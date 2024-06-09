@@ -1,3 +1,3 @@
-module interviewExercise
+module github.com/RandySteven/Library-GO
 
-go 1.17
+go 1.22
