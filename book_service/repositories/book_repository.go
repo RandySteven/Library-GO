@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"github.com/RandySteven/Library-GO/book_service/entities/models"
 	repositories_interfaces "github.com/RandySteven/Library-GO/book_service/interfaces/repositories"
-	"github.com/RandySteven/Library-GO/utils"
+	"github.com/RandySteven/Library-GO/pkg/utils"
 )
 
 type bookRepository struct {
