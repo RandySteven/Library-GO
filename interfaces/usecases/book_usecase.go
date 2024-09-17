@@ -1,4 +1,4 @@
-package usecases
+package usecases_interfaces
 
 import (
 	"context"
