@@ -63,3 +63,9 @@ func (u *userRepository) GetTx(ctx context.Context) (*sql.Tx, error) {
 }
 
 var _ repositories_interfaces.UserRepository = &userRepository{}
+
+func newUserRepository(db *sql.DB) *userRepository {
+	return &userRepository{
+		db: db,
+	}
+}

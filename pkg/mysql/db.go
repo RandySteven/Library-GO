@@ -6,16 +6,31 @@ import (
 	"github.com/RandySteven/Library-GO/pkg/configs"
 )
 
-func NewMySQLClient(config *configs.Config) (*sql.DB, error) {
+type MySQLClient struct {
+	db *sql.DB
+}
+
+func NewMySQLClient(config *configs.Config) (*MySQLClient, error) {
 	mysql := config.Config.MySQL
 	url := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", mysql.Host, mysql.Port, mysql.Username, mysql.Password, mysql.Database)
 	db, err := sql.Open("mysql", url)
 	if err != nil {
 		return nil, err
 	}
-	err = db.Ping()
-	if err != nil {
-		return nil, err
-	}
-	return db, nil
+
+	return &MySQLClient{
+		db: db,
+	}, nil
+}
+
+func (c *MySQLClient) Close() {
+	c.db.Close()
+}
+
+func (c *MySQLClient) Ping() error {
+	return c.db.Ping()
+}
+
+func (c *MySQLClient) Client() *sql.DB {
+	return c.db
 }

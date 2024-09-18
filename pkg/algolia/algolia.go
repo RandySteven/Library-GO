@@ -5,11 +5,21 @@ import (
 	"github.com/algolia/algoliasearch-client-go/v4/algolia/search"
 )
 
-func NewAlgoliaSearch(config *configs.Config) (*search.APIClient, error) {
+type AlgoliaAPISearchClient struct {
+	search *search.APIClient
+}
+
+func NewAlgoliaSearch(config *configs.Config) (*AlgoliaAPISearchClient, error) {
 	algolia := config.Config.Algolia
 	client, err := search.NewClient(algolia.AppID, algolia.ApiKey)
 	if err != nil {
 		return nil, err
 	}
-	return client, nil
+	return &AlgoliaAPISearchClient{
+		search: client,
+	}, nil
+}
+
+func (a *AlgoliaAPISearchClient) SearchClient() *search.APIClient {
+	return a.search
 }

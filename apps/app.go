@@ -2,6 +2,7 @@ package apps
 
 import (
 	"database/sql"
+	"github.com/RandySteven/Library-GO/pkg/caches"
 	"github.com/RandySteven/Library-GO/pkg/configs"
 	"github.com/RandySteven/Library-GO/pkg/mysql"
 	"github.com/algolia/algoliasearch-client-go/v4/algolia/search"
@@ -22,7 +23,13 @@ func NewApp(config *configs.Config) (*App, error) {
 		return nil, err
 	}
 
+	redis, err := caches.NewRedisCache(config)
+	if err != nil {
+		return nil, err
+	}
+
 	return &App{
-		MySQLDB: mysqlDB,
+		MySQLDB: mysqlDB.Client(),
+		Redis:   redis.Client(),
 	}, nil
 }
