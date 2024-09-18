@@ -9,8 +9,11 @@ type Usecases struct {
 	BookUsecase       usecases_interfaces.BookUsecase
 	BorrowUsecase     usecases_interfaces.BorrowUsecase
 	OnboardingUsecase usecases_interfaces.OnboardingUsecase
+	UserUsecase       usecases_interfaces.UserUsecase
 }
 
 func NewUsecases(repositories *repositories.Repositories) *Usecases {
-	return &Usecases{}
+	return &Usecases{
+		OnboardingUsecase: newOnboardingUsecase(repositories.UserRepo),
+	}
 }

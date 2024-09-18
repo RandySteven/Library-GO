@@ -52,14 +52,12 @@ func (u *userRepository) RollbackTx(ctx context.Context) error {
 	panic("implement me")
 }
 
-func (u *userRepository) SetTx(ctx context.Context, tx *sql.Tx) error {
-	//TODO implement me
-	panic("implement me")
+func (u *userRepository) SetTx(tx *sql.Tx) {
+	u.tx = tx
 }
 
-func (u *userRepository) GetTx(ctx context.Context) (*sql.Tx, error) {
-	//TODO implement me
-	panic("implement me")
+func (u *userRepository) GetTx(ctx context.Context) *sql.Tx {
+	return u.tx
 }
 
 var _ repositories_interfaces.UserRepository = &userRepository{}
