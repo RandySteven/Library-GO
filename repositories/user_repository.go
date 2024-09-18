@@ -5,11 +5,40 @@ import (
 	"database/sql"
 	"github.com/RandySteven/Library-GO/entities/models"
 	repositories_interfaces "github.com/RandySteven/Library-GO/interfaces/repositories"
+	"github.com/RandySteven/Library-GO/queries"
 )
 
 type userRepository struct {
 	db *sql.DB
 	tx *sql.Tx
+}
+
+func (u *userRepository) FindByEmail(ctx context.Context, email string) (*models.User, error) {
+	var trigger repositories_interfaces.Trigger = u.db
+	if u.tx != nil {
+		trigger = u.tx
+	}
+	result := &models.User{}
+	err := trigger.QueryRowContext(ctx, queries.SelectUserByEmailQuery.ToString(), email).Scan(
+		&result.ID,
+		&result.Name,
+		&result.Address,
+		&result.Email,
+		&result.PhoneNumber,
+		&result.Password,
+		&result.DoB,
+		&result.CreatedAt,
+		&result.UpdatedAt,
+		&result.DeletedAt)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+func (u *userRepository) FindByPhoneNumber(ctx context.Context, phoneNumber string) (*models.User, error) {
+	//TODO implement me
+	panic("implement me")
 }
 
 func (u *userRepository) Save(ctx context.Context, entity *models.User) (result *models.User, err error) {

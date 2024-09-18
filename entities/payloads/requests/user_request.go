@@ -7,6 +7,7 @@ type (
 		PhoneNumber string `json:"phone_number" validate:"required"`
 		Email       string `json:"email" validate:"required,email"`
 		Password    string `json:"password" validate:"required"`
+		Address     string `json:"address" validate:"required"`
 		Day         string `json:"day" validate:"required"`
 		Month       string `json:"month" validate:"required"`
 		Year        string `json:"year" validate:"required"`
