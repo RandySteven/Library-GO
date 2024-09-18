@@ -13,17 +13,16 @@ type onboardingUsecase struct {
 	userRepo repositories_interfaces.UserRepository
 }
 
-func (o onboardingUsecase) RegisterUser(ctx context.Context, request *requests.UserRegisterRequest) (result *responses.UserRegisterResponse, customErr *apperror.CustomError) {
+func (o *onboardingUsecase) RegisterUser(ctx context.Context, request *requests.UserRegisterRequest) (result *responses.UserRegisterResponse, customErr *apperror.CustomError) {
+	return
+}
+
+func (o *onboardingUsecase) LoginUser(ctx context.Context, request *requests.UserLoginRequest) (result *responses.UserLoginResponse, customErr *apperror.CustomError) {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (o onboardingUsecase) LoginUser(ctx context.Context, request *requests.UserLoginRequest) (result *responses.UserLoginResponse, customErr *apperror.CustomError) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (o onboardingUsecase) VerifyToken(ctx context.Context, token string) (customErr *apperror.CustomError) {
+func (o *onboardingUsecase) VerifyToken(ctx context.Context, token string) (customErr *apperror.CustomError) {
 	//TODO implement me
 	panic("implement me")
 }
