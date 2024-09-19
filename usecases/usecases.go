@@ -15,5 +15,6 @@ type Usecases struct {
 func NewUsecases(repositories *repositories.Repositories) *Usecases {
 	return &Usecases{
 		OnboardingUsecase: newOnboardingUsecase(repositories.UserRepo),
+		BookUsecase:       newBookUsecase(repositories.UserRepo, repositories.BookRepo),
 	}
 }

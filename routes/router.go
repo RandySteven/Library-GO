@@ -1,6 +1,10 @@
 package routes
 
-import "net/http"
+import (
+	"github.com/RandySteven/Library-GO/enums"
+	"github.com/RandySteven/Library-GO/handlers"
+	"net/http"
+)
 
 type (
 	HandlerFunc func(w http.ResponseWriter, r *http.Request)
@@ -16,6 +20,7 @@ func RegisterEndpointRouter(path, method string, handler HandlerFunc) *Router {
 	return &Router{path: path, handler: handler, method: method}
 }
 
-//func NewEndpointRouters(h *Handlers) map[enums.RouterPrefix][]Router {
-//	endpointRouters := make(map[enums.RouterPrefix][]Router)
-//}
+func NewEndpointRouters(h *handlers.Handlers) map[enums.RouterPrefix][]Router {
+	endpointRouters := make(map[enums.RouterPrefix][]Router)
+	return endpointRouters
+}

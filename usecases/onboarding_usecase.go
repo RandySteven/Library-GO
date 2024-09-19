@@ -11,6 +11,7 @@ import (
 	"github.com/RandySteven/Library-GO/entities/payloads/responses"
 	repositories_interfaces "github.com/RandySteven/Library-GO/interfaces/repositories"
 	usecases_interfaces "github.com/RandySteven/Library-GO/interfaces/usecases"
+	"github.com/RandySteven/Library-GO/utils"
 	"github.com/google/uuid"
 	"log"
 	"sync"
@@ -77,10 +78,11 @@ func (o *onboardingUsecase) RegisterUser(ctx context.Context, request *requests.
 		close(customErrCh)
 	}()
 
-	dob, err := time.Parse("2006-01-02", fmt.Sprintf("%s-%s-%s", request.Year, request.Month, request.Day))
+	dob, _ := time.Parse("2006-01-02", fmt.Sprintf("%s-%s-%s", request.Year, request.Month, request.Day))
 	user = &models.User{
 		Name:        fmt.Sprintf("%s %s", request.FirstName, request.LastName),
 		Email:       request.Email,
+		Password:    utils.HashPassword(request.Password),
 		PhoneNumber: request.PhoneNumber,
 		Address:     request.Address,
 		DoB:         dob,
@@ -105,6 +107,17 @@ func (o *onboardingUsecase) RegisterUser(ctx context.Context, request *requests.
 }
 
 func (o *onboardingUsecase) LoginUser(ctx context.Context, request *requests.UserLoginRequest) (result *responses.UserLoginResponse, customErr *apperror.CustomError) {
+	user, err := o.userRepo.FindByEmail(ctx, request.Email)
+	if err != nil {
+		if errors.As(err, &sql.ErrNoRows) {
+			return nil, apperror.NewCustomError(apperror.ErrNotFound, `failed to login email not found`, err)
+		}
+		return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to connect db`, err)
+	}
+	isPassExists := utils.ComparePassword(request.Password, user.Password)
+	if !isPassExists {
+		return nil, apperror.NewCustomError(apperror.ErrNotFound, `invalid credentials`, err)
+	}
 	return
 }
 
