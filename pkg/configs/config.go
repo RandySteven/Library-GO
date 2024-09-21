@@ -1,15 +1,17 @@
 package configs
 
+import "time"
+
 type Config struct {
 	Config struct {
 		Server struct {
 			Host    string `yaml:"host"`
 			Port    string `yaml:"port"`
 			Timeout struct {
-				Server int `yaml:"server"`
-				Read   int `yaml:"read"`
-				Write  int `yaml:"write"`
-				Idle   int `yaml:"idle"`
+				Server time.Duration `yaml:"server"`
+				Read   time.Duration `yaml:"read"`
+				Write  time.Duration `yaml:"write"`
+				Idle   time.Duration `yaml:"idle"`
 			} `yaml:"timeout"`
 		} `yaml:"server"`
 

@@ -4,6 +4,8 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/RandySteven/Library-GO/pkg/configs"
+	_ "github.com/go-sql-driver/mysql"
+	"log"
 )
 
 type MySQLClient struct {
@@ -12,7 +14,8 @@ type MySQLClient struct {
 
 func NewMySQLClient(config *configs.Config) (*MySQLClient, error) {
 	mysql := config.Config.MySQL
-	url := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", mysql.Host, mysql.Port, mysql.Username, mysql.Password, mysql.Database)
+	url := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", mysql.Username, mysql.Password, mysql.Host, mysql.Port, mysql.Database)
+	log.Println(url)
 	db, err := sql.Open("mysql", url)
 	if err != nil {
 		return nil, err

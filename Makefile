@@ -1,11 +1,12 @@
-user_service_run:
-	@echo "user_service_run"
+yaml_file = ./files/yml/library.local.yml
+cmd_folder = ./cmd/library_app/
+gorun = @go run
 
-borrow_service_run:
-	@echo "borrow_service_run"
+run:
+	${gorun} ${cmd_folder}http -config ${yaml_file}
 
-book_service_run:
-	@echo "book_service_run"
+migration:
+	${gorun} ${cmd_folder}migration -config ${yaml_file}
 
-main_run:
-	@echo "main_run"
+seed:
+	${gorun} ${cmd_folder}seed -config ${yaml_file}

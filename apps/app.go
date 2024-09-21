@@ -1,6 +1,7 @@
 package apps
 
 import (
+	"context"
 	"database/sql"
 	"github.com/RandySteven/Library-GO/pkg/caches"
 	"github.com/RandySteven/Library-GO/pkg/configs"
@@ -32,4 +33,18 @@ func NewApp(config *configs.Config) (*App, error) {
 		MySQLDB: mysqlDB.Client(),
 		Redis:   redis.Client(),
 	}, nil
+}
+
+func (a *App) Ping() error {
+	err := a.MySQLDB.Ping()
+	if err != nil {
+		return err
+	}
+
+	err = a.Redis.Ping(context.TODO()).Err()
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
