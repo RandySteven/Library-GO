@@ -9,7 +9,7 @@ type Handlers struct {
 	OnboardingHandler handlers_interfaces.OnboardingHandler
 }
 
-func NewHandlers(usecases usecases.Usecases) *Handlers {
+func NewHandlers(usecases *usecases.Usecases) *Handlers {
 	return &Handlers{
 		OnboardingHandler: newOnboardingHandler(usecases.OnboardingUsecase),
 	}
