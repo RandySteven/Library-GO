@@ -17,4 +17,10 @@ const (
 		    id, name, address, email, phone_number, password, dob, created_at, updated_at, deleted_at, verified_at 
 		FROM users WHERE phone_number = ?
 	`
+
+	SelectUserByIDQuery GoQuery = `
+		SELECT 
+		    id, name, address, email, phone_number, password, dob, created_at, updated_at, deleted_at, verified_at 
+		FROM users WHERE id = ?
+	`
 )

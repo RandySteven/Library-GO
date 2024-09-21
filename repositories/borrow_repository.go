@@ -12,6 +12,14 @@ type borrowRepository struct {
 	tx *sql.Tx
 }
 
+func (b *borrowRepository) InitTrigger() repositories_interfaces.Trigger {
+	var trigger repositories_interfaces.Trigger = b.db
+	if b.tx != nil {
+		trigger = b.tx
+	}
+	return trigger
+}
+
 func (b *borrowRepository) BeginTx(ctx context.Context) error {
 	tx, err := b.db.BeginTx(ctx, nil)
 	if err != nil {

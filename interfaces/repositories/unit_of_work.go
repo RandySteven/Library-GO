@@ -7,6 +7,7 @@ import (
 
 type (
 	UnitOfWork interface {
+		InitTrigger() Trigger
 		BeginTx(ctx context.Context) error
 		CommitTx(ctx context.Context) error
 		RollbackTx(ctx context.Context) error

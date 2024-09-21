@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	repositories_interfaces "github.com/RandySteven/Library-GO/interfaces/repositories"
 	"github.com/RandySteven/Library-GO/queries"
 	"log"
 	"reflect"
@@ -25,7 +26,7 @@ func QueryValidation(query queries.GoQuery, command string) error {
 	return nil
 }
 
-func Save[T any](ctx context.Context, db *sql.DB, query queries.GoQuery, requests ...any) (*uint64, error) {
+func Save[T any](ctx context.Context, db repositories_interfaces.Trigger, query queries.GoQuery, requests ...any) (*uint64, error) {
 	err := QueryValidation(query, insertQuery)
 	if err != nil {
 		return nil, err
@@ -77,7 +78,7 @@ func FindAll[T any](ctx context.Context, db *sql.DB, query queries.GoQuery) (res
 	return result, nil
 }
 
-func Delete[T any](ctx context.Context, db *sql.DB, query queries.GoQuery, id uint64) (err error) {
+func Delete[T any](ctx context.Context, db repositories_interfaces.Trigger, query queries.GoQuery, id uint64) (err error) {
 	err = QueryValidation(query, deleteQuery)
 	if err != nil {
 		return err
@@ -89,7 +90,7 @@ func Delete[T any](ctx context.Context, db *sql.DB, query queries.GoQuery, id ui
 	return nil
 }
 
-func FindByID[T any](ctx context.Context, db *sql.DB, query queries.GoQuery, id uint64, result *T) error {
+func FindByID[T any](ctx context.Context, db repositories_interfaces.Trigger, query queries.GoQuery, id uint64, result *T) error {
 	log.Println(strings.ReplaceAll(query.ToString(), "$1", fmt.Sprintf("%d", id)))
 
 	err := QueryValidation(query, selectQuery)
