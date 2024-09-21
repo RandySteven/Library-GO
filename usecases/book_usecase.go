@@ -14,10 +14,12 @@ import (
 )
 
 type bookUsecase struct {
-	userRepo   repositories_interfaces.UserRepository
-	bookRepo   repositories_interfaces.BookRepository
-	genreRepo  repositories_interfaces.GenreRepository
-	authorRepo repositories_interfaces.AuthorRepository
+	userRepo       repositories_interfaces.UserRepository
+	bookRepo       repositories_interfaces.BookRepository
+	genreRepo      repositories_interfaces.GenreRepository
+	authorRepo     repositories_interfaces.AuthorRepository
+	authorBookRepo repositories_interfaces.AuthorBookRepository
+	bookGenreRepo  repositories_interfaces.BookGenreRepository
 }
 
 func (b *bookUsecase) refreshTx(ctx context.Context) {
@@ -105,7 +107,56 @@ func (b *bookUsecase) AddNewBook(ctx context.Context, request *requests.CreateBo
 		close(customErrCh)
 	}()
 
-	return
+	select {
+	case customErr = <-customErrCh:
+		return nil, customErr
+	default:
+		wg.Add(2)
+		book := <-bookCh
+		go func() {
+			defer wg.Done()
+			authorIDs = <-authorIDChs
+			for _, authorID := range authorIDs {
+				_, err = b.authorBookRepo.Save(ctx, &models.AuthorBook{
+					AuthorID: authorID,
+					BookID:   book.ID,
+				})
+				if err != nil {
+					customErrCh <- apperror.NewCustomError(apperror.ErrInternalServer, `failed to create author book`, err)
+					return
+				}
+			}
+		}()
+
+		go func() {
+			defer wg.Done()
+			genreIDs = <-genreIDChs
+			for _, genreID := range genreIDs {
+				_, err = b.bookGenreRepo.Save(ctx, &models.BookGenre{
+					GenreID: genreID,
+					BookID:  book.ID,
+				})
+				if err != nil {
+					customErrCh <- apperror.NewCustomError(apperror.ErrInternalServer, `failed to create book genre`, err)
+					return
+				}
+			}
+		}()
+
+		wg.Wait()
+		close(customErrCh)
+
+		for customErr = range customErrCh {
+			if customErr != nil {
+				return nil, customErr
+			}
+		}
+
+		result = &responses.CreateBookResponse{
+			ID: book.ID,
+		}
+		return result, nil
+	}
 }
 
 func (b *bookUsecase) GetAllBooks(ctx context.Context) (result []*responses.ListBooksResponse, customErr *apperror.CustomError) {

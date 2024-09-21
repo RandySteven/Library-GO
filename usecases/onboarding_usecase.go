@@ -11,7 +11,9 @@ import (
 	"github.com/RandySteven/Library-GO/entities/payloads/responses"
 	repositories_interfaces "github.com/RandySteven/Library-GO/interfaces/repositories"
 	usecases_interfaces "github.com/RandySteven/Library-GO/interfaces/usecases"
+	jwt2 "github.com/RandySteven/Library-GO/pkg/jwt"
 	"github.com/RandySteven/Library-GO/utils"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"log"
 	"sync"
@@ -22,6 +24,11 @@ type onboardingUsecase struct {
 	userRepo repositories_interfaces.UserRepository
 }
 
+func (o *onboardingUsecase) refreshTx(ctx context.Context) {
+	tx := o.userRepo.GetTx(ctx)
+	o.userRepo.SetTx(tx)
+}
+
 func (o *onboardingUsecase) RegisterUser(ctx context.Context, request *requests.UserRegisterRequest) (result *responses.UserRegisterResponse, customErr *apperror.CustomError) {
 	var (
 		user        = &models.User{}
@@ -30,7 +37,7 @@ func (o *onboardingUsecase) RegisterUser(ctx context.Context, request *requests.
 	)
 	err := o.userRepo.BeginTx(ctx)
 	if err != nil {
-
+		return
 	}
 	defer func() {
 		defer o.userRepo.SetTx(nil)
@@ -118,7 +125,23 @@ func (o *onboardingUsecase) LoginUser(ctx context.Context, request *requests.Use
 	if !isPassExists {
 		return nil, apperror.NewCustomError(apperror.ErrNotFound, `invalid credentials`, err)
 	}
-	return
+	claims := &jwt2.JWTClaim{
+		UserID: user.ID,
+		RegisteredClaims: jwt.RegisteredClaims{
+			Issuer:    "Applications",
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 1)),
+		},
+	}
+	tokenAlgo := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	token, err := tokenAlgo.SignedString(jwt2.JWT_KEY)
+	if err != nil {
+		return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to generate token`, err)
+	}
+	result = &responses.UserLoginResponse{
+		Token: token,
+	}
+	return result, nil
 }
 
 func (o *onboardingUsecase) VerifyToken(ctx context.Context, token string) (customErr *apperror.CustomError) {

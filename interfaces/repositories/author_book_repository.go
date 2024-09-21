@@ -2,7 +2,7 @@ package repositories_interfaces
 
 import "github.com/RandySteven/Library-GO/entities/models"
 
-type BorrowDetailRepository interface {
-	Repository[models.BorrowDetail]
+type AuthorBookRepository interface {
+	Repository[models.AuthorBook]
 	UnitOfWork
 }
