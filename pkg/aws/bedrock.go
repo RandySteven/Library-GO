@@ -39,3 +39,7 @@ func NewAWSClient(configYml *configs.Config) (*AWSClient, error) {
 func (b *AWSClient) BedrockClient() *bedrockruntime.Client {
 	return b.brc
 }
+
+func (b *AWSClient) S3() *s3.S3 {
+	return b.s3
+}

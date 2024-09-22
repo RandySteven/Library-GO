@@ -3,6 +3,7 @@ package apps
 import (
 	"context"
 	"database/sql"
+	"github.com/RandySteven/Library-GO/caches"
 	handlers2 "github.com/RandySteven/Library-GO/handlers"
 	aws_client "github.com/RandySteven/Library-GO/pkg/aws"
 	"github.com/RandySteven/Library-GO/pkg/caches"
@@ -52,7 +53,8 @@ func NewApp(config *configs.Config) (*App, error) {
 
 func (app *App) PrepareTheHandler() *handlers2.Handlers {
 	repositories := repositories2.NewRepositories(app.MySQLDB)
-	usecases := usecases2.NewUsecases(repositories)
+	caches := caches.NewCaches(app.Redis)
+	usecases := usecases2.NewUsecases(repositories, caches)
 	return handlers2.NewHandlers(usecases)
 }
 
