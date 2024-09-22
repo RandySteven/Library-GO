@@ -8,13 +8,13 @@ const (
 
 	SelectUserByEmailQuery GoQuery = `
 		SELECT 
-		    id, name, address, email, phone_number, password, dob, created_at, updated_at, deleted_at, verified_at 
+		    id, name, address, email, phone_number, password, dob 
 		FROM users WHERE email = ?
 	`
 
 	SelectUserByPhoneNumberQuery GoQuery = `
 		SELECT 
-		    id, name, address, email, phone_number, password, dob, created_at, updated_at, deleted_at, verified_at 
+		    id, name, address, email, phone_number, password, dob 
 		FROM users WHERE phone_number = ?
 	`
 

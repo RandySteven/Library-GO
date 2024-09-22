@@ -4,19 +4,20 @@ import (
 	"context"
 	"database/sql"
 	handlers2 "github.com/RandySteven/Library-GO/handlers"
+	"github.com/RandySteven/Library-GO/pkg/bedrock"
 	"github.com/RandySteven/Library-GO/pkg/caches"
 	"github.com/RandySteven/Library-GO/pkg/configs"
 	"github.com/RandySteven/Library-GO/pkg/mysql"
 	repositories2 "github.com/RandySteven/Library-GO/repositories"
 	usecases2 "github.com/RandySteven/Library-GO/usecases"
 	"github.com/algolia/algoliasearch-client-go/v4/algolia/search"
-	"github.com/aws/aws-sdk-go/service/bedrock"
+	"github.com/aws/aws-sdk-go-v2/service/bedrockruntime"
 	"github.com/go-redis/redis/v8"
 )
 
 type App struct {
 	AlgoliaSearch *search.APIClient
-	Bedrock       *bedrock.Bedrock
+	Bedrock       *bedrockruntime.Client
 	MySQLDB       *sql.DB
 	Redis         *redis.Client
 }
@@ -32,9 +33,15 @@ func NewApp(config *configs.Config) (*App, error) {
 		return nil, err
 	}
 
+	brc, err := bedrock.NewBedrockClient(config)
+	if err != nil {
+		return nil, err
+	}
+
 	return &App{
 		MySQLDB: mysqlDB.Client(),
 		Redis:   redis.Client(),
+		Bedrock: brc,
 	}, nil
 }
 

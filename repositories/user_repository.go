@@ -7,6 +7,7 @@ import (
 	repositories_interfaces "github.com/RandySteven/Library-GO/interfaces/repositories"
 	"github.com/RandySteven/Library-GO/queries"
 	"github.com/RandySteven/Library-GO/utils"
+	"time"
 )
 
 type userRepository struct {
@@ -105,13 +106,19 @@ func (u *userRepository) findUser(ctx context.Context, by string, identifier str
 	} else {
 		query = queries.SelectUserByEmailQuery.ToString()
 	}
+	dobStr := ""
 	result := &models.User{}
 	err := u.InitTrigger().QueryRowContext(ctx, query, identifier).Scan(
 		&result.ID, &result.Name, &result.Address, &result.Email,
-		&result.PhoneNumber, &result.Password, &result.DoB,
-		&result.CreatedAt, &result.UpdatedAt, &result.DeletedAt)
+		&result.PhoneNumber, &result.Password, &dobStr)
 	if err != nil {
 		return nil, err
+	}
+	if dobStr != "" {
+		result.DoB, err = time.Parse("2006-01-02", dobStr) // Adjust format to match the database
+		if err != nil {
+			return nil, err
+		}
 	}
 	return result, nil
 }
