@@ -7,10 +7,12 @@ import (
 
 type Handlers struct {
 	OnboardingHandler handlers_interfaces.OnboardingHandler
+	BookHandler       handlers_interfaces.BookHandler
 }
 
 func NewHandlers(usecases *usecases.Usecases) *Handlers {
 	return &Handlers{
 		OnboardingHandler: newOnboardingHandler(usecases.OnboardingUsecase),
+		BookHandler:       newBookHandler(usecases.BookUsecase),
 	}
 }

@@ -32,7 +32,8 @@ func main() {
 	}
 	handlers := app.PrepareTheHandler()
 	r := mux.NewRouter()
-	routes.NewEndpointRouters(handlers)
+	routers := routes.NewEndpointRouters(handlers)
+	routes.InitRouters(routers, r)
 	go config.Run(r)
 
 	quit := make(chan os.Signal, 1)
