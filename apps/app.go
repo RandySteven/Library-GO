@@ -38,7 +38,7 @@ func NewApp(config *configs.Config) (*App, error) {
 		return nil, err
 	}
 
-	brc, err := aws_client.NewBedrockClient(config)
+	brc, err := aws_client.NewAWSClient(config)
 	if err != nil {
 		return nil, err
 	}
@@ -46,7 +46,7 @@ func NewApp(config *configs.Config) (*App, error) {
 	return &App{
 		MySQLDB: mysqlDB.Client(),
 		Redis:   redis.Client(),
-		Bedrock: brc,
+		Bedrock: brc.BedrockClient(),
 	}, nil
 }
 
