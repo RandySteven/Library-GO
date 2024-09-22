@@ -21,6 +21,11 @@ type Config struct {
 			Username string `yaml:"username"`
 			Password string `yaml:"password"`
 			Database string `yaml:"database"`
+			ConnPool struct {
+				MaxIdle   int `yaml:"maxIdle"`
+				ConnLimit int `yaml:"connLimit"`
+				IdleTime  int `yaml:"idleTime"`
+			} `yaml:"connPool"`
 		} `yaml:"mysql"`
 
 		AWS struct {

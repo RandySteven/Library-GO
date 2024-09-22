@@ -104,7 +104,7 @@ func (o *onboardingUsecase) RegisterUser(ctx context.Context, request *requests.
 		return nil, customErr
 	default:
 		return &responses.UserRegisterResponse{
-			ID:        user.ID,
+			ID:        utils.HashID(user.ID),
 			Token:     uuid.NewString(),
 			CreatedAt: time.Now(),
 		}, nil

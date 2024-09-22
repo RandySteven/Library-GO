@@ -6,6 +6,7 @@ import (
 	"github.com/RandySteven/Library-GO/pkg/configs"
 	_ "github.com/go-sql-driver/mysql"
 	"log"
+	"time"
 )
 
 type MySQLClient struct {
@@ -20,6 +21,11 @@ func NewMySQLClient(config *configs.Config) (*MySQLClient, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	connPool := mysql.ConnPool
+	db.SetMaxIdleConns(connPool.MaxIdle)
+	db.SetMaxOpenConns(connPool.ConnLimit)
+	db.SetConnMaxIdleTime(time.Duration(connPool.IdleTime) * time.Second)
 
 	return &MySQLClient{
 		db: db,

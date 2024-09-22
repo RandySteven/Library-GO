@@ -4,7 +4,7 @@ import "time"
 
 type (
 	CreateBookResponse struct {
-		ID uint64 `json:"id"`
+		ID string `json:"id"`
 	}
 
 	ListBooksResponse struct {

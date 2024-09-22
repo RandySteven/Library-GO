@@ -4,7 +4,7 @@ import "time"
 
 type (
 	UserRegisterResponse struct {
-		ID        uint64    `json:"id"`
+		ID        string    `json:"id"`
 		Token     string    `json:"token"`
 		CreatedAt time.Time `json:"created_at"`
 	}

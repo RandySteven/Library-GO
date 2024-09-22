@@ -10,6 +10,7 @@ import (
 	"github.com/RandySteven/Library-GO/enums"
 	repositories_interfaces "github.com/RandySteven/Library-GO/interfaces/repositories"
 	usecases_interfaces "github.com/RandySteven/Library-GO/interfaces/usecases"
+	"github.com/RandySteven/Library-GO/utils"
 	"log"
 	"sync"
 )
@@ -98,7 +99,7 @@ func (b *bookUsecase) AddNewBook(ctx context.Context, request *requests.CreateBo
 
 	// 5. Return response
 	result = &responses.CreateBookResponse{
-		ID: book.ID,
+		ID: utils.HashID(book.ID),
 	}
 	return result, nil
 }
