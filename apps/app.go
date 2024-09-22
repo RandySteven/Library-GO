@@ -28,6 +28,11 @@ func NewApp(config *configs.Config) (*App, error) {
 		return nil, err
 	}
 
+	err = mysqlDB.Ping()
+	if err != nil {
+		return nil, err
+	}
+
 	redis, err := caches.NewRedisCache(config)
 	if err != nil {
 		return nil, err

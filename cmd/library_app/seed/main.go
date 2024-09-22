@@ -26,12 +26,17 @@ func main() {
 		log.Fatal(err)
 		return
 	}
-	err = cl.SeedUserData(ctx)
-	if err != nil {
-		log.Fatal(err)
-		return
-	}
-	err = cl.SeedGenreData(ctx)
+	//err = cl.SeedUserData(ctx)
+	//if err != nil {
+	//	log.Fatal(err)
+	//	return
+	//}
+	//err = cl.SeedGenreData(ctx)
+	//if err != nil {
+	//	log.Fatal(err)
+	//	return
+	//}
+	err = cl.SeedAuthorData(ctx)
 	if err != nil {
 		log.Fatal(err)
 		return

@@ -3,6 +3,7 @@ package routes
 import (
 	"github.com/RandySteven/Library-GO/enums"
 	"github.com/RandySteven/Library-GO/handlers"
+	"github.com/RandySteven/Library-GO/middlewares"
 	"github.com/gorilla/mux"
 	"log"
 	"net/http"
@@ -51,6 +52,7 @@ func InitRouters(routers map[enums.RouterPrefix][]*Router, r *mux.Router) {
 	}
 
 	bookRouter := r.PathPrefix(enums.BookPrefix.ToString()).Subrouter()
+	bookRouter.Use(middlewares.AuthenticationMiddleware)
 	for _, router := range routers[enums.BookPrefix] {
 		router.RouterLog(enums.BookPrefix.ToString())
 		bookRouter.HandleFunc(router.path, router.handler).Methods(router.method)

@@ -5,6 +5,8 @@ import (
 	"database/sql"
 	"github.com/RandySteven/Library-GO/entities/models"
 	repositories_interfaces "github.com/RandySteven/Library-GO/interfaces/repositories"
+	"github.com/RandySteven/Library-GO/queries"
+	"github.com/RandySteven/Library-GO/utils"
 )
 
 type authorBookRepository struct {
@@ -13,8 +15,13 @@ type authorBookRepository struct {
 }
 
 func (a *authorBookRepository) Save(ctx context.Context, entity *models.AuthorBook) (result *models.AuthorBook, err error) {
-	//TODO implement me
-	panic("implement me")
+	id, err := utils.Save[models.AuthorBook](ctx, a.InitTrigger(), queries.InsertAuthorBookQuery, &entity.AuthorID, &entity.BookID)
+	if err != nil {
+		return nil, err
+	}
+	result = entity
+	result.ID = *id
+	return result, nil
 }
 
 func (a *authorBookRepository) FindByID(ctx context.Context, id uint64) (result *models.AuthorBook, err error) {

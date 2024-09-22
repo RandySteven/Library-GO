@@ -31,6 +31,23 @@ func (c *MySQLClient) SeedUserData(ctx context.Context) error {
 	return nil
 }
 
+func (c *MySQLClient) SeedAuthorData(ctx context.Context) error {
+	authors := []*models.Author{
+		{Name: "Haruki Murakami", Nationality: "Japanese"},
+		{Name: "Chimamanda Ngozi Adichie", Nationality: "Nigerian"},
+		{Name: "Gabriel García Márquez", Nationality: "Colombian"},
+		{Name: "J.K. Rowling", Nationality: "British"},
+		{Name: "Toni Morrison", Nationality: "American"},
+	}
+	for _, author := range authors {
+		_, err := c.db.ExecContext(ctx, queries.InsertAuthorQuery.ToString(), &author.Name, &author.Nationality)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (c *MySQLClient) SeedGenreData(ctx context.Context) error {
 	genres := []*models.Genre{
 		{Genre: `Adventure`},

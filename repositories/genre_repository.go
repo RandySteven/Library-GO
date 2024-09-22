@@ -33,6 +33,7 @@ func (g *genreRepository) Save(ctx context.Context, entity *models.Genre) (resul
 }
 
 func (g *genreRepository) FindByID(ctx context.Context, id uint64) (result *models.Genre, err error) {
+	result = &models.Genre{}
 	err = utils.FindByID[models.Genre](ctx, g.InitTrigger(), queries.SelectGenreByID, id, result)
 	if err != nil {
 		return nil, err

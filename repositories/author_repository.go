@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"github.com/RandySteven/Library-GO/entities/models"
 	repositories_interfaces "github.com/RandySteven/Library-GO/interfaces/repositories"
+	"github.com/RandySteven/Library-GO/queries"
 	"github.com/RandySteven/Library-GO/utils"
 )
 
@@ -32,8 +33,12 @@ func (a *authorRepository) Save(ctx context.Context, entity *models.Author) (res
 }
 
 func (a *authorRepository) FindByID(ctx context.Context, id uint64) (result *models.Author, err error) {
-	//TODO implement me
-	panic("implement me")
+	result = &models.Author{}
+	err = utils.FindByID[models.Author](ctx, a.InitTrigger(), queries.SelectAuthorByID, id, result)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
 }
 
 func (a *authorRepository) FindAll(ctx context.Context, skip uint64, take uint64) ([]*models.Author, error) {

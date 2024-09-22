@@ -3,6 +3,7 @@ package utils
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	repositories_interfaces "github.com/RandySteven/Library-GO/interfaces/repositories"
 	"github.com/RandySteven/Library-GO/queries"
@@ -31,19 +32,26 @@ func Save[T any](ctx context.Context, db repositories_interfaces.Trigger, query 
 	if err != nil {
 		return nil, err
 	}
+
 	stmt, err := db.PrepareContext(ctx, query.ToString())
 	if err != nil {
 		return nil, err
 	}
 	defer stmt.Close()
 
-	var id uint64
-	err = stmt.QueryRowContext(ctx, requests...).Scan(&id)
+	// Execute the insert statement
+	result, err := stmt.ExecContext(ctx, requests...)
 	if err != nil {
-		// Handle specific errors (e.g., pq.Error)
 		return nil, err
 	}
-	return &id, nil
+
+	// Retrieve the last inserted ID
+	id, err := result.LastInsertId()
+	if err != nil {
+		return nil, err
+	}
+	uid := uint64(id)
+	return &uid, nil
 }
 
 func FindAll[T any](ctx context.Context, db *sql.DB, query queries.GoQuery) (result []*T, err error) {
@@ -91,31 +99,50 @@ func Delete[T any](ctx context.Context, db repositories_interfaces.Trigger, quer
 }
 
 func FindByID[T any](ctx context.Context, db repositories_interfaces.Trigger, query queries.GoQuery, id uint64, result *T) error {
-	log.Println(strings.ReplaceAll(query.ToString(), "$1", fmt.Sprintf("%d", id)))
+	// Log query for debugging
+	log.Println("Executing query:", strings.ReplaceAll(query.ToString(), "?", fmt.Sprintf("%d", id)))
 
+	// Validate the query to ensure it's a SELECT query
 	err := QueryValidation(query, selectQuery)
 	if err != nil {
-		return err
+		return fmt.Errorf("query validation failed: %w", err)
 	}
+
+	// Prepare the SQL statement
 	stmt, err := db.PrepareContext(ctx, query.ToString())
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to prepare context: %w", err)
 	}
 	defer stmt.Close()
 
+	// Use reflection to ensure the result is properly initialized
+	if reflect.ValueOf(result).Kind() != reflect.Ptr || reflect.ValueOf(result).IsNil() {
+		return fmt.Errorf("result argument must be a non-nil pointer")
+	}
+
+	// Get the underlying type and value of the result
+	typ := reflect.TypeOf(result).Elem()
+	val := reflect.ValueOf(result).Elem()
+
 	var ptrs []interface{}
 
-	typ := reflect.TypeOf(result).Elem()
-
+	// Create a slice of pointers to each field in the struct
 	for i := 0; i < typ.NumField(); i++ {
-		field := reflect.ValueOf(result).Elem().Field(i)
+		field := val.Field(i)
 		ptrs = append(ptrs, field.Addr().Interface())
 	}
 
+	// Execute the query and scan the result into the struct fields
 	err = stmt.QueryRowContext(ctx, id).Scan(ptrs...)
 	if err != nil {
-		return err
+		// Handle no rows found
+		if errors.Is(err, sql.ErrNoRows) {
+			return fmt.Errorf("no rows found for ID %d: %w", id, err)
+		}
+		// Handle other scan errors
+		return fmt.Errorf("failed to scan result for ID %d: %w", id, err)
 	}
+
 	return nil
 }
 
