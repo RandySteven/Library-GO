@@ -1,0 +1,6 @@
+Please generate a story about %s,
+Set in %s,
+With genre %s,
+In the style of %s,
+Featuring a main character who is %s,
+And with a moral about %s.
