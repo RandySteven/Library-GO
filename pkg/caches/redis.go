@@ -1,4 +1,4 @@
-package caches
+package caches_client
 
 import (
 	"context"

@@ -1,4 +1,4 @@
-package algolia
+package algolia_client
 
 import (
 	"github.com/RandySteven/Library-GO/pkg/configs"

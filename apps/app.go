@@ -4,7 +4,7 @@ import (
 	"context"
 	"database/sql"
 	handlers2 "github.com/RandySteven/Library-GO/handlers"
-	"github.com/RandySteven/Library-GO/pkg/bedrock"
+	aws_client "github.com/RandySteven/Library-GO/pkg/aws"
 	"github.com/RandySteven/Library-GO/pkg/caches"
 	"github.com/RandySteven/Library-GO/pkg/configs"
 	"github.com/RandySteven/Library-GO/pkg/mysql"
@@ -23,7 +23,7 @@ type App struct {
 }
 
 func NewApp(config *configs.Config) (*App, error) {
-	mysqlDB, err := mysql.NewMySQLClient(config)
+	mysqlDB, err := mysql_client.NewMySQLClient(config)
 	if err != nil {
 		return nil, err
 	}
@@ -33,12 +33,12 @@ func NewApp(config *configs.Config) (*App, error) {
 		return nil, err
 	}
 
-	redis, err := caches.NewRedisCache(config)
+	redis, err := caches_client.NewRedisCache(config)
 	if err != nil {
 		return nil, err
 	}
 
-	brc, err := bedrock.NewBedrockClient(config)
+	brc, err := aws_client.NewBedrockClient(config)
 	if err != nil {
 		return nil, err
 	}
