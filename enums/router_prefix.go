@@ -3,6 +3,7 @@ package enums
 type RouterPrefix string
 
 const (
+	DevPrefix        RouterPrefix = "/dev"
 	OnboardingPrefix RouterPrefix = "/onboarding"
 	UserPrefix       RouterPrefix = "/users"
 	BookPrefix       RouterPrefix = "/books"

@@ -26,6 +26,12 @@ func RegisterEndpointRouter(path, method string, handler HandlerFunc) *Router {
 func NewEndpointRouters(h *handlers.Handlers) map[enums.RouterPrefix][]*Router {
 	endpointRouters := make(map[enums.RouterPrefix][]*Router)
 
+	endpointRouters[enums.DevPrefix] = []*Router{
+		RegisterEndpointRouter("/health-check", http.MethodGet, h.DevHandler.HealthCheck),
+		RegisterEndpointRouter("/create-bucket", http.MethodPost, h.DevHandler.CreateBucket),
+		RegisterEndpointRouter("/buckets", http.MethodGet, h.DevHandler.GetListBuckets),
+	}
+
 	endpointRouters[enums.OnboardingPrefix] = []*Router{
 		RegisterEndpointRouter("/register", http.MethodPost, h.OnboardingHandler.RegisterUser),
 		RegisterEndpointRouter("/login", http.MethodPost, h.OnboardingHandler.LoginUser),
@@ -49,6 +55,12 @@ func InitRouters(routers map[enums.RouterPrefix][]*Router, r *mux.Router) {
 	for _, router := range routers[enums.OnboardingPrefix] {
 		router.RouterLog(enums.OnboardingPrefix.ToString())
 		onboardingRouter.HandleFunc(router.path, router.handler).Methods(router.method)
+	}
+
+	devRouter := r.PathPrefix(enums.DevPrefix.ToString()).Subrouter()
+	for _, router := range routers[enums.DevPrefix] {
+		router.RouterLog(enums.DevPrefix.ToString())
+		devRouter.HandleFunc(router.path, router.handler).Methods(router.method)
 	}
 
 	bookRouter := r.PathPrefix(enums.BookPrefix.ToString()).Subrouter()

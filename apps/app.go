@@ -12,13 +12,12 @@ import (
 	repositories2 "github.com/RandySteven/Library-GO/repositories"
 	usecases2 "github.com/RandySteven/Library-GO/usecases"
 	"github.com/algolia/algoliasearch-client-go/v4/algolia/search"
-	"github.com/aws/aws-sdk-go-v2/service/bedrockruntime"
 	"github.com/go-redis/redis/v8"
 )
 
 type App struct {
 	AlgoliaSearch *search.APIClient
-	Bedrock       *bedrockruntime.Client
+	AWSClient     *aws_client.AWSClient
 	MySQLDB       *sql.DB
 	Redis         *redis.Client
 }
@@ -39,22 +38,22 @@ func NewApp(config *configs.Config) (*App, error) {
 		return nil, err
 	}
 
-	brc, err := aws_client.NewAWSClient(config)
+	aws, err := aws_client.NewAWSClient(config)
 	if err != nil {
 		return nil, err
 	}
 
 	return &App{
-		MySQLDB: mysqlDB.Client(),
-		Redis:   redis.Client(),
-		Bedrock: brc.BedrockClient(),
+		MySQLDB:   mysqlDB.Client(),
+		Redis:     redis.Client(),
+		AWSClient: aws,
 	}, nil
 }
 
 func (app *App) PrepareTheHandler() *handlers2.Handlers {
 	repositories := repositories2.NewRepositories(app.MySQLDB)
 	caches := caches.NewCaches(app.Redis)
-	usecases := usecases2.NewUsecases(repositories, caches)
+	usecases := usecases2.NewUsecases(repositories, caches, app.AWSClient)
 	return handlers2.NewHandlers(usecases)
 }
 

@@ -8,11 +8,13 @@ import (
 type Handlers struct {
 	OnboardingHandler handlers_interfaces.OnboardingHandler
 	BookHandler       handlers_interfaces.BookHandler
+	DevHandler        handlers_interfaces.DevHandler
 }
 
 func NewHandlers(usecases *usecases.Usecases) *Handlers {
 	return &Handlers{
 		OnboardingHandler: newOnboardingHandler(usecases.OnboardingUsecase),
 		BookHandler:       newBookHandler(usecases.BookUsecase),
+		DevHandler:        newDevHandler(usecases.DevUsecase),
 	}
 }

@@ -12,8 +12,9 @@ import (
 )
 
 type AWSClient struct {
-	s3  *s3.S3
-	brc *bedrockruntime.Client
+	session *session.Session
+	s3      *s3.S3
+	brc     *bedrockruntime.Client
 }
 
 func NewAWSClient(configYml *configs.Config) (*AWSClient, error) {
@@ -30,14 +31,22 @@ func NewAWSClient(configYml *configs.Config) (*AWSClient, error) {
 			"",
 		),
 	})
+	if err != nil {
+		return nil, err
+	}
 	return &AWSClient{
-		s3:  s3.New(sess),
-		brc: bedrockruntime.NewFromConfig(bedrockCfg),
+		session: sess,
+		s3:      s3.New(sess),
+		brc:     bedrockruntime.NewFromConfig(bedrockCfg),
 	}, nil
 }
 
 func (b *AWSClient) BedrockClient() *bedrockruntime.Client {
 	return b.brc
+}
+
+func (b *AWSClient) SessionClient() *session.Session {
+	return b.session
 }
 
 func (b *AWSClient) S3() *s3.S3 {

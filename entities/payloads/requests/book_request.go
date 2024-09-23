@@ -2,11 +2,11 @@ package requests
 
 type (
 	CreateBookRequest struct {
-		Title       string   `json:"title" validate:"required"`
-		Description string   `json:"description" validate:"required"`
-		Genres      []uint64 `json:"genres" validate:"required"`
-		Authors     []uint64 `json:"authors" validate:"required"`
-		ImageUrl    string   `json:"image_url" validate:"required"`
+		Title       string   `form:"title" validate:"required"`
+		Description string   `form:"description" validate:"required"`
+		Genres      []uint64 `form:"genres" validate:"required"`
+		Authors     []uint64 `form:"authors" validate:"required"`
+		Image       string   `form:"image_url" validate:"required"`
 	}
 
 	SearchBookRequest struct {

@@ -10,12 +10,15 @@ import (
 	"github.com/RandySteven/Library-GO/enums"
 	repositories_interfaces "github.com/RandySteven/Library-GO/interfaces/repositories"
 	usecases_interfaces "github.com/RandySteven/Library-GO/interfaces/usecases"
+	aws_client "github.com/RandySteven/Library-GO/pkg/aws"
 	"github.com/RandySteven/Library-GO/utils"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"log"
 	"sync"
 )
 
 type bookUsecase struct {
+	awsClient      *aws_client.AWSClient
 	userRepo       repositories_interfaces.UserRepository
 	bookRepo       repositories_interfaces.BookRepository
 	genreRepo      repositories_interfaces.GenreRepository
@@ -137,10 +140,27 @@ func (b *bookUsecase) findGenres(ctx context.Context, genreIDs []uint64, genreCh
 // createBook inserts a new book and sends the result through a channel
 func (b *bookUsecase) createBook(ctx context.Context, request *requests.CreateBookRequest, bookCh chan *models.Book, errCh chan *apperror.CustomError, wg *sync.WaitGroup) {
 	defer wg.Done()
+	bookImage := utils.RenameFileWithDateAndUUID(request.Image)
+	err := utils.ResizeImage(request.Image, bookImage, 640, 1080)
+	if err != nil {
+		errCh <- apperror.NewCustomError(apperror.ErrInternalServer, `failed to resize image`, err)
+		return
+	}
+	buckets, err := b.awsClient.ListBucket()
+	if err != nil {
+		errCh <- apperror.NewCustomError(apperror.ErrInternalServer, fmt.Sprintf(`failed to list buckets due %s`, err.Error()), err)
+		return
+	}
+	imagePath, err := b.awsClient.UploadFile(s3manager.NewUploader(b.awsClient.SessionClient()), "books/"+bookImage, buckets.Buckets[0].String(), bookImage)
+	if err != nil {
+		errCh <- apperror.NewCustomError(apperror.ErrInternalServer, `failed to upload book image`, err)
+		return
+	}
 	book, err := b.bookRepo.Save(ctx, &models.Book{
 		Title:       request.Title,
 		Description: request.Description,
 		Status:      enums.Available,
+		Image:       *imagePath,
 	})
 	if err != nil {
 		errCh <- apperror.NewCustomError(apperror.ErrInternalServer, fmt.Sprintf(`failed to create book due %s`, err.Error()), err)
