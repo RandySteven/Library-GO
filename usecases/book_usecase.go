@@ -13,7 +13,9 @@ import (
 	aws_client "github.com/RandySteven/Library-GO/pkg/aws"
 	"github.com/RandySteven/Library-GO/utils"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"io/ioutil"
 	"log"
+	"mime/multipart"
 	"sync"
 )
 
@@ -36,7 +38,7 @@ func (b *bookUsecase) refreshTx(ctx context.Context) {
 	b.bookGenreRepo.SetTx(tx)
 }
 
-func (b *bookUsecase) AddNewBook(ctx context.Context, request *requests.CreateBookRequest) (result *responses.CreateBookResponse, customErr *apperror.CustomError) {
+func (b *bookUsecase) AddNewBook(ctx context.Context, request *requests.CreateBookRequest, fileHeader *multipart.FileHeader) (result *responses.CreateBookResponse, customErr *apperror.CustomError) {
 	var (
 		wg       sync.WaitGroup
 		wg2      sync.WaitGroup
@@ -68,7 +70,7 @@ func (b *bookUsecase) AddNewBook(ctx context.Context, request *requests.CreateBo
 	wg.Add(3)
 	go b.findAuthors(ctx, request.Authors, authorCh, errCh, &wg)
 	go b.findGenres(ctx, request.Genres, genreCh, errCh, &wg)
-	go b.createBook(ctx, request, bookCh, errCh, &wg)
+	go b.createBook(ctx, request, bookCh, errCh, &wg, fileHeader)
 
 	// Wait for all goroutines to finish
 	wg.Wait()
@@ -138,24 +140,49 @@ func (b *bookUsecase) findGenres(ctx context.Context, genreIDs []uint64, genreCh
 }
 
 // createBook inserts a new book and sends the result through a channel
-func (b *bookUsecase) createBook(ctx context.Context, request *requests.CreateBookRequest, bookCh chan *models.Book, errCh chan *apperror.CustomError, wg *sync.WaitGroup) {
+func (b *bookUsecase) createBook(ctx context.Context, request *requests.CreateBookRequest, bookCh chan *models.Book, errCh chan *apperror.CustomError, wg *sync.WaitGroup, fileHeader *multipart.FileHeader) {
 	defer wg.Done()
-	bookImage := utils.RenameFileWithDateAndUUID(request.Image)
-	err := utils.ResizeImage(request.Image, bookImage, 640, 1080)
+
+	tempFile, err := ioutil.TempFile("./temp-images", "upload-*.png")
 	if err != nil {
-		errCh <- apperror.NewCustomError(apperror.ErrInternalServer, `failed to resize image`, err)
+		errCh <- apperror.NewCustomError(apperror.ErrInternalServer, "temp-images required", err)
 		return
 	}
+	defer tempFile.Close()
+
+	fileBytes, err := ioutil.ReadAll(request.Image)
+	if err != nil {
+		fmt.Println(err)
+	}
+	tempFile.Write(fileBytes)
+
+	if fileHeader == nil {
+		errCh <- apperror.NewCustomError(apperror.ErrBadRequest, "image is required", nil)
+		return
+	}
+
+	imageFile, err := fileHeader.Open()
+	if err != nil {
+		errCh <- apperror.NewCustomError(apperror.ErrInternalServer, "failed to open image file", err)
+		return
+	}
+	defer imageFile.Close()
+
+	renamedImage := utils.RenameFileWithDateAndUUID(tempFile.Name()[len(`./temp-images/`):])
+
 	buckets, err := b.awsClient.ListBucket()
 	if err != nil {
-		errCh <- apperror.NewCustomError(apperror.ErrInternalServer, fmt.Sprintf(`failed to list buckets due %s`, err.Error()), err)
+		errCh <- apperror.NewCustomError(apperror.ErrInternalServer, fmt.Sprintf("failed to list buckets: %s", err), err)
 		return
 	}
-	imagePath, err := b.awsClient.UploadFile(s3manager.NewUploader(b.awsClient.SessionClient()), "books/"+bookImage, buckets.Buckets[0].String(), bookImage)
+
+	imagePath, err := b.awsClient.UploadFile(s3manager.NewUploader(b.awsClient.SessionClient()), tempFile.Name(), *buckets.Buckets[0].Name, renamedImage)
 	if err != nil {
-		errCh <- apperror.NewCustomError(apperror.ErrInternalServer, `failed to upload book image`, err)
+		errCh <- apperror.NewCustomError(apperror.ErrInternalServer, "failed to upload book image", err)
 		return
 	}
+
+	// Save the book information to the repository
 	book, err := b.bookRepo.Save(ctx, &models.Book{
 		Title:       request.Title,
 		Description: request.Description,
@@ -163,9 +190,11 @@ func (b *bookUsecase) createBook(ctx context.Context, request *requests.CreateBo
 		Image:       *imagePath,
 	})
 	if err != nil {
-		errCh <- apperror.NewCustomError(apperror.ErrInternalServer, fmt.Sprintf(`failed to create book due %s`, err.Error()), err)
+		errCh <- apperror.NewCustomError(apperror.ErrInternalServer, fmt.Sprintf("failed to create book: %s", err), err)
 		return
 	}
+
+	// Send the created book back through the channel
 	bookCh <- book
 }
 
@@ -228,7 +257,8 @@ func newBookUsecase(
 	genreRepo repositories_interfaces.GenreRepository,
 	authorRepo repositories_interfaces.AuthorRepository,
 	authorBookRepo repositories_interfaces.AuthorBookRepository,
-	bookGenreRepo repositories_interfaces.BookGenreRepository) *bookUsecase {
+	bookGenreRepo repositories_interfaces.BookGenreRepository,
+	awsClient *aws_client.AWSClient) *bookUsecase {
 	return &bookUsecase{
 		userRepo:       userRepo,
 		bookRepo:       bookRepo,
@@ -236,5 +266,6 @@ func newBookUsecase(
 		authorRepo:     authorRepo,
 		authorBookRepo: authorBookRepo,
 		bookGenreRepo:  bookGenreRepo,
+		awsClient:      awsClient,
 	}
 }

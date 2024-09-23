@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Book</title>
+</head>
+<body>
+<h1>Create a New Book</h1>
+<form id="createBookForm">
+    <label for="title">Title:</label>
+    <input type="text" id="title" name="title" required><br><br>
+
+    <label for="description">Description:</label>
+    <textarea id="description" name="description" required></textarea><br><br>
+
+    <label for="genres">Genres (comma-separated IDs):</label>
+    <input type="text" id="genres" name="genres" required><br><br>
+
+    <label for="authors">Authors (comma-separated IDs):</label>
+    <input type="text" id="authors" name="authors" required><br><br>
+
+    <label for="image">Image:</label>
+    <input type="file" id="image" name="image" required><br><br>
+
+    <button type="submit">Create Book</button>
+</form>
+
+<script>
+    document.getElementById('createBookForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+
+        const formData = new FormData();
+        formData.append('title', document.getElementById('title').value);
+        formData.append('description', document.getElementById('description').value);
+        formData.append('genres', document.getElementById('genres').value.split(',').map(Number));
+        formData.append('authors', document.getElementById('authors').value.split(',').map(Number));
+        formData.append('image', document.getElementById('image').files[0]);
+        console.log(formData.get('image'))
+        fetch('http://localhost:8081/books', {
+            method: 'POST',
+            headers: {
+                'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VySUQiOjEsIlJvbGVJRCI6MCwiSXNWZXJpZnkiOmZhbHNlLCJpc3MiOiJBcHBsaWNhdGlvbnMiLCJleHAiOjE3MjcxMDE3OTEsImlhdCI6MTcyNzA5ODE5MX0.tspPUNm0Av3FkZBqf6XwVZ2uhL7YzDee4RqRnnGDVoc', // Replace with your token logic
+            },
+            body: formData,
+        })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Success:', data);
+                alert('Book created successfully!');
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+                alert('Failed to create book.');
+            });
+    });
+</script>
+</body>
+</html>

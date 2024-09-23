@@ -19,14 +19,31 @@ func (b *BookHandler) AddBook(w http.ResponseWriter, r *http.Request) {
 	var (
 		rID     = uuid.NewString()
 		ctx     = context.WithValue(r.Context(), "rID", rID)
-		request = &requests.CreateBookRequest{}
 		dataKey = `book`
 	)
+
+	request := &requests.CreateBookRequest{
+		Title:       r.FormValue("title"),
+		Description: r.FormValue("description"),
+		Genres:      utils.SeparateStringIntoUint64Arr(r.FormValue("genres"), ","),
+		Authors:     utils.SeparateStringIntoUint64Arr(r.FormValue("authors"), ","),
+	}
+
+	imageFile, fileHeader, err := r.FormFile("image")
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	defer imageFile.Close()
+	request.Image = imageFile
+
 	if err := utils.BindRequest(r, request); err != nil {
 		utils.ResponseHandler(w, http.StatusBadRequest, `bad request`, nil, nil, err)
 		return
 	}
-	result, customErr := b.usecase.AddNewBook(ctx, request)
+	//fileHeader := r.MultipartForm.File["image"][0]
+
+	result, customErr := b.usecase.AddNewBook(ctx, request, fileHeader)
 	if customErr != nil {
 		utils.ResponseHandler(w, customErr.ErrCode(), `internal server error`, nil, nil, customErr)
 		return

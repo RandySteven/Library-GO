@@ -12,6 +12,7 @@ import (
 	"log"
 	"net/http"
 	"reflect"
+	"strings"
 )
 
 func ContentType(w http.ResponseWriter, contentType string) {
@@ -68,8 +69,9 @@ func BindMultipartForm(req *http.Request, request interface{}) error {
 	if err != nil {
 		return err
 	}
-	multipartFiles := req.MultipartForm.File
 
+	// Handling file uploads
+	multipartFiles := req.MultipartForm.File
 	for fieldname, files := range multipartFiles {
 		field := reflect.ValueOf(request).Elem().FieldByName(fieldname)
 		if !field.IsValid() {
@@ -82,17 +84,14 @@ func BindMultipartForm(req *http.Request, request interface{}) error {
 		}
 
 		fieldSlice := reflect.MakeSlice(field.Type(), 0, len(files))
-
 		for _, fileHeader := range files {
 			uploadedFile, err := fileHeader.Open()
 			if err != nil {
 				return fmt.Errorf("Error opening uploaded file %s: %w", fileHeader.Filename, err)
 			}
 			defer uploadedFile.Close() // Close the file after processing
-
 			fieldSlice = reflect.Append(fieldSlice, reflect.ValueOf(uploadedFile))
 		}
-
 		field.Set(fieldSlice)
 	}
 
@@ -115,15 +114,25 @@ func ResponseHandler(w http.ResponseWriter, responseCode int, message string, da
 }
 
 func BindRequest(req *http.Request, request interface{}) error {
-	var bindRequestType = map[string]error{
-		enums.ContentTypeJSON:     BindJSON(req, request),
-		enums.ContentTypeForm:     BindForm(req, request),
-		enums.ContentTypeFormData: BindMultipartForm(req, request),
+	var bindRequestType = map[string]func(*http.Request, interface{}) error{
+		enums.ContentTypeJSON:     BindJSON,
+		enums.ContentTypeForm:     BindForm,
+		enums.ContentTypeFormData: BindMultipartForm,
 	}
 
 	contentType := req.Header.Get("Content-Type")
 
-	return bindRequestType[contentType]
+	// Trim any parameters from the content type (e.g., boundary)
+	if semicolonIndex := strings.Index(contentType, ";"); semicolonIndex != -1 {
+		contentType = contentType[:semicolonIndex]
+	}
+
+	bindFunc, exists := bindRequestType[contentType]
+	if !exists {
+		return fmt.Errorf("unsupported content type: %s", contentType)
+	}
+
+	return bindFunc(req, request)
 }
 
 func ErrorHandler(w http.ResponseWriter, customErr *apperror.CustomError) {

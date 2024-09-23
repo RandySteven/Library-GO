@@ -19,6 +19,6 @@ func NewUsecases(repositories *repositories.Repositories, caches *caches.Caches,
 	return &Usecases{
 		DevUsecase:        newDevUsecase(awsClient),
 		OnboardingUsecase: newOnboardingUsecase(repositories.UserRepo),
-		BookUsecase:       newBookUsecase(repositories.UserRepo, repositories.BookRepo, repositories.GenreRepo, repositories.AuthorRepo, repositories.AuthorBookRepo, repositories.BookGenreRepo),
+		BookUsecase:       newBookUsecase(repositories.UserRepo, repositories.BookRepo, repositories.GenreRepo, repositories.AuthorRepo, repositories.AuthorBookRepo, repositories.BookGenreRepo, awsClient),
 	}
 }

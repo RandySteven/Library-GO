@@ -6,11 +6,14 @@ import (
 	"image"
 	"image/jpeg"
 	"image/png"
+	"log"
 	"os"
+	"strconv"
 	"strings"
 )
 
 func ResizeImage(inputPath string, outputPath string, width uint, height uint) error {
+	log.Println(inputPath)
 	file, err := os.Open(inputPath)
 	if err != nil {
 		return fmt.Errorf("failed to open image: %v", err)
@@ -46,4 +49,13 @@ func ResizeImage(inputPath string, outputPath string, width uint, height uint) e
 	}
 
 	return nil
+}
+
+func SeparateStringIntoUint64Arr(str string, sep string) []uint64 {
+	strArr := strings.Split(str, sep)
+	resArr := make([]uint64, len(strArr))
+	for i, s := range strArr {
+		resArr[i], _ = strconv.ParseUint(s, 10, 64)
+	}
+	return resArr
 }
