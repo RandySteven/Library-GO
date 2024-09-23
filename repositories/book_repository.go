@@ -48,7 +48,7 @@ func (b *bookRepository) GetTx(ctx context.Context) *sql.Tx {
 }
 
 func (b *bookRepository) Save(ctx context.Context, entity *models.Book) (result *models.Book, err error) {
-	id, err := utils.Save[models.Book](ctx, b.InitTrigger(), queries.InsertBookQuery, entity.Title, entity.Description, entity.Image)
+	id, err := utils.Save[models.Book](ctx, b.InitTrigger(), queries.InsertBookQuery, entity.Title, entity.Description, entity.Image, entity.Status)
 	if err != nil {
 		return nil, err
 	}
@@ -63,8 +63,7 @@ func (b *bookRepository) FindByID(ctx context.Context, id uint64) (result *model
 }
 
 func (b *bookRepository) FindAll(ctx context.Context, skip uint64, take uint64) ([]*models.Book, error) {
-	//TODO implement me
-	panic("implement me")
+	return utils.FindAll[models.Book](ctx, b.InitTrigger(), queries.SelectBooksQuery)
 }
 
 func (b *bookRepository) DeleteByID(ctx context.Context, id uint64) (err error) {

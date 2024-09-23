@@ -237,9 +237,13 @@ func (b *bookUsecase) GetAllBooks(ctx context.Context) (result []*responses.List
 	}
 	for _, book := range books {
 		result = append(result, &responses.ListBooksResponse{
-			ID:    book.ID,
-			Image: book.Image,
-			Title: book.Title,
+			ID:        book.ID,
+			Image:     book.Image,
+			Title:     book.Title,
+			Status:    book.Status.ToString(),
+			CreatedAt: book.CreatedAt.Local(),
+			UpdatedAt: book.UpdatedAt.Local(),
+			DeletedAt: book.DeletedAt,
 		})
 	}
 	return
