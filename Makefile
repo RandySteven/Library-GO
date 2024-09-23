@@ -10,3 +10,8 @@ migration:
 
 seed:
 	${gorun} ${cmd_folder}seed -config ${yaml_file}
+
+drop:
+	${gorun} ${cmd_folder}drop -config ${yaml_file}
+
+refresh: drop migration seed

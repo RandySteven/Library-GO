@@ -8,11 +8,11 @@ const (
 	`
 
 	SelectAuthorQuery GoQuery = `
-		SELECT id, name, nationality FROM authors
+		SELECT id, name, nationality, created_at, updated_at, deleted_at FROM authors
 	`
 
 	SelectAuthorByID GoQuery = `
-		SELECT id, name, nationality FROM authors
+		SELECT id, name, nationality, created_at, updated_at, deleted_at FROM authors
 		WHERE id = ?
 	`
 )

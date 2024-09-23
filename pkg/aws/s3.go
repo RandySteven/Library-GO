@@ -35,7 +35,7 @@ func (c *AWSClient) UploadFile(uploader *s3manager.Uploader, filePath string, bu
 
 	result, err := uploader.Upload(&s3manager.UploadInput{
 		Bucket: aws.String(bucketName),
-		Key:    aws.String(fileName),
+		Key:    aws.String("books/" + fileName),
 		Body:   file,
 	})
 	if err != nil {

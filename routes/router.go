@@ -46,6 +46,11 @@ func NewEndpointRouters(h *handlers.Handlers) map[enums.RouterPrefix][]*Router {
 		RegisterEndpointRouter("/{id}", http.MethodGet, h.BookHandler.GetBookByID),
 	}
 
+	endpointRouters[enums.GenrePrefix] = []*Router{
+		RegisterEndpointRouter("", http.MethodGet, h.GenreHandler.GetAllGenres),
+		RegisterEndpointRouter("", http.MethodPost, h.GenreHandler.AddNewGenre),
+	}
+
 	return endpointRouters
 }
 
@@ -68,6 +73,12 @@ func InitRouters(routers map[enums.RouterPrefix][]*Router, r *mux.Router) {
 	for _, router := range routers[enums.BookPrefix] {
 		router.RouterLog(enums.BookPrefix.ToString())
 		bookRouter.HandleFunc(router.path, router.handler).Methods(router.method)
+	}
+
+	genreRouter := r.PathPrefix(enums.GenrePrefix.ToString()).Subrouter()
+	for _, router := range routers[enums.GenrePrefix] {
+		router.RouterLog(enums.GenrePrefix.ToString())
+		genreRouter.HandleFunc(router.path, router.handler).Methods(router.method)
 	}
 }
 

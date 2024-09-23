@@ -54,7 +54,7 @@ func Save[T any](ctx context.Context, db repositories_interfaces.Trigger, query 
 	return &uid, nil
 }
 
-func FindAll[T any](ctx context.Context, db *sql.DB, query queries.GoQuery) (result []*T, err error) {
+func FindAll[T any](ctx context.Context, db repositories_interfaces.Trigger, query queries.GoQuery) (result []*T, err error) {
 	requests := new(T)
 	err = QueryValidation(query, selectQuery)
 	if err != nil {

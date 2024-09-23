@@ -41,9 +41,8 @@ func (g *genreRepository) FindByID(ctx context.Context, id uint64) (result *mode
 	return result, nil
 }
 
-func (g *genreRepository) FindAll(ctx context.Context, skip uint64, take uint64) ([]*models.Genre, error) {
-	//TODO implement me
-	panic("implement me")
+func (g *genreRepository) FindAll(ctx context.Context, skip uint64, take uint64) (result []*models.Genre, err error) {
+	return utils.FindAll[models.Genre](ctx, g.InitTrigger(), queries.SelectGenresQuery)
 }
 
 func (g *genreRepository) DeleteByID(ctx context.Context, id uint64) (err error) {

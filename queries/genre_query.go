@@ -11,7 +11,7 @@ const (
 	`
 
 	SelectGenreByID GoQuery = `
-		SELECT id, genre FROM genres
+		SELECT id, genre, created_at, updated_at, deleted_at FROM genres
 		WHERE id = ?
 	`
 )

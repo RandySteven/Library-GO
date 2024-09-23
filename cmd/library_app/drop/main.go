@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"github.com/RandySteven/Library-GO/pkg/configs"
-	"github.com/RandySteven/Library-GO/pkg/mysql"
+	mysql_client "github.com/RandySteven/Library-GO/pkg/mysql"
 	"log"
 )
 
@@ -26,5 +26,6 @@ func main() {
 		log.Fatal(err)
 		return
 	}
-	cl.Migration(context.TODO())
+
+	cl.Drop(context.TODO())
 }
