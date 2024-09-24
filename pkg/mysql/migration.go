@@ -14,6 +14,10 @@ func initTableMigration() []queries.MigrationQuery {
 		queries.BookMigration,
 		queries.AuthorBookMigration,
 		queries.BookGenreMigration,
+		queries.BagMigration,
+		queries.BorrowMigration,
+		queries.BorrowDetailMigration,
+		queries.StoryGeneratorMigration,
 	}
 }
 

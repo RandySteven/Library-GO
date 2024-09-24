@@ -80,8 +80,32 @@ const (
 		    FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE CASCADE
 		)
 	`
-	BorrowMigration         MigrationQuery = ``
-	BorrowDetailMigration   MigrationQuery = ``
+	BorrowMigration MigrationQuery = `
+		CREATE TABLE IF NOT EXISTS borrows (
+		    id BIGINT PRIMARY KEY NOT NULL AUTO_INCREMENT,
+		    user_id BIGINT NOT NULL,
+		    borrow_reference CHAR(24) NOT NULL UNIQUE,
+		    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		    deleted_at TIMESTAMP DEFAULT NULL,
+		    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+		)
+	`
+	BorrowDetailMigration MigrationQuery = `
+		CREATE TABLE IF NOT EXISTS borrow_details (
+		    id BIGINT PRIMARY KEY NOT NULL AUTO_INCREMENT,
+		    borrow_id BIGINT NOT NULL,
+		    book_id BIGINT NOT NULL,
+		    borrowed_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		    returned_date TIMESTAMP NOT NULL,
+		    verified_return_date TIMESTAMP DEFAULT NULL,
+		    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		    deleted_at TIMESTAMP DEFAULT NULL,
+			FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE CASCADE,
+		    FOREIGN KEY (borrow_id) REFERENCES borrows(id) ON DELETE CASCADE
+		)
+	`
 	StoryGeneratorMigration MigrationQuery = `
 		CREATE TABLE IF NOT EXISTS story_generators (
 		    id BIGINT PRIMARY KEY NOT NULL AUTO_INCREMENT,

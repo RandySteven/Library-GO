@@ -73,11 +73,13 @@ func (b *bookUsecase) AddNewBook(ctx context.Context, request *requests.CreateBo
 	go b.createBook(ctx, request, bookCh, errCh, &wg, fileHeader)
 
 	// Wait for all goroutines to finish
-	wg.Wait()
-	close(errCh)
-	close(authorCh)
-	close(genreCh)
-	close(bookCh)
+	go func() {
+		wg.Wait()
+		close(errCh)
+		close(authorCh)
+		close(genreCh)
+		close(bookCh)
+	}()
 
 	// 3. Check for errors during the process
 	if customErr = <-errCh; customErr != nil {

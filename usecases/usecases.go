@@ -11,6 +11,7 @@ type Usecases struct {
 	BookUsecase       usecases_interfaces.BookUsecase
 	BorrowUsecase     usecases_interfaces.BorrowUsecase
 	OnboardingUsecase usecases_interfaces.OnboardingUsecase
+	BagUsecase        usecases_interfaces.BagUsecase
 	UserUsecase       usecases_interfaces.UserUsecase
 	DevUsecase        usecases_interfaces.DevUsecase
 	GenreUsecase      usecases_interfaces.GenreUsecase
@@ -18,6 +19,7 @@ type Usecases struct {
 
 func NewUsecases(repositories *repositories.Repositories, caches *caches.Caches, awsClient *aws_client.AWSClient) *Usecases {
 	return &Usecases{
+		BagUsecase:        newBagUsecase(repositories.BagRepo, repositories.BookRepo, repositories.UserRepo),
 		DevUsecase:        newDevUsecase(awsClient),
 		OnboardingUsecase: newOnboardingUsecase(repositories.UserRepo),
 		BookUsecase:       newBookUsecase(repositories.UserRepo, repositories.BookRepo, repositories.GenreRepo, repositories.AuthorRepo, repositories.AuthorBookRepo, repositories.BookGenreRepo, awsClient),
