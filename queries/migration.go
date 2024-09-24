@@ -71,7 +71,15 @@ const (
 				FOREIGN KEY(genre_id) REFERENCES genres(id) ON DELETE CASCADE
 			)
 	`
-	BagMigration            MigrationQuery = ``
+	BagMigration MigrationQuery = `
+		CREATE TABLE IF NOT EXISTS bags (
+		    id BIGINT PRIMARY KEY NOT NULL AUTO_INCREMENT,
+		    user_id BIGINT NOT NULL,
+		    book_id BIGINT NOT NULL,
+		    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+		    FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE CASCADE
+		)
+	`
 	BorrowMigration         MigrationQuery = ``
 	BorrowDetailMigration   MigrationQuery = ``
 	StoryGeneratorMigration MigrationQuery = `
@@ -79,7 +87,10 @@ const (
 		    id BIGINT PRIMARY KEY NOT NULL AUTO_INCREMENT,
 		    prompt TEXT NOT NULL,
 		    result TEXT NOT NULL,
-		    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+		    image VARCHAR(244) NOT NULL,
+		    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		    deleted_at TIMESTAMP DEFAULT NULL
 		)
 	`
 )
