@@ -78,7 +78,12 @@ func (b *bagRepository) InitTrigger() repositories_interfaces.Trigger {
 }
 
 func (b *bagRepository) BeginTx(ctx context.Context) error {
-	return b.tx.Commit()
+	tx, err := b.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	b.tx = tx
+	return nil
 }
 
 func (b *bagRepository) CommitTx(ctx context.Context) error {

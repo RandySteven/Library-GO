@@ -97,13 +97,35 @@ func (b *bagUsecase) AddBookToBag(ctx context.Context, request *requests.BagRequ
 	if err != nil {
 		return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to save book`, err)
 	}
-	result.BookID = bag.BookID
+	result = &responses.AddBagResponse{
+		BookID: bag.BookID,
+	}
 	return result, nil
 }
 
-func (b *bagUsecase) GetUserBag(ctx context.Context) (result []*responses.GetAllBagsResponse, customErr *apperror.CustomError) {
-	//TODO implement me
-	panic("implement me")
+func (b *bagUsecase) GetUserBag(ctx context.Context) (result *responses.GetAllBagsResponse, customErr *apperror.CustomError) {
+	userId := ctx.Value(enums.UserID).(uint64)
+	bagBooks, err := b.bagRepo.FindBagByUser(ctx, userId)
+	if err != nil {
+		return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to find bag`, err)
+	}
+	bookIds := []uint64{}
+	for _, bagBook := range bagBooks {
+		bookIds = append(bookIds, bagBook.BookID)
+	}
+	books, err := b.bookRepo.FindSelectedBooksId(ctx, bookIds)
+	if err != nil {
+		return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to find bags`, err)
+	}
+	result = &responses.GetAllBagsResponse{}
+	for _, book := range books {
+		result.Books = append(result.Books, &responses.BookBagResponse{
+			ID:    book.ID,
+			Title: book.Title,
+			Image: book.Image,
+		})
+	}
+	return result, nil
 }
 
 func (b *bagUsecase) DeleteBookFromBag(ctx context.Context, request *requests.BagRequest) (customErr *apperror.CustomError) {

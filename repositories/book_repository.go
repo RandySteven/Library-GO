@@ -3,10 +3,14 @@ package repositories
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"github.com/RandySteven/Library-GO/entities/models"
 	repositories_interfaces "github.com/RandySteven/Library-GO/interfaces/repositories"
 	"github.com/RandySteven/Library-GO/queries"
 	"github.com/RandySteven/Library-GO/utils"
+	"log"
+	"strconv"
+	"strings"
 )
 
 type bookRepository struct {
@@ -58,8 +62,12 @@ func (b *bookRepository) Save(ctx context.Context, entity *models.Book) (result 
 }
 
 func (b *bookRepository) FindByID(ctx context.Context, id uint64) (result *models.Book, err error) {
-	//TODO implement me
-	panic("implement me")
+	result = &models.Book{}
+	err = utils.FindByID[models.Book](ctx, b.InitTrigger(), queries.SelectBookByIDQuery, id, result)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
 }
 
 func (b *bookRepository) FindAll(ctx context.Context, skip uint64, take uint64) ([]*models.Book, error) {
@@ -74,6 +82,32 @@ func (b *bookRepository) DeleteByID(ctx context.Context, id uint64) (err error) 
 func (b *bookRepository) Update(ctx context.Context, entity *models.Book) (result *models.Book, err error) {
 	//TODO implement me
 	panic("implement me")
+}
+
+func (b *bookRepository) FindSelectedBooksId(ctx context.Context, ids []uint64) (results []*models.Book, err error) {
+	queryIn := ` WHERE id IN (%s)`
+	wildCards := []string{}
+	for _, id := range ids {
+		wildCards = append(wildCards, strconv.Itoa(int(id)))
+	}
+	wildCardStr := strings.Join(wildCards, ",")
+	queryIn = fmt.Sprintf(queryIn, wildCardStr)
+	selectStr := queries.SelectBooksQuery.ToString() + queryIn
+	log.Println(selectStr)
+	rows, err := b.db.QueryContext(ctx, selectStr)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		book := new(models.Book)
+		err = rows.Scan(&book.ID, &book.Title, &book.Description, &book.Image, &book.Status, &book.CreatedAt, &book.UpdatedAt, &book.DeletedAt)
+		if err != nil {
+			return nil, err
+		}
+		results = append(results, book)
+	}
+	return results, nil
 }
 
 var _ repositories_interfaces.BookRepository = &bookRepository{}

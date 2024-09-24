@@ -10,6 +10,7 @@ type Handlers struct {
 	BookHandler       handlers_interfaces.BookHandler
 	DevHandler        handlers_interfaces.DevHandler
 	GenreHandler      handlers_interfaces.GenreHandler
+	BagHandler        handlers_interfaces.BagHandler
 }
 
 func NewHandlers(usecases *usecases.Usecases) *Handlers {
@@ -18,5 +19,6 @@ func NewHandlers(usecases *usecases.Usecases) *Handlers {
 		BookHandler:       newBookHandler(usecases.BookUsecase),
 		DevHandler:        newDevHandler(usecases.DevUsecase),
 		GenreHandler:      newGenreHandler(usecases.GenreUsecase),
+		BagHandler:        newBagHandler(usecases.BagUsecase),
 	}
 }
