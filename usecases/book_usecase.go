@@ -264,26 +264,27 @@ func (b *bookUsecase) GetBookByID(ctx context.Context, id uint64) (result *respo
 	}
 
 	result = &responses.BookDetailResponse{
-		ID:        book.ID,
-		Image:     book.Image,
-		Title:     book.Title,
-		Status:    book.Status.ToString(),
-		CreatedAt: book.CreatedAt.Local(),
+		ID:          book.ID,
+		Title:       book.Title,
+		Description: book.Description,
+		Image:       book.Image,
+		Status:      book.Status.ToString(),
+		CreatedAt:   book.CreatedAt.Local(),
 	}
 
 	wg.Add(2)
 
 	go func() {
 		defer wg.Done()
-		authorNames := []string{}
+		var authorNames []string
 		authorBooks, err := b.authorBookRepo.FindAuthorBookByBookID(ctx, book.ID)
 		if err != nil {
 			customErrCh <- apperror.NewCustomError(apperror.ErrInternalServer, `failed to get author book by id`, err)
 			return
 		}
-		authorIDs := make([]uint64, len(authorBooks))
-		for i, authorBook := range authorBooks {
-			authorIDs[i] = authorBook.AuthorID
+		var authorIDs []uint64
+		for _, authorBook := range authorBooks {
+			authorIDs = append(authorIDs, authorBook.AuthorID)
 		}
 		authors, err := b.authorRepo.FindSelectedAuthorsByID(ctx, authorIDs)
 		if err != nil {
@@ -304,7 +305,7 @@ func (b *bookUsecase) GetBookByID(ctx context.Context, id uint64) (result *respo
 			customErrCh <- apperror.NewCustomError(apperror.ErrInternalServer, `failed to get book genre by id`, err)
 			return
 		}
-		genreIDs := make([]uint64, len(bookGenres))
+		genreIDs := []uint64{}
 		for _, bookGenre := range bookGenres {
 			genreIDs = append(genreIDs, bookGenre.ID)
 		}
@@ -327,13 +328,14 @@ func (b *bookUsecase) GetBookByID(ctx context.Context, id uint64) (result *respo
 		close(authorsCh)
 	}()
 
-	if customErr = <-customErrCh; customErr != nil {
+	select {
+	case customErr = <-customErrCh:
 		return nil, customErr
+	default:
+		result.Authors = <-authorsCh
+		result.Genres = <-genresCh
+		return result, nil
 	}
-
-	result.Authors = <-authorsCh
-	result.Genres = <-genresCh
-	return result, nil
 }
 
 var _ usecases_interfaces.BookUsecase = &bookUsecase{}
