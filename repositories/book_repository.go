@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/RandySteven/Library-GO/entities/models"
+	"github.com/RandySteven/Library-GO/enums"
 	repositories_interfaces "github.com/RandySteven/Library-GO/interfaces/repositories"
 	"github.com/RandySteven/Library-GO/queries"
 	"github.com/RandySteven/Library-GO/utils"
@@ -108,6 +109,16 @@ func (b *bookRepository) FindSelectedBooksId(ctx context.Context, ids []uint64) 
 		results = append(results, book)
 	}
 	return results, nil
+}
+
+func (b *bookRepository) FindBookStatus(ctx context.Context, id uint64, status enums.BookStatus) (isExist bool, err error) {
+	result := &models.Book{}
+	err = b.InitTrigger().QueryRowContext(ctx, queries.SelectBookAndStatus.ToString(), id, status).Scan(
+		&result.ID, &result.Title, &result.Description, &result.Image, &result.Status, &result.CreatedAt, &result.UpdatedAt, &result.DeletedAt)
+	if err != nil {
+		return false, err
+	}
+	return result.Status == status, nil
 }
 
 var _ repositories_interfaces.BookRepository = &bookRepository{}

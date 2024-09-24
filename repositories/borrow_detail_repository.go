@@ -5,15 +5,23 @@ import (
 	"database/sql"
 	"github.com/RandySteven/Library-GO/entities/models"
 	repositories_interfaces "github.com/RandySteven/Library-GO/interfaces/repositories"
+	"github.com/RandySteven/Library-GO/queries"
+	"github.com/RandySteven/Library-GO/utils"
 )
 
 type borrowDetailRepository struct {
 	db *sql.DB
+	tx *sql.Tx
 }
 
 func (b *borrowDetailRepository) Save(ctx context.Context, entity *models.BorrowDetail) (result *models.BorrowDetail, err error) {
-	//TODO implement me
-	panic("implement me")
+	result = entity
+	id, err := utils.Save[models.BorrowDetail](ctx, b.InitTrigger(), queries.InsertBorrowDetailQuery, &entity.BorrowID, &entity.BookID)
+	if err != nil {
+		return nil, err
+	}
+	result.ID = *id
+	return result, nil
 }
 
 func (b *borrowDetailRepository) FindByID(ctx context.Context, id uint64) (result *models.BorrowDetail, err error) {
@@ -37,33 +45,36 @@ func (b *borrowDetailRepository) Update(ctx context.Context, entity *models.Borr
 }
 
 func (b *borrowDetailRepository) InitTrigger() repositories_interfaces.Trigger {
-	//TODO implement me
-	panic("implement me")
+	var trigger repositories_interfaces.Trigger = b.db
+	if b.tx != nil {
+		trigger = b.tx
+	}
+	return trigger
 }
 
 func (b *borrowDetailRepository) BeginTx(ctx context.Context) error {
-	//TODO implement me
-	panic("implement me")
+	tx, err := b.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	b.tx = tx
+	return nil
 }
 
 func (b *borrowDetailRepository) CommitTx(ctx context.Context) error {
-	//TODO implement me
-	panic("implement me")
+	return b.tx.Commit()
 }
 
 func (b *borrowDetailRepository) RollbackTx(ctx context.Context) error {
-	//TODO implement me
-	panic("implement me")
+	return b.tx.Rollback()
 }
 
 func (b *borrowDetailRepository) SetTx(tx *sql.Tx) {
-	//TODO implement me
-	panic("implement me")
+	b.tx = tx
 }
 
 func (b *borrowDetailRepository) GetTx(ctx context.Context) *sql.Tx {
-	//TODO implement me
-	panic("implement me")
+	return b.tx
 }
 
 var _ repositories_interfaces.BorrowDetailRepository = &borrowDetailRepository{}

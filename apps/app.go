@@ -5,18 +5,18 @@ import (
 	"database/sql"
 	"github.com/RandySteven/Library-GO/caches"
 	handlers2 "github.com/RandySteven/Library-GO/handlers"
+	algolia_client "github.com/RandySteven/Library-GO/pkg/algolia"
 	aws_client "github.com/RandySteven/Library-GO/pkg/aws"
 	"github.com/RandySteven/Library-GO/pkg/caches"
 	"github.com/RandySteven/Library-GO/pkg/configs"
 	"github.com/RandySteven/Library-GO/pkg/mysql"
 	repositories2 "github.com/RandySteven/Library-GO/repositories"
 	usecases2 "github.com/RandySteven/Library-GO/usecases"
-	"github.com/algolia/algoliasearch-client-go/v4/algolia/search"
 	"github.com/go-redis/redis/v8"
 )
 
 type App struct {
-	AlgoliaSearch *search.APIClient
+	AlgoliaSearch *algolia_client.AlgoliaAPISearchClient
 	AWSClient     *aws_client.AWSClient
 	MySQLDB       *sql.DB
 	Redis         *redis.Client
@@ -43,10 +43,16 @@ func NewApp(config *configs.Config) (*App, error) {
 		return nil, err
 	}
 
+	algolia, err := algolia_client.NewAlgoliaSearch(config)
+	if err != nil {
+		return nil, err
+	}
+
 	return &App{
-		MySQLDB:   mysqlDB.Client(),
-		Redis:     redis.Client(),
-		AWSClient: aws,
+		MySQLDB:       mysqlDB.Client(),
+		Redis:         redis.Client(),
+		AWSClient:     aws,
+		AlgoliaSearch: algolia,
 	}, nil
 }
 

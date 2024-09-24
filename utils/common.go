@@ -7,9 +7,11 @@ import (
 	"image/jpeg"
 	"image/png"
 	"log"
+	"math/rand"
 	"os"
 	"strconv"
 	"strings"
+	"time"
 )
 
 func ResizeImage(inputPath string, outputPath string, width uint, height uint) error {
@@ -58,4 +60,14 @@ func SeparateStringIntoUint64Arr(str string, sep string) []uint64 {
 		resArr[i], _ = strconv.ParseUint(s, 10, 64)
 	}
 	return resArr
+}
+
+func GenerateBorrowReference(length uint64) string {
+	charset := "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	seededRand := rand.New(rand.NewSource(time.Now().UnixNano()))
+	b := make([]byte, length)
+	for i := range b {
+		b[i] = charset[seededRand.Intn(len(charset))]
+	}
+	return string(b)
 }
