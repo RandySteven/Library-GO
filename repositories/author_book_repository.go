@@ -79,6 +79,23 @@ func (a *authorBookRepository) GetTx(ctx context.Context) *sql.Tx {
 	return a.tx
 }
 
+func (a *authorBookRepository) FindAuthorBookByBookID(ctx context.Context, bookID uint64) (result []*models.AuthorBook, err error) {
+	rows, err := a.InitTrigger().QueryContext(ctx, queries.SelectAuthorBookByBookIDQuery.ToString(), bookID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		authorBook := new(models.AuthorBook)
+		err = rows.Scan(&authorBook.ID, &authorBook.AuthorID, &authorBook.BookID, &authorBook.CreatedAt, &authorBook.UpdatedAt, &authorBook.DeletedAt)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, authorBook)
+	}
+	return result, nil
+}
+
 var _ repositories_interfaces.AuthorBookRepository = &authorBookRepository{}
 
 func newAuthorBookRepository(db *sql.DB) *authorBookRepository {

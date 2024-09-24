@@ -79,6 +79,23 @@ func (b *bookGenreRepository) GetTx(ctx context.Context) *sql.Tx {
 	return b.tx
 }
 
+func (b *bookGenreRepository) FindBookGenreByBookID(ctx context.Context, bookID uint64) (result []*models.BookGenre, err error) {
+	rows, err := b.InitTrigger().QueryContext(ctx, queries.SelectBookGenreByBookIDQuery.ToString(), bookID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		bookGenre := new(models.BookGenre)
+		err = rows.Scan(&bookGenre.ID, &bookGenre.BookID, &bookGenre.GenreID, &bookGenre.CreatedAt, &bookGenre.UpdatedAt, &bookGenre.DeletedAt)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, bookGenre)
+	}
+	return result, nil
+}
+
 var _ repositories_interfaces.BookGenreRepository = &bookGenreRepository{}
 
 func newBookGenreRepository(db *sql.DB) *bookGenreRepository {

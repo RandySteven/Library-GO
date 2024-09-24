@@ -252,7 +252,88 @@ func (b *bookUsecase) GetAllBooks(ctx context.Context) (result []*responses.List
 }
 
 func (b *bookUsecase) GetBookByID(ctx context.Context, id uint64) (result *responses.BookDetailResponse, customErr *apperror.CustomError) {
-	return
+	var (
+		wg          sync.WaitGroup
+		customErrCh = make(chan *apperror.CustomError)
+		genresCh    = make(chan []string)
+		authorsCh   = make(chan []string)
+	)
+	book, err := b.bookRepo.FindByID(ctx, id)
+	if err != nil {
+		return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to get book by id`, err)
+	}
+
+	result = &responses.BookDetailResponse{
+		ID:        book.ID,
+		Image:     book.Image,
+		Title:     book.Title,
+		Status:    book.Status.ToString(),
+		CreatedAt: book.CreatedAt.Local(),
+	}
+
+	wg.Add(2)
+
+	go func() {
+		defer wg.Done()
+		authorNames := []string{}
+		authorBooks, err := b.authorBookRepo.FindAuthorBookByBookID(ctx, book.ID)
+		if err != nil {
+			customErrCh <- apperror.NewCustomError(apperror.ErrInternalServer, `failed to get author book by id`, err)
+			return
+		}
+		authorIDs := make([]uint64, len(authorBooks))
+		for i, authorBook := range authorBooks {
+			authorIDs[i] = authorBook.AuthorID
+		}
+		authors, err := b.authorRepo.FindSelectedAuthorsByID(ctx, authorIDs)
+		if err != nil {
+			customErrCh <- apperror.NewCustomError(apperror.ErrInternalServer, `failed to get author book by id`, err)
+			return
+		}
+		for _, author := range authors {
+			authorNames = append(authorNames, author.Name)
+		}
+		authorsCh <- authorNames
+	}()
+
+	go func() {
+		defer wg.Done()
+		genreNames := []string{}
+		bookGenres, err := b.bookGenreRepo.FindBookGenreByBookID(ctx, book.ID)
+		if err != nil {
+			customErrCh <- apperror.NewCustomError(apperror.ErrInternalServer, `failed to get book genre by id`, err)
+			return
+		}
+		genreIDs := make([]uint64, len(bookGenres))
+		for _, bookGenre := range bookGenres {
+			genreIDs = append(genreIDs, bookGenre.ID)
+		}
+
+		genres, err := b.genreRepo.FindSelectedGenresByID(ctx, genreIDs)
+		if err != nil {
+			customErrCh <- apperror.NewCustomError(apperror.ErrInternalServer, `failed to get book genre by id`, err)
+			return
+		}
+		for _, genre := range genres {
+			genreNames = append(genreNames, genre.Genre)
+		}
+		genresCh <- genreNames
+	}()
+
+	go func() {
+		wg.Wait()
+		close(customErrCh)
+		close(genresCh)
+		close(authorsCh)
+	}()
+
+	if customErr = <-customErrCh; customErr != nil {
+		return nil, customErr
+	}
+
+	result.Authors = <-authorsCh
+	result.Genres = <-genresCh
+	return result, nil
 }
 
 var _ usecases_interfaces.BookUsecase = &bookUsecase{}

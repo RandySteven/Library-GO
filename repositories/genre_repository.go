@@ -3,10 +3,14 @@ package repositories
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"github.com/RandySteven/Library-GO/entities/models"
 	repositories_interfaces "github.com/RandySteven/Library-GO/interfaces/repositories"
 	"github.com/RandySteven/Library-GO/queries"
 	"github.com/RandySteven/Library-GO/utils"
+	"log"
+	"strconv"
+	"strings"
 )
 
 type genreRepository struct {
@@ -43,6 +47,32 @@ func (g *genreRepository) FindByID(ctx context.Context, id uint64) (result *mode
 
 func (g *genreRepository) FindAll(ctx context.Context, skip uint64, take uint64) (result []*models.Genre, err error) {
 	return utils.FindAll[models.Genre](ctx, g.InitTrigger(), queries.SelectGenresQuery)
+}
+
+func (g *genreRepository) FindSelectedGenresByID(ctx context.Context, ids []uint64) (result []*models.Genre, err error) {
+	queryIn := ` WHERE id IN (%s)`
+	wildCards := []string{}
+	for _, id := range ids {
+		wildCards = append(wildCards, strconv.Itoa(int(id)))
+	}
+	wildCardStr := strings.Join(wildCards, ",")
+	queryIn = fmt.Sprintf(queryIn, wildCardStr)
+	selectStr := queries.SelectGenresQuery.ToString() + queryIn
+	log.Println(selectStr)
+	rows, err := g.InitTrigger().QueryContext(ctx, selectStr)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		genre := new(models.Genre)
+		err = rows.Scan(&genre.ID, &genre.Genre, &genre.CreatedAt, &genre.UpdatedAt, &genre.DeletedAt)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, genre)
+	}
+	return result, nil
 }
 
 func (g *genreRepository) DeleteByID(ctx context.Context, id uint64) (err error) {
