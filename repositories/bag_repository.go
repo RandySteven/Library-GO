@@ -14,6 +14,15 @@ type bagRepository struct {
 	tx *sql.Tx
 }
 
+func (b *bagRepository) CheckBagExists(ctx context.Context, bag *models.Bag) (bool, error) {
+	exists := 1
+	err := b.InitTrigger().QueryRowContext(ctx, queries.SelectExistBookAlreadyInBag.ToString(), &bag.BookID, &bag.UserID).Scan(&exists)
+	if err != nil {
+		return false, err
+	}
+	return exists == 1, nil
+}
+
 func (b *bagRepository) FindBagByUser(ctx context.Context, userID uint64) (result []*models.Bag, err error) {
 	rows, err := b.InitTrigger().QueryContext(ctx, queries.SelectBagByUserQuery.ToString(), userID)
 	if err != nil {

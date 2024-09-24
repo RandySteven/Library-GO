@@ -10,6 +10,7 @@ import (
 	repositories_interfaces "github.com/RandySteven/Library-GO/interfaces/repositories"
 	usecases_interfaces "github.com/RandySteven/Library-GO/interfaces/usecases"
 	"log"
+	"sync"
 )
 
 type bagUsecase struct {
@@ -25,6 +26,10 @@ func (b *bagUsecase) refreshTx(ctx context.Context) {
 }
 
 func (b *bagUsecase) AddBookToBag(ctx context.Context, request *requests.BagRequest) (result *responses.AddBagResponse, customErr *apperror.CustomError) {
+	var (
+		wg          sync.WaitGroup
+		customErrCh = make(chan *apperror.CustomError)
+	)
 	userId := ctx.Value(enums.UserID).(uint64)
 	bag := &models.Bag{
 		BookID: request.BookID,
@@ -50,19 +55,50 @@ func (b *bagUsecase) AddBookToBag(ctx context.Context, request *requests.BagRequ
 		}
 	}()
 	b.refreshTx(ctx)
-	//1. check if book status avail
-	book, err := b.bookRepo.FindByID(ctx, bag.BookID)
-	if err != nil {
-		return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to find book`, err)
-	}
-	if book.Status != enums.Available {
-		return nil, apperror.NewCustomError(apperror.ErrBadRequest, `book already not available`, err)
-	}
+	wg.Add(2)
+	go func() {
+		defer wg.Done()
+		//1. check if book status avail
+		book, err := b.bookRepo.FindByID(ctx, bag.BookID)
+		if err != nil {
+			customErrCh <- apperror.NewCustomError(apperror.ErrInternalServer, `failed to find book`, err)
+			return
+		}
+		if book.Status != enums.Available {
+			customErrCh <- apperror.NewCustomError(apperror.ErrBadRequest, `book already not available`, err)
+			return
+		}
+	}()
 
-	//2. check book already exist in bag
+	go func() {
+		defer wg.Done()
+		exist, err := b.bagRepo.CheckBagExists(ctx, bag)
+		if err != nil {
+			customErrCh <- apperror.NewCustomError(apperror.ErrInternalServer, `failed to check book bag`, err)
+			return
+		}
+		if exist {
+			customErrCh <- apperror.NewCustomError(apperror.ErrBadRequest, `book already exist`, err)
+			return
+		}
+	}()
+
+	go func() {
+		wg.Wait()
+		close(customErrCh)
+	}()
+
+	if customErr = <-customErrCh; customErr != nil {
+		return nil, customErr
+	}
 
 	//3. insert book into user bag
-	return
+	bag, err := b.bagRepo.Save(ctx, bag)
+	if err != nil {
+		return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to save book`, err)
+	}
+	result.BookID = bag.BookID
+	return result, nil
 }
 
 func (b *bagUsecase) GetUserBag(ctx context.Context) (result []*responses.GetAllBagsResponse, customErr *apperror.CustomError) {
