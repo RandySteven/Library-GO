@@ -24,4 +24,10 @@ const (
 		FROM books
 		WHERE id = ? AND status = ?
 	`
+
+	UpdateBookStatusQuery GoQuery = `
+		UPDATE books
+		SET status = ?
+		WHERE id = ?
+	`
 )

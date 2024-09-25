@@ -102,6 +102,14 @@ func (b *bagRepository) GetTx(ctx context.Context) *sql.Tx {
 	return b.tx
 }
 
+func (b *bagRepository) DeleteUserBag(ctx context.Context, userId uint64) error {
+	_, err := b.InitTrigger().ExecContext(ctx, queries.DeleteUserBagQuery.ToString(), userId)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 var _ repositories_interfaces.BagRepository = &bagRepository{}
 
 func newBagRepository(db *sql.DB) *bagRepository {

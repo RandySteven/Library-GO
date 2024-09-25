@@ -11,6 +11,7 @@ import (
 	usecases_interfaces "github.com/RandySteven/Library-GO/interfaces/usecases"
 	"github.com/RandySteven/Library-GO/utils"
 	"log"
+	"time"
 )
 
 type borrowUsecase struct {
@@ -42,7 +43,7 @@ func (b *borrowUsecase) BorrowTransaction(ctx context.Context, request *requests
 		//customErrCh = make(chan *apperror.CustomError)
 	)
 
-	if err := b.borrowRepo.BeginTx(ctx); err != nil {
+	if err = b.borrowRepo.BeginTx(ctx); err != nil {
 		return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to init trx`, err)
 	}
 	defer func() {
@@ -86,9 +87,40 @@ func (b *borrowUsecase) BorrowTransaction(ctx context.Context, request *requests
 	if err != nil {
 		return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to save borrow`, err)
 	}
-	//6. Create borrow detail
+	//6. Create borrow detail and update book
+	for _, bookId := range bookIds {
+		borrowDetail := &models.BorrowDetail{
+			BorrowID:     borrow.ID,
+			BookID:       bookId,
+			ReturnedDate: time.Now().Add(7 * 24 * time.Hour),
+		}
+		borrowDetail, err = b.borrowDetailRepo.Save(ctx, borrowDetail)
+		if err != nil {
+			return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to save detail`, err)
+		}
+		err = b.bookRepo.UpdateBookStatus(ctx, bookId, enums.ReadyToTake)
+		if err != nil {
+			return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to save status`, err)
+		}
+	}
 
-	return
+	//8. delete book from bag based on user
+	err = b.bagRepo.DeleteUserBag(ctx, userId)
+	if err != nil {
+		return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to delete user bag`, err)
+	}
+
+	result = &responses.BorrowResponse{
+		ID:           borrow.ID,
+		BorrowID:     borrow.BorrowReference,
+		UserID:       userId,
+		TotalItems:   uint64(len(bookIds)),
+		Status:       "SUCCESS",
+		BorrowedDate: time.Now().Local(),
+		ReturnedDate: time.Now().Local().Add(7 * 24 * time.Hour),
+	}
+
+	return result, nil
 }
 
 func (b *borrowUsecase) GetAllBorrows(ctx context.Context) (result []*responses.BorrowListResponse, customErr *apperror.CustomError) {

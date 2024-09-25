@@ -121,6 +121,14 @@ func (b *bookRepository) FindBookStatus(ctx context.Context, id uint64, status e
 	return result.Status == status, nil
 }
 
+func (b *bookRepository) UpdateBookStatus(ctx context.Context, id uint64, status enums.BookStatus) error {
+	_, err := b.InitTrigger().ExecContext(ctx, queries.UpdateBookStatusQuery.ToString(), status, id)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 var _ repositories_interfaces.BookRepository = &bookRepository{}
 
 func newBookRepository(db *sql.DB) *bookRepository {

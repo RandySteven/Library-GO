@@ -16,4 +16,8 @@ const (
 	SelectExistBookAlreadyInBag GoQuery = `
 		SELECT EXISTS(SELECT * FROM bags WHERE book_id = ? AND user_id = ?)
 	`
+
+	DeleteUserBagQuery GoQuery = `
+		DELETE FROM bags WHERE user_id = ?
+	`
 )

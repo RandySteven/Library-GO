@@ -5,7 +5,7 @@ import "time"
 type (
 	BorrowResponse struct {
 		ID           uint64    `json:"id"`
-		BorrowID     uint64    `json:"borrow_id"`
+		BorrowID     string    `json:"borrow_id"`
 		UserID       uint64    `json:"user_id"`
 		TotalItems   uint64    `json:"total_items"`
 		Status       string    `json:"status"`
