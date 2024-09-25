@@ -178,7 +178,7 @@ func (b *bookUsecase) createBook(ctx context.Context, request *requests.CreateBo
 		return
 	}
 
-	imagePath, err := b.awsClient.UploadFile(s3manager.NewUploader(b.awsClient.SessionClient()), tempFile.Name(), *buckets.Buckets[0].Name, renamedImage)
+	imagePath, err := b.awsClient.UploadFile(s3manager.NewUploader(b.awsClient.SessionClient()), tempFile.Name(), *buckets.Buckets[0].Name, "books/"+renamedImage)
 	if err != nil {
 		errCh <- apperror.NewCustomError(apperror.ErrInternalServer, "failed to upload book image", err)
 		return

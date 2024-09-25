@@ -23,6 +23,7 @@ func NewUsecases(repositories *repositories.Repositories, caches *caches.Caches,
 		DevUsecase:        newDevUsecase(awsClient),
 		OnboardingUsecase: newOnboardingUsecase(repositories.UserRepo),
 		BookUsecase:       newBookUsecase(repositories.UserRepo, repositories.BookRepo, repositories.GenreRepo, repositories.AuthorRepo, repositories.AuthorBookRepo, repositories.BookGenreRepo, awsClient),
+		BorrowUsecase:     newBorrowUsecase(repositories.BagRepo, repositories.BookRepo, repositories.BorrowRepo, repositories.BorrowDetailRepo, repositories.UserRepo, repositories.AuthorRepo, repositories.GenreRepo),
 		GenreUsecase:      newGenreUsecase(repositories.GenreRepo),
 	}
 }

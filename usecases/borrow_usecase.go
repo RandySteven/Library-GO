@@ -87,7 +87,7 @@ func (b *borrowUsecase) BorrowTransaction(ctx context.Context, request *requests
 		return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to save borrow`, err)
 	}
 	//6. Create borrow detail
-	
+
 	return
 }
 
@@ -107,3 +107,22 @@ func (b *borrowUsecase) ReturnBorrowBook(ctx context.Context, request *requests.
 }
 
 var _ usecases_interfaces.BorrowUsecase = &borrowUsecase{}
+
+func newBorrowUsecase(
+	bagRepo repositories_interfaces.BagRepository,
+	bookRepo repositories_interfaces.BookRepository,
+	borrowRepo repositories_interfaces.BorrowRepository,
+	borrowDetailRepo repositories_interfaces.BorrowDetailRepository,
+	userRepo repositories_interfaces.UserRepository,
+	authorRepo repositories_interfaces.AuthorRepository,
+	genreRepo repositories_interfaces.GenreRepository) *borrowUsecase {
+	return &borrowUsecase{
+		bagRepo:          bagRepo,
+		bookRepo:         bookRepo,
+		borrowRepo:       borrowRepo,
+		borrowDetailRepo: borrowDetailRepo,
+		userRepo:         userRepo,
+		authorRepo:       authorRepo,
+		genreRepo:        genreRepo,
+	}
+}
