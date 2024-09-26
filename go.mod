@@ -3,7 +3,7 @@ module github.com/RandySteven/Library-GO
 go 1.22
 
 require (
-	github.com/algolia/algoliasearch-client-go/v4 v4.3.1
+	github.com/algolia/algoliasearch-client-go/v4 v4.3.5
 	github.com/aws/aws-sdk-go v1.55.5
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/go-sql-driver/mysql v1.8.1
