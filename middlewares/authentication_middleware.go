@@ -23,7 +23,7 @@ func AuthenticationMiddleware(next http.Handler) http.Handler {
 		}
 		claims := &jwt2.JWTClaim{}
 		token, err := jwt.ParseWithClaims(tokenStr, claims, func(j *jwt.Token) (interface{}, error) {
-			return jwt2.JWT_KEY, nil
+			return jwt2.JwtKey, nil
 		})
 		if err != nil || !token.Valid {
 			utils.ResponseHandler(w, http.StatusUnauthorized, `Invalid token`, nil, nil, err)

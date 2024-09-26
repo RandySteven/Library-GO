@@ -5,7 +5,7 @@ import (
 	"os"
 )
 
-var JWT_KEY = []byte(os.Getenv("JWT_KEY"))
+var JwtKey = []byte(os.Getenv("JWT_KEY"))
 
 type JWTClaim struct {
 	UserID   uint64

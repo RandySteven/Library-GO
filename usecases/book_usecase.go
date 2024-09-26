@@ -16,6 +16,7 @@ import (
 	"io/ioutil"
 	"log"
 	"mime/multipart"
+	"os"
 	"sync"
 )
 
@@ -183,6 +184,7 @@ func (b *bookUsecase) createBook(ctx context.Context, request *requests.CreateBo
 		errCh <- apperror.NewCustomError(apperror.ErrInternalServer, "failed to upload book image", err)
 		return
 	}
+	_ = os.Remove(tempFile.Name())
 
 	// Save the book information to the repository
 	book, err := b.bookRepo.Save(ctx, &models.Book{

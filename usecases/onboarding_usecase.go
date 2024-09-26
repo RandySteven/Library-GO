@@ -134,7 +134,7 @@ func (o *onboardingUsecase) LoginUser(ctx context.Context, request *requests.Use
 		},
 	}
 	tokenAlgo := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	token, err := tokenAlgo.SignedString(jwt2.JWT_KEY)
+	token, err := tokenAlgo.SignedString(jwt2.JwtKey)
 	if err != nil {
 		return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to generate token`, err)
 	}

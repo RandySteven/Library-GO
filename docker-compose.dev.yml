@@ -1,0 +1,58 @@
+version: "2"
+
+networks:
+  app-network:
+    driver: bridge
+
+services:
+  library:
+    image: library
+    ports:
+      - 8888:8888
+    build:
+      dockerfile: Dockerfile
+    networks:
+      - app-network
+    depends_on:
+      - library-mysql
+    deploy:
+      replicas: 4
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-U", "postman", "-h", "neo-post-postgres" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+  library-mysql:
+    image: mysql:latest
+    container_name: library-mysql
+    restart: unless-stopped
+    volumes:
+      - ./mysql-data:/var/lib/mysql/data
+    ports:
+      - 3306:3306
+    env_file: ./files/env/.env
+    networks:
+      - app-network
+    environment:
+      - MYSQL_PASSWORD=${POSTGRES_PASSWORD}
+      - MYSQL_USER=${POSTGRES_USER}
+      - MYSQL_DB=${POSTGRES_DB}
+#  neo-post-migration:
+#    image: neo-post-migration
+#    networks:
+#      - app-network
+#    depends_on:
+#      - neo-post-postgres
+#    build:
+#      dockerfile: migration.dockerfile
+#    profiles:
+#      - donotstart
+#  neo-post-nginx:
+#    image: neo-post-nginx
+#    networks:
+#      - app-network
+#    build:
+#      dockerfile: nginx.dockerfile
+
+volumes:
+  mysql-data:
