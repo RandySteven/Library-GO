@@ -56,6 +56,10 @@ func NewEndpointRouters(h *handlers.Handlers) map[enums.RouterPrefix][]*Router {
 		RegisterEndpointRouter("", http.MethodPost, h.BagHandler.AddBookToBag),
 	}
 
+	endpointRouters[enums.StoryPrefix] = []*Router{
+		RegisterEndpointRouter("", http.MethodPost, h.StoryGeneratorHandler.GenerateStory),
+	}
+
 	return endpointRouters
 }
 
@@ -91,6 +95,12 @@ func InitRouters(routers map[enums.RouterPrefix][]*Router, r *mux.Router) {
 	for _, router := range routers[enums.BagPrefix] {
 		router.RouterLog(enums.BagPrefix.ToString())
 		bagRouter.HandleFunc(router.path, router.handler).Methods(router.method)
+	}
+
+	storyRouter := r.PathPrefix(enums.StoryPrefix.ToString()).Subrouter()
+	for _, router := range routers[enums.StoryPrefix] {
+		router.RouterLog(enums.StoryPrefix.ToString())
+		storyRouter.HandleFunc(router.path, router.handler).Methods(router.method)
 	}
 }
 

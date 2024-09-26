@@ -4,11 +4,14 @@ import (
 	"context"
 	"github.com/RandySteven/Library-GO/pkg/configs"
 	"github.com/aws/aws-sdk-go-v2/config"
+	credentials2 "github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockruntime"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"net/http"
+	"time"
 )
 
 type AWSClient struct {
@@ -19,7 +22,16 @@ type AWSClient struct {
 
 func NewAWSClient(configYml *configs.Config) (*AWSClient, error) {
 	awsCfg := configYml.Config.AWS
-	bedrockCfg, err := config.LoadDefaultConfig(context.Background(), config.WithRegion(awsCfg.Region))
+	bedrockCfg, err := config.LoadDefaultConfig(context.Background(),
+		config.WithRegion(awsCfg.Region),
+		config.WithCredentialsProvider(credentials2.NewStaticCredentialsProvider(
+			awsCfg.AccessKeyID,
+			awsCfg.SecretAccessKey,
+			"",
+		)),
+		config.WithHTTPClient(&http.Client{
+			Timeout: 120 * time.Second,
+		}))
 	if err != nil {
 		return nil, err
 	}

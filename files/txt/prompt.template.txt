@@ -1,6 +1,1 @@
-Please generate a story about %s,
-Set in %s,
-With genre %s,
-In the style of %s,
-Featuring a main character who is %s,
-And with a moral about %s.
+Please generate a story based on %s, set in %s, with genre %s, in the style of %s, featuring a main character who is %s and side character who is %s and the ending should be %s
