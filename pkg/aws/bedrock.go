@@ -10,7 +10,16 @@ import (
 	"time"
 )
 
-func (a *AWSClient) GeneratePromptResult(ctx context.Context, request any) (result string, err error) {
+type BedrockResponse struct {
+	InputTextTokenCount int `json:"inputTextTokenCount"`
+	Results             []struct {
+		TokenCount       int    `json:"tokenCount"`
+		OutputText       string `json:"outputText"`
+		CompletionReason string `json:"completionReason"`
+	} `json:"results"`
+}
+
+func (a *AWSClient) GeneratePromptResult(ctx context.Context, request any) (outputText string, err error) {
 	// Marshalling the request into JSON
 	payloadBytes, err := json.Marshal(request)
 	if err != nil {
@@ -32,18 +41,16 @@ func (a *AWSClient) GeneratePromptResult(ctx context.Context, request any) (resu
 		return "", err
 	}
 
-	// Since output.Body is already []byte, directly convert to string
-	result = string(output.Body)
-	log.Println("Generated text:", result)
-
 	// Optionally, you can unmarshal the result if it's JSON formatted
-	var response map[string]interface{}
+	var response BedrockResponse
 	if err := json.Unmarshal(output.Body, &response); err != nil {
 		return "", fmt.Errorf("failed to unmarshal response: %w", err)
 	}
-
+	if len(response.Results) > 0 {
+		outputText = response.Results[0].OutputText
+	}
 	// For debugging or inspecting the full response
 	log.Printf("Full response: %+v\n", response)
 
-	return result, nil
+	return outputText, nil
 }

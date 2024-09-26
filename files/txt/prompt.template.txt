@@ -1,1 +1,2 @@
-Please generate a story based on %s, set in %s, with genre %s, in the style of %s, featuring a main character who is %s and side character who is %s and the ending should be %s
+Please generate a short story based on %s, set in %s, with genre %s, in the style of %s, featuring a main character who is %s and side character who is %s and the ending should be %s.
+Limited by 5 sentences. first sentence is opening, second sentence is conflict, third sentence is climax, forth sentence is final, fifth sentence is ending
