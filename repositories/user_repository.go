@@ -43,6 +43,7 @@ func (u *userRepository) Save(ctx context.Context, entity *models.User) (result 
 }
 
 func (u *userRepository) FindByID(ctx context.Context, id uint64) (result *models.User, err error) {
+	result = &models.User{}
 	err = utils.FindByID[models.User](ctx, u.InitTrigger(), queries.SelectUserByIDQuery, id, result)
 	if err != nil {
 		return nil, err

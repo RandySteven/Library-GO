@@ -11,6 +11,7 @@ import (
 	usecases_interfaces "github.com/RandySteven/Library-GO/interfaces/usecases"
 	"github.com/RandySteven/Library-GO/utils"
 	"log"
+	"sync"
 	"time"
 )
 
@@ -128,9 +129,84 @@ func (b *borrowUsecase) GetAllBorrows(ctx context.Context) (result []*responses.
 	panic("implement me")
 }
 
-func (b *borrowUsecase) GetBorrowDetail(ctx context.Context, borrowId string) (result *responses.BorrowDetailResponse, customErr *apperror.CustomError) {
-	//TODO implement me
-	panic("implement me")
+func (b *borrowUsecase) GetBorrowDetail(ctx context.Context, id uint64) (result *responses.BorrowDetailResponse, customErr *apperror.CustomError) {
+	var (
+		wg              sync.WaitGroup
+		customErrCh     = make(chan *apperror.CustomError)
+		userCh          = make(chan *models.User)
+		bookDetailResCh = make(chan []*responses.BorrowedBook)
+	)
+	borrow, err := b.borrowRepo.FindByID(ctx, id)
+	if err != nil {
+		return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to get borrow`, err)
+	}
+
+	if ctx.Value(enums.UserID).(uint64) != borrow.UserID {
+		return nil, apperror.NewCustomError(apperror.ErrForbidden, `you can't access this detail`, nil)
+	}
+
+	wg.Add(2)
+	go func() {
+		defer wg.Done()
+		borrowDetails, err := b.borrowDetailRepo.FindByBorrowID(ctx, id)
+		if err != nil {
+			customErrCh <- apperror.NewCustomError(apperror.ErrInternalServer, `failed to get borrow detail`, err)
+			return
+		}
+		bookDetailRes := []*responses.BorrowedBook{}
+		for _, borrowDetail := range borrowDetails {
+			book, err := b.bookRepo.FindByID(ctx, borrowDetail.BookID)
+			if err != nil {
+				customErrCh <- apperror.NewCustomError(apperror.ErrInternalServer, `failed to get book detail`, err)
+				return
+			}
+			bookDetailRes = append(bookDetailRes, &responses.BorrowedBook{
+				ID:           book.ID,
+				Title:        book.Title,
+				Image:        book.Image,
+				BorrowedDate: borrowDetail.BorrowedDate,
+				ReturnedDate: borrowDetail.ReturnedDate,
+				HasReturned:  borrowDetail.VerifiedReturnDate != nil,
+			})
+		}
+		bookDetailResCh <- bookDetailRes
+		return
+	}()
+
+	go func() {
+		defer wg.Done()
+		user, err := b.userRepo.FindByID(ctx, borrow.UserID)
+		if err != nil {
+			customErrCh <- apperror.NewCustomError(apperror.ErrInternalServer, `failed to get user detail`, err)
+			return
+		}
+		userCh <- user
+		return
+	}()
+
+	go func() {
+		wg.Wait()
+		close(userCh)
+		close(customErrCh)
+		close(bookDetailResCh)
+	}()
+
+	select {
+	case customErr = <-customErrCh:
+		return nil, customErr
+	default:
+		user := <-userCh
+		bookDetailRes := <-bookDetailResCh
+		result = &responses.BorrowDetailResponse{
+			ID: id,
+			User: struct {
+				ID   uint64 `json:"id"`
+				Name string `json:"name"`
+			}{ID: user.ID, Name: user.Name},
+			BorrowedBooks: bookDetailRes,
+		}
+		return result, nil
+	}
 }
 
 func (b *borrowUsecase) ReturnBorrowBook(ctx context.Context, request *requests.ReturnRequest) (result *responses.ReturnBooksResponse, customErr *apperror.CustomError) {

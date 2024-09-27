@@ -9,6 +9,7 @@ type ErrType int
 
 const (
 	ErrBadRequest ErrType = iota + 1
+	ErrForbidden
 	ErrNotFound
 	ErrInternalServer
 	ErrTimeout
@@ -38,6 +39,8 @@ func (cu *CustomError) ErrCode() int {
 	switch cu.ErrType {
 	case ErrBadRequest:
 		return http.StatusBadRequest
+	case ErrForbidden:
+		return http.StatusForbidden
 	case ErrNotFound:
 		return http.StatusNotFound
 	case ErrTimeout:

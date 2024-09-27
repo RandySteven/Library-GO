@@ -5,6 +5,8 @@ import (
 	"database/sql"
 	"github.com/RandySteven/Library-GO/entities/models"
 	repositories_interfaces "github.com/RandySteven/Library-GO/interfaces/repositories"
+	"github.com/RandySteven/Library-GO/queries"
+	"github.com/RandySteven/Library-GO/utils"
 )
 
 type borrowRepository struct {
@@ -46,13 +48,21 @@ func (b *borrowRepository) GetTx(ctx context.Context) *sql.Tx {
 }
 
 func (b *borrowRepository) Save(ctx context.Context, entity *models.Borrow) (result *models.Borrow, err error) {
-	//TODO implement me
-	panic("implement me")
+	id, err := utils.Save[models.Borrow](ctx, b.InitTrigger(), queries.InsertBorrowQuery, &entity.UserID, &entity.BorrowReference)
+	if err != nil {
+		return nil, err
+	}
+	entity.ID = *id
+	return entity, nil
 }
 
 func (b *borrowRepository) FindByID(ctx context.Context, id uint64) (result *models.Borrow, err error) {
-	//TODO implement me
-	panic("implement me")
+	result = &models.Borrow{}
+	err = utils.FindByID[models.Borrow](ctx, b.InitTrigger(), queries.SelectBorrowByIDQuery, id, result)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
 }
 
 func (b *borrowRepository) FindAll(ctx context.Context, skip uint64, take uint64) ([]*models.Borrow, error) {

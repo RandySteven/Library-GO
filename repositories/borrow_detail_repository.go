@@ -16,7 +16,7 @@ type borrowDetailRepository struct {
 
 func (b *borrowDetailRepository) Save(ctx context.Context, entity *models.BorrowDetail) (result *models.BorrowDetail, err error) {
 	result = entity
-	id, err := utils.Save[models.BorrowDetail](ctx, b.InitTrigger(), queries.InsertBorrowDetailQuery, &entity.BorrowID, &entity.BookID)
+	id, err := utils.Save[models.BorrowDetail](ctx, b.InitTrigger(), queries.InsertBorrowDetailQuery, &entity.BorrowID, &entity.BookID, &entity.ReturnedDate)
 	if err != nil {
 		return nil, err
 	}
@@ -75,6 +75,25 @@ func (b *borrowDetailRepository) SetTx(tx *sql.Tx) {
 
 func (b *borrowDetailRepository) GetTx(ctx context.Context) *sql.Tx {
 	return b.tx
+}
+
+func (b *borrowDetailRepository) FindByBorrowID(ctx context.Context, borrowID uint64) (results []*models.BorrowDetail, err error) {
+	rows, err := b.InitTrigger().QueryContext(ctx, queries.SelectBorrowDetailByBorrowIDQuery.ToString(), borrowID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		borrowDetail := &models.BorrowDetail{}
+		err = rows.Scan(
+			&borrowDetail.ID, &borrowDetail.BorrowID, &borrowDetail.BookID, &borrowDetail.BorrowedDate, &borrowDetail.ReturnedDate, &borrowDetail.VerifiedReturnDate,
+			&borrowDetail.CreatedAt, &borrowDetail.UpdatedAt, &borrowDetail.DeletedAt)
+		if err != nil {
+			return nil, err
+		}
+		results = append(results, borrowDetail)
+	}
+	return results, nil
 }
 
 var _ repositories_interfaces.BorrowDetailRepository = &borrowDetailRepository{}
