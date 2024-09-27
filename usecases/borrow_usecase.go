@@ -34,7 +34,7 @@ func (b *borrowUsecase) refreshTx(ctx context.Context) {
 	b.genreRepo.SetTx(tx)
 }
 
-func (b *borrowUsecase) BorrowTransaction(ctx context.Context, request *requests.BorrowRequest) (result *responses.BorrowResponse, customErr *apperror.CustomError) {
+func (b *borrowUsecase) BorrowTransaction(ctx context.Context) (result *responses.BorrowResponse, customErr *apperror.CustomError) {
 	userId := ctx.Value(enums.UserID).(uint64)
 	bookIds := []uint64{}
 	var (

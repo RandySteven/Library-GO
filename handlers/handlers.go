@@ -12,6 +12,7 @@ type Handlers struct {
 	GenreHandler          handlers_interfaces.GenreHandler
 	BagHandler            handlers_interfaces.BagHandler
 	StoryGeneratorHandler handlers_interfaces.StoryGeneratorHandler
+	BorrowHandler         handlers_interfaces.BorrowHandler
 }
 
 func NewHandlers(usecases *usecases.Usecases) *Handlers {
@@ -22,5 +23,6 @@ func NewHandlers(usecases *usecases.Usecases) *Handlers {
 		GenreHandler:          newGenreHandler(usecases.GenreUsecase),
 		BagHandler:            newBagHandler(usecases.BagUsecase),
 		StoryGeneratorHandler: newStoryGeneratorHandler(usecases.StoryGeneratorUsecase),
+		BorrowHandler:         newBorrowHandler(usecases.BorrowUsecase),
 	}
 }

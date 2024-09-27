@@ -10,6 +10,7 @@ const (
 	GenrePrefix      RouterPrefix = "/genres"
 	BagPrefix        RouterPrefix = "/bags"
 	StoryPrefix      RouterPrefix = "/stories"
+	BorrowPrefix     RouterPrefix = "/borrows"
 )
 
 func (r RouterPrefix) ToString() string {
