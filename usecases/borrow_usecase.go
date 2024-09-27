@@ -198,7 +198,8 @@ func (b *borrowUsecase) GetBorrowDetail(ctx context.Context, id uint64) (result 
 		user := <-userCh
 		bookDetailRes := <-bookDetailResCh
 		result = &responses.BorrowDetailResponse{
-			ID: id,
+			ID:              id,
+			BorrowReference: borrow.BorrowReference,
 			User: struct {
 				ID   uint64 `json:"id"`
 				Name string `json:"name"`

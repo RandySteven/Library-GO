@@ -31,8 +31,9 @@ type (
 	}
 
 	BorrowDetailResponse struct {
-		ID   uint64 `json:"id"`
-		User struct {
+		ID              uint64 `json:"id"`
+		BorrowReference string `json:"borrow_reference"`
+		User            struct {
 			ID   uint64 `json:"id"`
 			Name string `json:"name"`
 		} `json:"user"`
