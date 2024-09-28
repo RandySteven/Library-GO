@@ -16,6 +16,7 @@ type Usecases struct {
 	DevUsecase            usecases_interfaces.DevUsecase
 	GenreUsecase          usecases_interfaces.GenreUsecase
 	StoryGeneratorUsecase usecases_interfaces.StoryGeneratorUsecase
+	ReturnUsecase         usecases_interfaces.ReturnUsecase
 }
 
 func NewUsecases(repositories *repositories.Repositories, caches *caches.Caches, awsClient *aws_client.AWSClient) *Usecases {
@@ -27,5 +28,6 @@ func NewUsecases(repositories *repositories.Repositories, caches *caches.Caches,
 		BorrowUsecase:         newBorrowUsecase(repositories.BagRepo, repositories.BookRepo, repositories.BorrowRepo, repositories.BorrowDetailRepo, repositories.UserRepo, repositories.AuthorRepo, repositories.GenreRepo),
 		GenreUsecase:          newGenreUsecase(repositories.GenreRepo),
 		StoryGeneratorUsecase: newStoryGeneratorUsecase(awsClient),
+		ReturnUsecase:         newReturnUsecase(repositories.BorrowRepo, repositories.BorrowDetailRepo, repositories.BookRepo, repositories.UserRepo),
 	}
 }
