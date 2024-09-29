@@ -88,6 +88,25 @@ func (b *BookHandler) GetBookByID(w http.ResponseWriter, r *http.Request) {
 	utils.ResponseHandler(w, http.StatusOK, `success get book`, &dataKey, result, nil)
 }
 
+func (b *BookHandler) SearchBooks(w http.ResponseWriter, r *http.Request) {
+	var (
+		rID     = uuid.NewString()
+		ctx     = context.WithValue(r.Context(), enums.RequestID, rID)
+		dataKey = `book`
+		request = &requests.SearchBookRequest{}
+	)
+	if err := utils.BindRequest(r, request); err != nil {
+		utils.ResponseHandler(w, http.StatusBadRequest, `bad request`, nil, nil, err)
+		return
+	}
+	result, customErr := b.usecase.SearchBook(ctx, request)
+	if customErr != nil {
+		utils.ResponseHandler(w, customErr.ErrCode(), `internal server error`, nil, nil, customErr)
+		return
+	}
+	utils.ResponseHandler(w, http.StatusOK, `success search books`, &dataKey, result, nil)
+}
+
 var _ handlers_interfaces.BookHandler = &BookHandler{}
 
 func newBookHandler(usecase usecases_interfaces.BookUsecase) *BookHandler {

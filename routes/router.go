@@ -44,6 +44,7 @@ func NewEndpointRouters(h *handlers.Handlers) map[enums.RouterPrefix][]*Router {
 		RegisterEndpointRouter("", http.MethodPost, h.BookHandler.AddBook),
 		RegisterEndpointRouter("", http.MethodGet, h.BookHandler.GetAllBooks),
 		RegisterEndpointRouter("/{id}", http.MethodGet, h.BookHandler.GetBookByID),
+		RegisterEndpointRouter("/search", http.MethodPost, h.BookHandler.SearchBooks),
 	}
 
 	endpointRouters[enums.GenrePrefix] = []*Router{

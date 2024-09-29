@@ -33,6 +33,13 @@ func HashID(id uint64) string {
 	return base64.StdEncoding.EncodeToString(hash.Sum(nil))
 }
 
+func CompareID(requestId, existId string) bool {
+	hash := sha512.New()
+	hash.Write([]byte(requestId))
+	pass := base64.StdEncoding.EncodeToString(hash.Sum(nil))
+	return pass == existId
+}
+
 func RenameFileWithDateAndUUID(fileName string) string {
 	currentDate := time.Now().Format("20060102")
 

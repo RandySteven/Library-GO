@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/RandySteven/Library-GO/apperror"
 	"github.com/RandySteven/Library-GO/entities/models"
-	"github.com/RandySteven/Library-GO/entities/payloads/requests"
 	"github.com/RandySteven/Library-GO/entities/payloads/responses"
 	"github.com/RandySteven/Library-GO/enums"
 	repositories_interfaces "github.com/RandySteven/Library-GO/interfaces/repositories"
@@ -208,11 +207,6 @@ func (b *borrowUsecase) GetBorrowDetail(ctx context.Context, id uint64) (result 
 		}
 		return result, nil
 	}
-}
-
-func (b *borrowUsecase) ReturnBorrowBook(ctx context.Context, request *requests.ReturnRequest) (result *responses.ReturnBooksResponse, customErr *apperror.CustomError) {
-	//TODO implement me
-	panic("implement me")
 }
 
 var _ usecases_interfaces.BorrowUsecase = &borrowUsecase{}

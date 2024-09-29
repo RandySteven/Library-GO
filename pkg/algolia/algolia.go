@@ -33,7 +33,7 @@ func (a *AlgoliaAPISearchClient) SaveObject(indexName string, record map[string]
 	return resp, nil
 }
 
-func (a *AlgoliaAPISearchClient) Search(indexName string, query string) ([]search.SearchResult, error) {
+func (a *AlgoliaAPISearchClient) Search(indexName string, query string) (*search.SearchResponses, error) {
 	resp, err := a.search.Search(
 		a.search.NewApiSearchRequest(
 			search.NewEmptySearchMethodParams().SetRequests(
@@ -48,5 +48,6 @@ func (a *AlgoliaAPISearchClient) Search(indexName string, query string) ([]searc
 	if err != nil {
 		return nil, err
 	}
-	return resp.Results, nil
+
+	return resp, nil
 }

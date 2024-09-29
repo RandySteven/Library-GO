@@ -356,6 +356,31 @@ func (b *bookUsecase) GetBookByID(ctx context.Context, id uint64) (result *respo
 	}
 }
 
+func (b *bookUsecase) SearchBook(ctx context.Context, request *requests.SearchBookRequest) (result []*responses.ListBooksResponse, customErr *apperror.CustomError) {
+	//searchResults, err := b.algoClient.Search(enums.BooksIndex, request.Keyword)
+	//if err != nil {
+	//	return nil, apperror.NewCustomError(apperror.ErrInternalServer, "failed to search books", err)
+	//}
+	//
+	//result = []*responses.ListBooksResponse{}
+	//
+	//for _, res := range searchResults.Results {
+	//	hits := res.SearchResponse.Hits
+	//	for _, hit := range hits {
+	//		mapHit := *hit.HighlightResult
+	//		convertId, _ := strconv.Atoi(mapHit["objectID"].HighlightResultOption.Value)
+	//		bookObj := &responses.ListBooksResponse{
+	//			ID:    uint64(convertId),
+	//			Title: mapHit["title"].HighlightResultOption.Value,
+	//			Image: mapHit["image"].HighlightResultOption.Value,
+	//		}
+	//		result = append(result, bookObj)
+	//	}
+	//}
+
+	return result, nil
+}
+
 var _ usecases_interfaces.BookUsecase = &bookUsecase{}
 
 func newBookUsecase(

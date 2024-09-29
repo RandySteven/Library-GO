@@ -14,6 +14,6 @@ type (
 	}
 
 	SearchBookRequest struct {
-		Search string `json:"search" validate:"required"`
+		Keyword string `json:"keyword" validate:"keyword"`
 	}
 )
