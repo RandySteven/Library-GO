@@ -66,6 +66,7 @@ func (b *bookUsecase) AddNewBook(ctx context.Context, request *requests.CreateBo
 		} else if err = b.bookRepo.CommitTx(ctx); err != nil {
 			log.Println("failed to commit transaction:", err)
 		}
+		b.bookRepo.SetTx(nil)
 	}()
 	b.refreshTx(ctx)
 

@@ -8,6 +8,9 @@ import (
 
 func initDrop() []queries.DropQuery {
 	return []queries.DropQuery{
+		queries.DropBorrowDetailTable,
+		queries.DropBorrowTable,
+		queries.DropBagTable,
 		queries.DropAuthorBookTable,
 		queries.DropBookGenreTable,
 		queries.DropAuthorTable,
