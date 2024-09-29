@@ -3,6 +3,7 @@ package usecases
 import (
 	"github.com/RandySteven/Library-GO/caches"
 	usecases_interfaces "github.com/RandySteven/Library-GO/interfaces/usecases"
+	algolia_client "github.com/RandySteven/Library-GO/pkg/algolia"
 	aws_client "github.com/RandySteven/Library-GO/pkg/aws"
 	"github.com/RandySteven/Library-GO/repositories"
 )
@@ -19,12 +20,12 @@ type Usecases struct {
 	ReturnUsecase         usecases_interfaces.ReturnUsecase
 }
 
-func NewUsecases(repositories *repositories.Repositories, caches *caches.Caches, awsClient *aws_client.AWSClient) *Usecases {
+func NewUsecases(repositories *repositories.Repositories, caches *caches.Caches, awsClient *aws_client.AWSClient, algoClient *algolia_client.AlgoliaAPISearchClient) *Usecases {
 	return &Usecases{
 		BagUsecase:            newBagUsecase(repositories.BagRepo, repositories.BookRepo, repositories.UserRepo),
 		DevUsecase:            newDevUsecase(awsClient),
 		OnboardingUsecase:     newOnboardingUsecase(repositories.UserRepo),
-		BookUsecase:           newBookUsecase(repositories.UserRepo, repositories.BookRepo, repositories.GenreRepo, repositories.AuthorRepo, repositories.AuthorBookRepo, repositories.BookGenreRepo, awsClient),
+		BookUsecase:           newBookUsecase(repositories.UserRepo, repositories.BookRepo, repositories.GenreRepo, repositories.AuthorRepo, repositories.AuthorBookRepo, repositories.BookGenreRepo, awsClient, algoClient),
 		BorrowUsecase:         newBorrowUsecase(repositories.BagRepo, repositories.BookRepo, repositories.BorrowRepo, repositories.BorrowDetailRepo, repositories.UserRepo, repositories.AuthorRepo, repositories.GenreRepo),
 		GenreUsecase:          newGenreUsecase(repositories.GenreRepo),
 		StoryGeneratorUsecase: newStoryGeneratorUsecase(awsClient),

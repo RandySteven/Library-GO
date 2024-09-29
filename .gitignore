@@ -1,5 +1,6 @@
 .idea
 .vscode
 *.local.yml
+*.docker.yml
 *.prod.yml
 temp-images

@@ -10,6 +10,7 @@ import (
 	"github.com/RandySteven/Library-GO/enums"
 	repositories_interfaces "github.com/RandySteven/Library-GO/interfaces/repositories"
 	usecases_interfaces "github.com/RandySteven/Library-GO/interfaces/usecases"
+	algolia_client "github.com/RandySteven/Library-GO/pkg/algolia"
 	aws_client "github.com/RandySteven/Library-GO/pkg/aws"
 	"github.com/RandySteven/Library-GO/utils"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
@@ -22,6 +23,7 @@ import (
 
 type bookUsecase struct {
 	awsClient      *aws_client.AWSClient
+	algoClient     *algolia_client.AlgoliaAPISearchClient
 	userRepo       repositories_interfaces.UserRepository
 	bookRepo       repositories_interfaces.BookRepository
 	genreRepo      repositories_interfaces.GenreRepository
@@ -45,9 +47,9 @@ func (b *bookUsecase) AddNewBook(ctx context.Context, request *requests.CreateBo
 		wg2      sync.WaitGroup
 		errCh    = make(chan *apperror.CustomError, 1) // Buffered channels to prevent blocking
 		errCh2   = make(chan *apperror.CustomError, 1)
-		bookCh   = make(chan *models.Book, 1) // Buffered channel
-		authorCh = make(chan []uint64, 1)     // Buffered channel
-		genreCh  = make(chan []uint64, 1)     // Buffered channel
+		bookCh   = make(chan *models.Book, 1)     // Buffered channel
+		authorCh = make(chan []*models.Author, 1) // Buffered channel
+		genreCh  = make(chan []*models.Genre, 1)  // Buffered channel
 	)
 
 	// 1. Begin transaction
@@ -104,40 +106,53 @@ func (b *bookUsecase) AddNewBook(ctx context.Context, request *requests.CreateBo
 	if customErr = <-errCh2; customErr != nil {
 		return nil, customErr
 	}
+	hashedID := utils.HashID(book.ID)
+	_, err = b.algoClient.SaveObject(enums.BooksIndex, map[string]any{
+		"objectID":    book.ID,
+		"title":       book.Title,
+		"description": book.Description,
+		"image":       book.Image,
+		"genres":      genreIDs,
+		"authors":     authorIDs,
+		"createdAt":   book.CreatedAt.Local(),
+		"updatedAt":   book.UpdatedAt.Local(),
+	})
+	if err != nil {
+		return nil, apperror.NewCustomError(apperror.ErrInternalServer, "failed to save book", err)
+	}
 
-	// 5. Return response
 	result = &responses.CreateBookResponse{
-		ID: utils.HashID(book.ID),
+		ID: hashedID,
 	}
 	return result, nil
 }
 
 // findAuthors fetches authors by their IDs concurrently
-func (b *bookUsecase) findAuthors(ctx context.Context, authorIDs []uint64, authorCh chan []uint64, errCh chan *apperror.CustomError, wg *sync.WaitGroup) {
+func (b *bookUsecase) findAuthors(ctx context.Context, authorIDs []uint64, authorCh chan []*models.Author, errCh chan *apperror.CustomError, wg *sync.WaitGroup) {
 	defer wg.Done()
-	var foundAuthorIDs []uint64
+	var foundAuthorIDs []*models.Author
 	for _, authorID := range authorIDs {
 		author, err := b.authorRepo.FindByID(ctx, authorID)
 		if err != nil {
 			errCh <- apperror.NewCustomError(apperror.ErrInternalServer, fmt.Sprintf(`failed to find authors due %s`, err.Error()), err)
 			return
 		}
-		foundAuthorIDs = append(foundAuthorIDs, author.ID)
+		foundAuthorIDs = append(foundAuthorIDs, author)
 	}
 	authorCh <- foundAuthorIDs
 }
 
 // findGenres fetches genres by their IDs concurrently
-func (b *bookUsecase) findGenres(ctx context.Context, genreIDs []uint64, genreCh chan []uint64, errCh chan *apperror.CustomError, wg *sync.WaitGroup) {
+func (b *bookUsecase) findGenres(ctx context.Context, genreIDs []uint64, genreCh chan []*models.Genre, errCh chan *apperror.CustomError, wg *sync.WaitGroup) {
 	defer wg.Done()
-	var foundGenreIDs []uint64
+	var foundGenreIDs []*models.Genre
 	for _, genreID := range genreIDs {
 		genre, err := b.genreRepo.FindByID(ctx, genreID)
 		if err != nil {
 			errCh <- apperror.NewCustomError(apperror.ErrInternalServer, fmt.Sprintf(`failed to find genres due %s`, err.Error()), err)
 			return
 		}
-		foundGenreIDs = append(foundGenreIDs, genre.ID)
+		foundGenreIDs = append(foundGenreIDs, genre)
 	}
 	genreCh <- foundGenreIDs
 }
@@ -203,12 +218,12 @@ func (b *bookUsecase) createBook(ctx context.Context, request *requests.CreateBo
 }
 
 // createAuthorBookRelations creates relations between authors and the book
-func (b *bookUsecase) createAuthorBookRelations(ctx context.Context, authorIDs []uint64, bookID uint64, errCh chan *apperror.CustomError, wg *sync.WaitGroup) {
+func (b *bookUsecase) createAuthorBookRelations(ctx context.Context, authorIDs []*models.Author, bookID uint64, errCh chan *apperror.CustomError, wg *sync.WaitGroup) {
 	defer wg.Done()
 	log.Println("author book relation insert")
 	for _, authorID := range authorIDs {
 		_, err := b.authorBookRepo.Save(ctx, &models.AuthorBook{
-			AuthorID: authorID,
+			AuthorID: authorID.ID,
 			BookID:   bookID,
 		})
 		if err != nil {
@@ -219,11 +234,11 @@ func (b *bookUsecase) createAuthorBookRelations(ctx context.Context, authorIDs [
 }
 
 // createBookGenreRelations creates relations between genres and the book
-func (b *bookUsecase) createBookGenreRelations(ctx context.Context, genreIDs []uint64, bookID uint64, errCh chan *apperror.CustomError, wg *sync.WaitGroup) {
+func (b *bookUsecase) createBookGenreRelations(ctx context.Context, genreIDs []*models.Genre, bookID uint64, errCh chan *apperror.CustomError, wg *sync.WaitGroup) {
 	defer wg.Done()
 	for _, genreID := range genreIDs {
 		_, err := b.bookGenreRepo.Save(ctx, &models.BookGenre{
-			GenreID: genreID,
+			GenreID: genreID.ID,
 			BookID:  bookID,
 		})
 		if err != nil {
@@ -250,7 +265,7 @@ func (b *bookUsecase) GetAllBooks(ctx context.Context) (result []*responses.List
 			DeletedAt: book.DeletedAt,
 		})
 	}
-	return
+	return result, nil
 }
 
 func (b *bookUsecase) GetBookByID(ctx context.Context, id uint64) (result *responses.BookDetailResponse, customErr *apperror.CustomError) {
@@ -349,7 +364,8 @@ func newBookUsecase(
 	authorRepo repositories_interfaces.AuthorRepository,
 	authorBookRepo repositories_interfaces.AuthorBookRepository,
 	bookGenreRepo repositories_interfaces.BookGenreRepository,
-	awsClient *aws_client.AWSClient) *bookUsecase {
+	awsClient *aws_client.AWSClient,
+	algoClient *algolia_client.AlgoliaAPISearchClient) *bookUsecase {
 	return &bookUsecase{
 		userRepo:       userRepo,
 		bookRepo:       bookRepo,
@@ -358,5 +374,6 @@ func newBookUsecase(
 		authorBookRepo: authorBookRepo,
 		bookGenreRepo:  bookGenreRepo,
 		awsClient:      awsClient,
+		algoClient:     algoClient,
 	}
 }
