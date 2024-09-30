@@ -45,15 +45,29 @@ func main() {
 	schedulers := app.PrepareScheduler()
 	scheduler := crons_client.NewScheduler(schedulers)
 	log.Println("Starting scheduler...")
-	for err != nil {
-		if err = scheduler.RunAllJobs(ctx); err != nil {
-			log.Fatal(err)
-			return
-		}
+	if err = scheduler.RunAllJobs(ctx); err != nil {
+		log.Fatalf("Scheduler encountered an error: %v", err)
+		return
 	}
-	log.Println("Run scheduler...")
+
+	log.Println("Scheduler running...")
+
+	// Channel to listen for quit signals
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+
+	// Block until a signal is received
 	<-quit
-	log.Println("Shutting down server...")
+
+	// Gracefully shutdown the scheduler
+	log.Println("Shutting down scheduler...")
+	cancel() // Cancel context to stop jobs
+
+	err = scheduler.StopAllJobs(ctx)
+	if err != nil {
+		log.Fatalf("Failed to stop scheduler: %v", err)
+		return
+	}
+
+	log.Println("Scheduler stopped. Exiting...")
 }
