@@ -9,4 +9,5 @@ type BorrowDetailRepository interface {
 	Repository[models.BorrowDetail]
 	UnitOfWork
 	FindByBorrowID(ctx context.Context, borrowID uint64) (results []*models.BorrowDetail, err error)
+	FindCurrReturnDate(ctx context.Context) (results []*models.BorrowDetail, err error)
 }

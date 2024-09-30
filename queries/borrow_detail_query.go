@@ -12,4 +12,10 @@ const (
 		FROM borrow_details
 		WHERE borrow_id = ?
 	`
+
+	SelectBorrowDetailReturnedDateTodayQuery GoQuery = `
+		SELECT id, borrow_id, book_id, borrowed_date, returned_date, verified_return_date, created_at, updated_at, deleted_at
+		FROM borrow_details
+		WHERE returned_date IS CURRENT_DATE() AND verified_return_date IS NULL
+	`
 )

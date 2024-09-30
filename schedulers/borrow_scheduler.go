@@ -2,6 +2,7 @@ package schedulers
 
 import (
 	"context"
+	"github.com/RandySteven/Library-GO/enums"
 	repositories_interfaces "github.com/RandySteven/Library-GO/interfaces/repositories"
 	schedulers_interfaces "github.com/RandySteven/Library-GO/interfaces/schedulers"
 )
@@ -13,13 +14,24 @@ type borrowScheduler struct {
 }
 
 func (b *borrowScheduler) UpdateBorrowDetailStatusToExpired(ctx context.Context) error {
-	//preconditions:
-	// - init transaction
-	//1. get all borrow detail tables
-	//2. get current date of returned_date
-	//3. if returned_date == todays date
-	//  a. return all book ids
-	//4. update all book ids into expired
+	if err := b.borrowDetailRepo.BeginTx(ctx); err != nil {
+		return err
+	}
+	borrowDetails, err := b.borrowDetailRepo.FindCurrReturnDate(ctx)
+	if err != nil {
+		return err
+	}
+	var bookIds = []uint64{}
+	for _, borrowDetail := range borrowDetails {
+		bookIds = append(bookIds, borrowDetail.BookID)
+	}
+
+	for _, bookId := range bookIds {
+		err = b.bookRepo.UpdateBookStatus(ctx, bookId, enums.Expired)
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }
 

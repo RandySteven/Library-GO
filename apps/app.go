@@ -11,6 +11,7 @@ import (
 	"github.com/RandySteven/Library-GO/pkg/configs"
 	"github.com/RandySteven/Library-GO/pkg/mysql"
 	repositories2 "github.com/RandySteven/Library-GO/repositories"
+	schedulers2 "github.com/RandySteven/Library-GO/schedulers"
 	usecases2 "github.com/RandySteven/Library-GO/usecases"
 	"github.com/go-redis/redis/v8"
 )
@@ -61,6 +62,12 @@ func (app *App) PrepareTheHandler() *handlers2.Handlers {
 	caches := caches.NewCaches(app.Redis)
 	usecases := usecases2.NewUsecases(repositories, caches, app.AWSClient, app.AlgoliaSearch)
 	return handlers2.NewHandlers(usecases)
+}
+
+func (app *App) PrepareScheduler() *schedulers2.Schedulers {
+	repositories := repositories2.NewRepositories(app.MySQLDB)
+	schedulers := schedulers2.NewSchedulers(repositories)
+	return schedulers
 }
 
 func (a *App) Ping() error {
