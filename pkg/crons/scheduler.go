@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/RandySteven/Library-GO/schedulers"
 	"github.com/robfig/cron/v3"
+	"os"
 	"time"
 )
 
@@ -26,7 +27,7 @@ func (s *scheduler) RunAllJobs(ctx context.Context) error {
 }
 
 func (s *scheduler) updateBorrowDetailStatus(ctx context.Context) error {
-	return s.runScheduler(ctx, "@daily", s.dependencies.schedulers.BorrowScheduler.UpdateBorrowDetailStatusToExpired)
+	return s.runScheduler(ctx, os.Getenv("SCHEDULER_UPDATE_BOOK_STATUS"), s.dependencies.schedulers.BorrowScheduler.UpdateBorrowDetailStatusToExpired)
 }
 
 func (s *scheduler) runScheduler(ctx context.Context, spec string, schedulerFunc func(ctx context.Context) error) error {

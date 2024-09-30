@@ -4,3 +4,4 @@
 *.docker.yml
 *.prod.yml
 temp-images
+.env

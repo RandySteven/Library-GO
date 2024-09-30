@@ -15,3 +15,6 @@ drop:
 	${gorun} ${cmd_folder}drop -config ${yaml_file}
 
 refresh: drop migration seed
+
+scheduler:
+	${gorun} ${cmd_folder}scheduler -config ${yaml_file}
