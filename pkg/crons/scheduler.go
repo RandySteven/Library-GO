@@ -20,6 +20,30 @@ type (
 	}
 )
 
+func deleteCreateDir(dirName string) error {
+	err := os.RemoveAll(dirName)
+	if err != nil {
+		return err
+	}
+	err = os.Mkdir(dirName, os.ModePerm)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *scheduler) deleteStoryFiles(ctx context.Context) error {
+	return s.runScheduler(ctx, os.Getenv("SCHEDULER_DELETE_FILE"), func(ctx context.Context) error {
+		return deleteCreateDir("./temp-stories")
+	})
+}
+
+func (s *scheduler) deleteImageFiles(ctx context.Context) error {
+	return s.runScheduler(ctx, os.Getenv("SCHEDULER_DELETE_FILE"), func(ctx context.Context) error {
+		return deleteCreateDir("./temp-stories")
+	})
+}
+
 func (s *scheduler) RunAllJobs(ctx context.Context) error {
 	log.Println("Running all jobs")
 	s.cron.Start()
