@@ -4,4 +4,5 @@
 *.docker.yml
 *.prod.yml
 temp-images
+temp-stories
 .env

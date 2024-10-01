@@ -4,8 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/RandySteven/Library-GO/utils"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockruntime"
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"log"
 	"time"
 )
@@ -51,6 +53,20 @@ func (a *AWSClient) GeneratePromptResult(ctx context.Context, request any) (outp
 	}
 	// For debugging or inspecting the full response
 	log.Printf("Full response: %+v\n", response)
+	fileName := utils.GenerateStoryName()
 
-	return outputText, nil
+	err = utils.GenerateStoryFile(fileName, outputText)
+	if err != nil {
+		return "", err
+	}
+	buckets, err := a.ListBucket()
+	if err != nil {
+		return "", err
+	}
+	resultLocation, err := a.UploadFile(s3manager.NewUploader(a.session), "./temp-stories/"+fileName, *buckets.Buckets[0].Name, "stories/"+fileName)
+	if err != nil {
+		return "", err
+	}
+
+	return *resultLocation, nil
 }

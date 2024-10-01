@@ -47,7 +47,7 @@ func (s *storyGeneratorUsecase) GenerateStory(ctx context.Context, request *requ
 			request.Title, request.Setting, request.Genre,
 			request.Style, request.MainCharacter, request.SideCharacter, request.Ending),
 		TextGenerationConfig: TextConfig{
-			MaxTokenCount: 244,
+			MaxTokenCount: 4096,
 			StopSequences: []string{},
 			Temperature:   0.7,
 			TopP:          1.0,

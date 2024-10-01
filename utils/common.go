@@ -2,6 +2,7 @@ package utils
 
 import (
 	"fmt"
+	"github.com/google/uuid"
 	"github.com/nfnt/resize"
 	"image"
 	"image/jpeg"
@@ -79,4 +80,24 @@ func ReadFileContent(filePath string) (string, error) {
 		return "", err
 	}
 	return string(content), nil
+}
+
+func GenerateStoryName() string {
+	currentDate := time.Now().Format("20060102")
+
+	uniqueID := uuid.New().String()
+
+	baseName := "story"
+
+	fileName := fmt.Sprintf("%s_%s_%s.txt", baseName, currentDate, uniqueID)
+	return fileName
+}
+
+func GenerateStoryFile(fileName, storyContent string) error {
+	contentByte := []byte(storyContent)
+	err := os.WriteFile("./temp-stories/"+fileName, contentByte, 0644)
+	if err != nil {
+		return err
+	}
+	return nil
 }
