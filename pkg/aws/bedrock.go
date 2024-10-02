@@ -7,6 +7,7 @@ import (
 	"github.com/RandySteven/Library-GO/utils"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockruntime"
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"log"
 	"time"
@@ -22,17 +23,14 @@ type BedrockResponse struct {
 }
 
 func (a *AWSClient) GeneratePromptResult(ctx context.Context, request any) (outputText string, err error) {
-	// Marshalling the request into JSON
 	payloadBytes, err := json.Marshal(request)
 	if err != nil {
 		return "", err
 	}
 
-	// Setting a longer timeout for the context, if needed
 	ctx, cancel := context.WithTimeout(ctx, 60*time.Second) // 60-second timeout
 	defer cancel()
 
-	// Making the request to the model
 	output, err := a.brc.InvokeModel(ctx, &bedrockruntime.InvokeModelInput{
 		Body:        payloadBytes,
 		ModelId:     aws.String("amazon.titan-text-lite-v1"),
@@ -43,7 +41,6 @@ func (a *AWSClient) GeneratePromptResult(ctx context.Context, request any) (outp
 		return "", err
 	}
 
-	// Optionally, you can unmarshal the result if it's JSON formatted
 	var response BedrockResponse
 	if err := json.Unmarshal(output.Body, &response); err != nil {
 		return "", fmt.Errorf("failed to unmarshal response: %w", err)
@@ -51,7 +48,6 @@ func (a *AWSClient) GeneratePromptResult(ctx context.Context, request any) (outp
 	if len(response.Results) > 0 {
 		outputText = response.Results[0].OutputText
 	}
-	// For debugging or inspecting the full response
 	log.Printf("Full response: %+v\n", response)
 	fileName := utils.GenerateStoryName()
 
@@ -59,14 +55,29 @@ func (a *AWSClient) GeneratePromptResult(ctx context.Context, request any) (outp
 	if err != nil {
 		return "", err
 	}
-	buckets, err := a.ListBucket()
-	if err != nil {
-		return "", err
-	}
-	resultLocation, err := a.UploadFile(s3manager.NewUploader(a.session), "./temp-stories/"+fileName, *buckets.Buckets[0].Name, "stories/"+fileName)
-	if err != nil {
-		return "", err
-	}
+	bucketsCh := make(chan *s3.ListBucketsOutput)
+	errCh := make(chan error)
+	go func() {
+		buckets, err := a.ListBucket()
+		if err != nil {
+			errCh <- err
+			return
+		}
+		bucketsCh <- buckets
+	}()
 
-	return *resultLocation, nil
+	uploader := s3manager.NewUploader(a.session)
+
+	select {
+	case buckets := <-bucketsCh:
+		resultLocation, err := a.UploadFile(uploader, "./temp-stories/"+fileName, *buckets.Buckets[0].Name, "stories/"+fileName)
+		if err != nil {
+			return "", err
+		}
+		return *resultLocation, nil
+
+	case err = <-errCh:
+		// Handle error in bucket listing
+		return "", err
+	}
 }
