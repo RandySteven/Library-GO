@@ -37,3 +37,7 @@ func (c *RedisClient) Ping() error {
 func (c *RedisClient) Client() *redis.Client {
 	return c.client
 }
+
+func (c *RedisClient) ClearCache(ctx context.Context) error {
+	return c.client.FlushDB(ctx).Err()
+}

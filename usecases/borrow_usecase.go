@@ -24,7 +24,7 @@ type borrowUsecase struct {
 	genreRepo        repositories_interfaces.GenreRepository
 }
 
-func (b *borrowUsecase) refreshTx(ctx context.Context) {
+func (b *borrowUsecase) setTx(ctx context.Context) {
 	tx := b.borrowRepo.GetTx(ctx)
 	b.bagRepo.SetTx(tx)
 	b.bookRepo.SetTx(tx)
@@ -32,6 +32,11 @@ func (b *borrowUsecase) refreshTx(ctx context.Context) {
 	b.userRepo.SetTx(tx)
 	b.authorRepo.SetTx(tx)
 	b.genreRepo.SetTx(tx)
+}
+
+func (b *borrowUsecase) refreshTx(ctx context.Context) {
+	b.borrowRepo.SetTx(nil)
+	b.setTx(ctx)
 }
 
 func (b *borrowUsecase) BorrowTransaction(ctx context.Context) (result *responses.BorrowResponse, customErr *apperror.CustomError) {
@@ -49,14 +54,18 @@ func (b *borrowUsecase) BorrowTransaction(ctx context.Context) (result *response
 	defer func() {
 		if r := recover(); r != nil {
 			_ = b.borrowRepo.RollbackTx(ctx)
+			b.refreshTx(ctx)
 			panic(r)
 		} else if customErr != nil {
 			_ = b.borrowRepo.RollbackTx(ctx)
+			b.refreshTx(ctx)
 		} else if err = b.borrowRepo.CommitTx(ctx); err != nil {
 			log.Println("failed to commit transaction:", err)
+			b.refreshTx(ctx)
 		}
+		b.refreshTx(ctx)
 	}()
-	b.refreshTx(ctx)
+	b.setTx(ctx)
 
 	//3. Get all books from user bag
 	bagBooks, err := b.bagRepo.FindBagByUser(ctx, userId)

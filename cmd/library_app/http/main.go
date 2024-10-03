@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"github.com/RandySteven/Library-GO/apps"
 	"github.com/RandySteven/Library-GO/middlewares"
 	"github.com/RandySteven/Library-GO/pkg/configs"
@@ -13,6 +14,7 @@ import (
 )
 
 func main() {
+	ctx := context.TODO()
 	configPath, err := configs.ParseFlags()
 
 	if err != nil {
@@ -41,8 +43,8 @@ func main() {
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
-	//if err = caches.ClearCache(ctx); err != nil {
-	//	log.Fatal(err)
-	//	return
-	//}
+	if err = app.RefreshRedis(ctx); err != nil {
+		log.Fatal(err)
+		return
+	}
 }

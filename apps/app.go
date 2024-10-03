@@ -70,6 +70,10 @@ func (app *App) PrepareScheduler() *schedulers2.Schedulers {
 	return schedulers
 }
 
+func (app *App) RefreshRedis(ctx context.Context) error {
+	return app.Redis.FlushDB(ctx).Err()
+}
+
 func (a *App) Ping() error {
 	err := a.MySQLDB.Ping()
 	if err != nil {

@@ -19,10 +19,15 @@ type bagUsecase struct {
 	userRepo repositories_interfaces.UserRepository
 }
 
-func (b *bagUsecase) refreshTx(ctx context.Context) {
+func (b *bagUsecase) setTx(ctx context.Context) {
 	tx := b.bagRepo.GetTx(ctx)
 	b.userRepo.SetTx(tx)
 	b.bookRepo.SetTx(tx)
+}
+
+func (b *bagUsecase) refreshTx(ctx context.Context) {
+	b.bagRepo.SetTx(nil)
+	b.setTx(ctx)
 }
 
 func (b *bagUsecase) AddBookToBag(ctx context.Context, request *requests.BagRequest) (result *responses.AddBagResponse, customErr *apperror.CustomError) {
@@ -42,19 +47,22 @@ func (b *bagUsecase) AddBookToBag(ctx context.Context, request *requests.BagRequ
 		defer b.bagRepo.SetTx(nil)
 		if r := recover(); r != nil {
 			_ = b.bagRepo.RollbackTx(ctx)
+			b.refreshTx(ctx)
 			panic(r)
 		} else if customErr != nil {
 			_ = b.bagRepo.RollbackTx(ctx)
+			b.refreshTx(ctx)
 			return
 		} else {
 			if err := b.bagRepo.CommitTx(ctx); err != nil {
 				log.Println("failed to commit transaction")
+				b.refreshTx(ctx)
 				return
 			}
 			return
 		}
 	}()
-	b.refreshTx(ctx)
+	b.setTx(ctx)
 	wg.Add(2)
 	go func() {
 		defer wg.Done()
