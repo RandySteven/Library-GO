@@ -44,7 +44,7 @@ func (b *bagUsecase) AddBookToBag(ctx context.Context, request *requests.BagRequ
 		return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to begin tx`, err)
 	}
 	defer func() {
-		defer b.bagRepo.SetTx(nil)
+		b.bagRepo.SetTx(nil)
 		if r := recover(); r != nil {
 			_ = b.bagRepo.RollbackTx(ctx)
 			b.refreshTx(ctx)
