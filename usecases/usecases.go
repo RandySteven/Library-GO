@@ -27,7 +27,7 @@ func NewUsecases(repositories *repositories.Repositories, caches *caches.Caches,
 		OnboardingUsecase:     newOnboardingUsecase(repositories.UserRepo),
 		BookUsecase:           newBookUsecase(repositories.UserRepo, repositories.BookRepo, repositories.GenreRepo, repositories.AuthorRepo, repositories.AuthorBookRepo, repositories.BookGenreRepo, awsClient, algoClient),
 		BorrowUsecase:         newBorrowUsecase(repositories.BagRepo, repositories.BookRepo, repositories.BorrowRepo, repositories.BorrowDetailRepo, repositories.UserRepo, repositories.AuthorRepo, repositories.GenreRepo),
-		GenreUsecase:          newGenreUsecase(repositories.GenreRepo),
+		GenreUsecase:          newGenreUsecase(repositories.GenreRepo, repositories.BookRepo, repositories.BookGenreRepo),
 		StoryGeneratorUsecase: newStoryGeneratorUsecase(awsClient),
 		ReturnUsecase:         newReturnUsecase(repositories.BorrowRepo, repositories.BorrowDetailRepo, repositories.BookRepo, repositories.UserRepo),
 	}

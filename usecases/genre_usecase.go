@@ -10,7 +10,57 @@ import (
 )
 
 type genreUsecase struct {
-	genreRepo repositories_interfaces.GenreRepository
+	genreRepo     repositories_interfaces.GenreRepository
+	bookRepo      repositories_interfaces.BookRepository
+	bookGenreRepo repositories_interfaces.BookGenreRepository
+}
+
+func (g *genreUsecase) GetGenreDetail(ctx context.Context, id uint64) (result *responses.GenreResponseDetail, customErr *apperror.CustomError) {
+	var (
+		bookIDs       = []uint64{}
+		bookResponses = []*responses.ListBooksResponse{}
+	)
+	genre, err := g.genreRepo.FindByID(ctx, id)
+	if err != nil {
+		return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to get genre id`, err)
+	}
+
+	bookGenres, err := g.bookGenreRepo.FindBookGenreByBookID(ctx, genre.ID)
+	if err != nil {
+		return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to get genre id`, err)
+	}
+
+	for _, bookGenre := range bookGenres {
+		bookIDs = append(bookIDs, bookGenre.ID)
+	}
+
+	if len(bookIDs) != 0 {
+		books, err := g.bookRepo.FindSelectedBooksId(ctx, bookIDs)
+		if err != nil {
+			return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to get genre id`, err)
+		}
+		for _, book := range books {
+			bookResponses = append(bookResponses, &responses.ListBooksResponse{
+				ID:        book.ID,
+				Image:     book.Image,
+				Title:     book.Title,
+				Status:    book.Status.ToString(),
+				CreatedAt: book.CreatedAt.Local(),
+				UpdatedAt: book.UpdatedAt.Local(),
+				DeletedAt: book.DeletedAt,
+			})
+		}
+	}
+
+	result = &responses.GenreResponseDetail{
+		ID:        genre.ID,
+		Genre:     genre.Genre,
+		Books:     bookResponses,
+		CreatedAt: genre.CreatedAt,
+		UpdatedAt: genre.UpdatedAt,
+	}
+
+	return result, nil
 }
 
 func (g *genreUsecase) AddGenre(ctx context.Context, request *requests.GenreRequest) (idHash string, customErr *apperror.CustomError) {
@@ -34,6 +84,8 @@ func (g *genreUsecase) GetAllGenres(ctx context.Context) (result []*responses.Li
 
 var _ usecases_interfaces.GenreUsecase = &genreUsecase{}
 
-func newGenreUsecase(genreRepo repositories_interfaces.GenreRepository) *genreUsecase {
-	return &genreUsecase{genreRepo: genreRepo}
+func newGenreUsecase(genreRepo repositories_interfaces.GenreRepository,
+	bookRepo repositories_interfaces.BookRepository,
+	bookGenreRepo repositories_interfaces.BookGenreRepository) *genreUsecase {
+	return &genreUsecase{genreRepo: genreRepo, bookRepo: bookRepo, bookGenreRepo: bookGenreRepo}
 }

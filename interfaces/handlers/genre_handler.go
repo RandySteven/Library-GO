@@ -5,4 +5,5 @@ import "net/http"
 type GenreHandler interface {
 	AddNewGenre(w http.ResponseWriter, r *http.Request)
 	GetAllGenres(w http.ResponseWriter, r *http.Request)
+	GetGenre(w http.ResponseWriter, r *http.Request)
 }

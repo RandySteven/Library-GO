@@ -4,11 +4,12 @@ import "time"
 
 type (
 	GenreResponseDetail struct {
-		ID        uint64     `json:"id"`
-		Genre     string     `json:"genre"`
-		CreatedAt time.Time  `json:"created_at"`
-		UpdatedAt time.Time  `json:"updated_at"`
-		DeletedAt *time.Time `json:"deleted_at"`
+		ID        uint64               `json:"id"`
+		Genre     string               `json:"genre"`
+		Books     []*ListBooksResponse `json:"books"`
+		CreatedAt time.Time            `json:"created_at"`
+		UpdatedAt time.Time            `json:"updated_at"`
+		DeletedAt *time.Time           `json:"deleted_at"`
 	}
 
 	ListGenresResponse struct {
