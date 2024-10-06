@@ -9,7 +9,7 @@
 <span id="story"></span>
 <script>
     fetch('https://go-library-bucket.s3.ap-southeast-2.amazonaws.com/stories/story_20241001_7ae4ed1b-970b-4db3-aeda-15e244bab71a.txt')
-        .then(response => response.text())
+        .then(response => console.log(response.text()))
         .then(text => {
             document.getElementById('story').textContent = text;
         })

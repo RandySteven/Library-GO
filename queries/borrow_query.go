@@ -7,4 +7,9 @@ const (
 		FROM borrows
 		WHERE id = ?
 	`
+	SelectBorrowByReference GoQuery = `
+		SELECT id, user_id, borrow_reference, created_at, updated_at, deleted_at
+		FROM borrows
+		WHERE borrow_reference = ?
+	`
 )

@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"github.com/RandySteven/Library-GO/entities/payloads/requests"
 	"github.com/RandySteven/Library-GO/enums"
 	handlers_interfaces "github.com/RandySteven/Library-GO/interfaces/handlers"
 	usecases_interfaces "github.com/RandySteven/Library-GO/interfaces/usecases"
@@ -48,6 +49,24 @@ func (b *BorrowHandler) BorrowCheckout(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	utils.ResponseHandler(w, http.StatusOK, `success to borrow book`, &dataKey, result, nil)
+}
+
+func (b *BorrowHandler) BorrowConfirmation(w http.ResponseWriter, r *http.Request) {
+	var (
+		rID     = uuid.NewString()
+		ctx     = context.WithValue(r.Context(), enums.RequestID, rID)
+		request = &requests.ConfirmBorrowRequest{}
+	)
+	if err := utils.BindRequest(r, &request); err != nil {
+		utils.ResponseHandler(w, http.StatusBadRequest, `failed to borrow book`, nil, nil, err)
+		return
+	}
+	customErr := b.usecase.BorrowConfirmation(ctx, request)
+	if customErr != nil {
+		utils.ResponseHandler(w, customErr.ErrCode(), `failed to borrow book`, nil, nil, customErr)
+	}
+	utils.ResponseHandler(w, http.StatusOK, `success to borrow book confirmation`, nil, nil, nil)
+
 }
 
 var _ handlers_interfaces.BorrowHandler = &BorrowHandler{}

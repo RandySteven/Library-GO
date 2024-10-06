@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/RandySteven/Library-GO/apperror"
 	"github.com/RandySteven/Library-GO/entities/models"
+	"github.com/RandySteven/Library-GO/entities/payloads/requests"
 	"github.com/RandySteven/Library-GO/entities/payloads/responses"
 	"github.com/RandySteven/Library-GO/enums"
 	repositories_interfaces "github.com/RandySteven/Library-GO/interfaces/repositories"
@@ -54,15 +55,13 @@ func (b *borrowUsecase) BorrowTransaction(ctx context.Context) (result *response
 	defer func() {
 		if r := recover(); r != nil {
 			_ = b.borrowRepo.RollbackTx(ctx)
-			b.refreshTx(ctx)
 			panic(r)
 		} else if customErr != nil {
 			_ = b.borrowRepo.RollbackTx(ctx)
-			b.refreshTx(ctx)
 		} else if err = b.borrowRepo.CommitTx(ctx); err != nil {
 			log.Println("failed to commit transaction:", err)
-			b.refreshTx(ctx)
 		}
+		b.setTx(nil)
 		b.refreshTx(ctx)
 	}()
 	b.setTx(ctx)
@@ -216,6 +215,44 @@ func (b *borrowUsecase) GetBorrowDetail(ctx context.Context, id uint64) (result 
 		}
 		return result, nil
 	}
+}
+
+func (b *borrowUsecase) BorrowConfirmation(ctx context.Context, request *requests.ConfirmBorrowRequest) (customErr *apperror.CustomError) {
+	if err := b.borrowRepo.BeginTx(ctx); err != nil {
+		return apperror.NewCustomError(apperror.ErrInternalServer, `failed to init trx`, err)
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			_ = b.borrowRepo.RollbackTx(ctx)
+			panic(r)
+		} else if customErr != nil {
+			_ = b.borrowRepo.RollbackTx(ctx)
+		} else if err := b.borrowRepo.CommitTx(ctx); err != nil {
+			log.Println("failed to commit transaction:", err)
+		}
+		b.setTx(nil)
+		b.refreshTx(ctx)
+	}()
+	b.setTx(ctx)
+
+	borrow, err := b.borrowRepo.FindByReferenceID(ctx, request.BorrowID)
+	if err != nil {
+		return apperror.NewCustomError(apperror.ErrInternalServer, `failed to get borrow`, err)
+	}
+
+	borrowDetails, err := b.borrowDetailRepo.FindByBorrowID(ctx, borrow.ID)
+	if err != nil {
+		return apperror.NewCustomError(apperror.ErrInternalServer, `failed to get borrow detail`, err)
+	}
+
+	for _, borrowDetail := range borrowDetails {
+		err = b.bookRepo.UpdateBookStatus(ctx, borrowDetail.BookID, enums.Borrowed)
+		if err != nil {
+			return apperror.NewCustomError(apperror.ErrInternalServer, `failed to update borrow detail`, err)
+		}
+	}
+
+	return nil
 }
 
 var _ usecases_interfaces.BorrowUsecase = &borrowUsecase{}

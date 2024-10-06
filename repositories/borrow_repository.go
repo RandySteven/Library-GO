@@ -80,6 +80,22 @@ func (b *borrowRepository) Update(ctx context.Context, entity *models.Borrow) (r
 	panic("implement me")
 }
 
+func (b *borrowRepository) FindByReferenceID(ctx context.Context, referenceID string) (result *models.Borrow, err error) {
+	result = &models.Borrow{}
+	err = b.InitTrigger().QueryRowContext(ctx, queries.SelectBorrowByReference.ToString(), referenceID).
+		Scan(
+			&result.ID,
+			&result.UserID,
+			&result.BorrowReference,
+			&result.CreatedAt,
+			&result.UpdatedAt,
+			&result.DeletedAt)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
 var _ repositories_interfaces.BorrowRepository = &borrowRepository{}
 
 func newBorrowRepository(db *sql.DB) *borrowRepository {
