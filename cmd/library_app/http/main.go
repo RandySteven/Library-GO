@@ -36,7 +36,9 @@ func main() {
 	handlers := app.PrepareTheHandler()
 	r := mux.NewRouter()
 	routers := routes.NewEndpointRouters(handlers)
-	r.Use(middlewares.CorsMiddleware)
+	r.Use(
+		middlewares.CorsMiddleware,
+		middlewares.TimeoutMiddleware)
 	routes.InitRouters(routers, r)
 	go config.Run(r)
 
