@@ -7,11 +7,20 @@ import (
 	"github.com/RandySteven/Library-GO/pkg/configs"
 	"github.com/RandySteven/Library-GO/routes"
 	"github.com/gorilla/mux"
+	"github.com/joho/godotenv"
 	"log"
 	"os"
 	"os/signal"
 	"syscall"
 )
+
+func init() {
+	err := godotenv.Load("./files/env/.env")
+	if err != nil {
+		log.Fatal("Error loading .env file")
+		return
+	}
+}
 
 func main() {
 	ctx := context.TODO()
@@ -37,7 +46,9 @@ func main() {
 	r := mux.NewRouter()
 	routers := routes.NewEndpointRouters(handlers)
 	r.Use(
-		middlewares.CorsMiddleware)
+		middlewares.CorsMiddleware,
+		middlewares.TimeoutMiddleware,
+	)
 	routes.InitRouters(routers, r)
 	go config.Run(r)
 

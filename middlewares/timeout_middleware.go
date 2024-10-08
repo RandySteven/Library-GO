@@ -2,16 +2,32 @@ package middlewares
 
 import (
 	"context"
+	"errors"
+	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 )
 
 func TimeoutMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		serverTimeout, _ := time.ParseDuration(os.Getenv("SERVER_TIMEOUT"))
-		ctx, cancel := context.WithTimeout(r.Context(), serverTimeout*time.Second)
+		timeoutTime, err := strconv.Atoi(os.Getenv("SERVER_TIMEOUT"))
+		if err != nil {
+			log.Printf("Could not parse timeout value: %v", err)
+			return
+		}
+		ctx, cancel := context.WithTimeout(r.Context(), time.Duration(timeoutTime)*time.Second)
 		defer cancel()
-		next.ServeHTTP(w, r.WithContext(ctx))
+
+		r = r.WithContext(ctx)
+		next.ServeHTTP(w, r)
+
+		if err := ctx.Err(); err != nil {
+			if errors.Is(err, context.DeadlineExceeded) {
+				log.Println(err)
+				return
+			}
+		}
 	})
 }

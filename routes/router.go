@@ -72,7 +72,6 @@ func NewEndpointRouters(h *handlers.Handlers) map[enums.RouterPrefix][]*Router {
 }
 
 func InitRouters(routers map[enums.RouterPrefix][]*Router, r *mux.Router) {
-
 	onboardingRouter := r.PathPrefix(enums.OnboardingPrefix.ToString()).Subrouter()
 	for _, router := range routers[enums.OnboardingPrefix] {
 		router.RouterLog(enums.OnboardingPrefix.ToString())
