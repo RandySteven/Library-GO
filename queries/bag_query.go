@@ -20,4 +20,8 @@ const (
 	DeleteUserBagQuery GoQuery = `
 		DELETE FROM bags WHERE user_id = ?
 	`
+
+	DeleteByUserAndBookQuery GoQuery = `
+		DELETE FROM bags WHERE user_id = ? AND book_id = ?
+	`
 )

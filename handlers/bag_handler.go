@@ -49,6 +49,21 @@ func (b *BagHandler) GetUserBag(w http.ResponseWriter, r *http.Request) {
 }
 
 func (b *BagHandler) DeleteBookFromBag(w http.ResponseWriter, r *http.Request) {
+	var (
+		rID     = uuid.NewString()
+		ctx     = context.WithValue(r.Context(), enums.RequestID, rID)
+		request = &requests.BagRequest{}
+	)
+	if err := utils.BindRequest(r, &request); err != nil {
+		utils.ResponseHandler(w, http.StatusBadRequest, `bad request`, nil, nil, err)
+		return
+	}
+	customErr := b.usecase.DeleteBookFromBag(ctx, request)
+	if customErr != nil {
+		utils.ResponseHandler(w, customErr.ErrCode(), `internal server error`, nil, nil, customErr)
+		return
+	}
+	utils.ResponseHandler(w, http.StatusOK, `success delete book from bag`, nil, nil, nil)
 }
 
 var _ handlers_interfaces.BagHandler = &BagHandler{}

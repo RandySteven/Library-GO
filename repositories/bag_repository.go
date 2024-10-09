@@ -69,6 +69,14 @@ func (b *bagRepository) Update(ctx context.Context, entity *models.Bag) (result 
 	panic("implement me")
 }
 
+func (b *bagRepository) DeleteByUserAndBook(ctx context.Context, userId uint64, bookId uint64) error {
+	_, err := b.InitTrigger().ExecContext(ctx, queries.DeleteByUserAndBookQuery.ToString(), userId, bookId)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (b *bagRepository) InitTrigger() repositories_interfaces.Trigger {
 	var trigger repositories_interfaces.Trigger = b.db
 	if b.tx != nil {

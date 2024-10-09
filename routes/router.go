@@ -19,53 +19,50 @@ type (
 	}
 )
 
-func RegisterEndpointRouter(path, method string, handler HandlerFunc) *Router {
-	return &Router{path: path, handler: handler, method: method}
-}
-
 func NewEndpointRouters(h *handlers.Handlers) map[enums.RouterPrefix][]*Router {
 	endpointRouters := make(map[enums.RouterPrefix][]*Router)
 
 	endpointRouters[enums.DevPrefix] = []*Router{
-		RegisterEndpointRouter("/health-check", http.MethodGet, h.DevHandler.HealthCheck),
-		RegisterEndpointRouter("/create-bucket", http.MethodPost, h.DevHandler.CreateBucket),
-		RegisterEndpointRouter("/buckets", http.MethodGet, h.DevHandler.GetListBuckets),
+		Get("/health-check", h.DevHandler.HealthCheck),
+		Post("/create-bucket", h.DevHandler.CreateBucket),
+		Get("/buckets", h.DevHandler.GetListBuckets),
 	}
 
 	endpointRouters[enums.OnboardingPrefix] = []*Router{
-		RegisterEndpointRouter("/register", http.MethodPost, h.OnboardingHandler.RegisterUser),
-		RegisterEndpointRouter("/login", http.MethodPost, h.OnboardingHandler.LoginUser),
-		RegisterEndpointRouter("/verify", http.MethodPost, h.OnboardingHandler.VerifyUser),
+		Post("/register", h.OnboardingHandler.RegisterUser),
+		Post("/login", h.OnboardingHandler.LoginUser),
+		Post("/verify", h.OnboardingHandler.VerifyUser),
 	}
 
 	endpointRouters[enums.UserPrefix] = []*Router{}
 
 	endpointRouters[enums.BookPrefix] = []*Router{
-		RegisterEndpointRouter("", http.MethodPost, h.BookHandler.AddBook),
-		RegisterEndpointRouter("", http.MethodGet, h.BookHandler.GetAllBooks),
-		RegisterEndpointRouter("/{id}", http.MethodGet, h.BookHandler.GetBookByID),
-		RegisterEndpointRouter("/search", http.MethodPost, h.BookHandler.SearchBooks),
+		Post("", h.BookHandler.AddBook),
+		Get("", h.BookHandler.GetAllBooks),
+		Get("/{id}", h.BookHandler.GetBookByID),
+		Post("/search", h.BookHandler.SearchBooks),
 	}
 
 	endpointRouters[enums.GenrePrefix] = []*Router{
-		RegisterEndpointRouter("", http.MethodGet, h.GenreHandler.GetAllGenres),
-		RegisterEndpointRouter("", http.MethodPost, h.GenreHandler.AddNewGenre),
-		RegisterEndpointRouter("/{id}", http.MethodGet, h.GenreHandler.GetGenre),
+		Get("", h.GenreHandler.GetAllGenres),
+		Post("", h.GenreHandler.AddNewGenre),
+		Get("/{id}", h.GenreHandler.GetGenre),
 	}
 
 	endpointRouters[enums.BagPrefix] = []*Router{
-		RegisterEndpointRouter("", http.MethodGet, h.BagHandler.GetUserBag),
-		RegisterEndpointRouter("", http.MethodPost, h.BagHandler.AddBookToBag),
+		Get("", h.BagHandler.GetUserBag),
+		Post("", h.BagHandler.AddBookToBag),
+		Post("/remove", h.BagHandler.DeleteBookFromBag),
 	}
 
 	endpointRouters[enums.StoryPrefix] = []*Router{
-		RegisterEndpointRouter("", http.MethodPost, h.StoryGeneratorHandler.GenerateStory),
+		Post("", h.StoryGeneratorHandler.GenerateStory),
 	}
 
 	endpointRouters[enums.BorrowPrefix] = []*Router{
-		RegisterEndpointRouter("", http.MethodGet, h.BorrowHandler.BorrowCheckout),
-		RegisterEndpointRouter("/{id}", http.MethodGet, h.BorrowHandler.GetBorrowDetail),
-		RegisterEndpointRouter("/confirm", http.MethodPost, h.BorrowHandler.BorrowConfirmation),
+		Get("", h.BorrowHandler.BorrowCheckout),
+		Get("/{id}", h.BorrowHandler.GetBorrowDetail),
+		Post("/confirm", h.BorrowHandler.BorrowConfirmation),
 	}
 
 	return endpointRouters

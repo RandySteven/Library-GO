@@ -137,8 +137,13 @@ func (b *bagUsecase) GetUserBag(ctx context.Context) (result *responses.GetAllBa
 }
 
 func (b *bagUsecase) DeleteBookFromBag(ctx context.Context, request *requests.BagRequest) (customErr *apperror.CustomError) {
-	//TODO implement me
-	panic("implement me")
+	userId := ctx.Value(enums.UserID).(uint64)
+	bagId := request.BookID
+	err := b.bagRepo.DeleteByUserAndBook(ctx, userId, bagId)
+	if err != nil {
+		return apperror.NewCustomError(apperror.ErrInternalServer, `failed to delete user book in bag`, err)
+	}
+	return nil
 }
 
 func (b *bagUsecase) EmptyBag(ctx context.Context) (customErr *apperror.CustomError) {
