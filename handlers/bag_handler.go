@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"github.com/RandySteven/Library-GO/apperror"
 	"github.com/RandySteven/Library-GO/entities/payloads/requests"
 	"github.com/RandySteven/Library-GO/enums"
 	handlers_interfaces "github.com/RandySteven/Library-GO/interfaces/handlers"
@@ -50,20 +51,28 @@ func (b *BagHandler) GetUserBag(w http.ResponseWriter, r *http.Request) {
 
 func (b *BagHandler) DeleteBookFromBag(w http.ResponseWriter, r *http.Request) {
 	var (
-		rID     = uuid.NewString()
-		ctx     = context.WithValue(r.Context(), enums.RequestID, rID)
-		request = &requests.BagRequest{}
+		rID       = uuid.NewString()
+		ctx       = context.WithValue(r.Context(), enums.RequestID, rID)
+		request   = &requests.DeleteBookBagRequest{}
+		customErr *apperror.CustomError
+		message   = ``
 	)
 	if err := utils.BindRequest(r, &request); err != nil {
 		utils.ResponseHandler(w, http.StatusBadRequest, `bad request`, nil, nil, err)
 		return
 	}
-	customErr := b.usecase.DeleteBookFromBag(ctx, request)
+	if request.BookIDs != nil {
+		customErr = b.usecase.DeleteBookFromBag(ctx, request)
+		message = `success deleted seleceted book`
+	} else {
+		customErr = b.usecase.EmptyBag(ctx)
+		message = `success delete user bag`
+	}
 	if customErr != nil {
 		utils.ResponseHandler(w, customErr.ErrCode(), `internal server error`, nil, nil, customErr)
 		return
 	}
-	utils.ResponseHandler(w, http.StatusOK, `success delete book from bag`, nil, nil, nil)
+	utils.ResponseHandler(w, http.StatusOK, message, nil, nil, nil)
 }
 
 var _ handlers_interfaces.BagHandler = &BagHandler{}

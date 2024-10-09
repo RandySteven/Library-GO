@@ -3,10 +3,14 @@ package repositories
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"github.com/RandySteven/Library-GO/entities/models"
 	repositories_interfaces "github.com/RandySteven/Library-GO/interfaces/repositories"
 	"github.com/RandySteven/Library-GO/queries"
 	"github.com/RandySteven/Library-GO/utils"
+	"log"
+	"strconv"
+	"strings"
 )
 
 type bagRepository struct {
@@ -69,8 +73,17 @@ func (b *bagRepository) Update(ctx context.Context, entity *models.Bag) (result 
 	panic("implement me")
 }
 
-func (b *bagRepository) DeleteByUserAndBook(ctx context.Context, userId uint64, bookId uint64) error {
-	_, err := b.InitTrigger().ExecContext(ctx, queries.DeleteByUserAndBookQuery.ToString(), userId, bookId)
+func (b *bagRepository) DeleteByUserAndSelectedBooks(ctx context.Context, userId uint64, bookIds []uint64) error {
+	queryIn := ` AND book_id IN (%s)`
+	wildCards := []string{}
+	for _, id := range bookIds {
+		wildCards = append(wildCards, strconv.Itoa(int(id)))
+	}
+	wildCardStr := strings.Join(wildCards, ",")
+	queryIn = fmt.Sprintf(queryIn, wildCardStr)
+	selectStr := queries.DeleteUserBagQuery.ToString() + queryIn
+	log.Printf(selectStr)
+	_, err := b.InitTrigger().ExecContext(ctx, selectStr, userId)
 	if err != nil {
 		return err
 	}

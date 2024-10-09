@@ -11,5 +11,5 @@ type BagRepository interface {
 	FindBagByUser(ctx context.Context, userID uint64) (result []*models.Bag, err error)
 	CheckBagExists(ctx context.Context, bag *models.Bag) (bool, error)
 	DeleteUserBag(ctx context.Context, userId uint64) error
-	DeleteByUserAndBook(ctx context.Context, userId uint64, bookId uint64) error
+	DeleteByUserAndSelectedBooks(ctx context.Context, userId uint64, bookId []uint64) error
 }

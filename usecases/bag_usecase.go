@@ -44,19 +44,16 @@ func (b *bagUsecase) AddBookToBag(ctx context.Context, request *requests.BagRequ
 		return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to begin tx`, err)
 	}
 	defer func() {
-		b.bagRepo.SetTx(nil)
+		defer b.refreshTx(ctx)
 		if r := recover(); r != nil {
 			_ = b.bagRepo.RollbackTx(ctx)
-			b.refreshTx(ctx)
 			panic(r)
 		} else if customErr != nil {
 			_ = b.bagRepo.RollbackTx(ctx)
-			b.refreshTx(ctx)
 			return
 		} else {
 			if err := b.bagRepo.CommitTx(ctx); err != nil {
 				log.Println("failed to commit transaction")
-				b.refreshTx(ctx)
 				return
 			}
 			return
@@ -100,7 +97,6 @@ func (b *bagUsecase) AddBookToBag(ctx context.Context, request *requests.BagRequ
 		return nil, customErr
 	}
 
-	//3. insert book into user bag
 	bag, err := b.bagRepo.Save(ctx, bag)
 	if err != nil {
 		return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to save book`, err)
@@ -136,10 +132,10 @@ func (b *bagUsecase) GetUserBag(ctx context.Context) (result *responses.GetAllBa
 	return result, nil
 }
 
-func (b *bagUsecase) DeleteBookFromBag(ctx context.Context, request *requests.BagRequest) (customErr *apperror.CustomError) {
+func (b *bagUsecase) DeleteBookFromBag(ctx context.Context, request *requests.DeleteBookBagRequest) (customErr *apperror.CustomError) {
 	userId := ctx.Value(enums.UserID).(uint64)
-	bagId := request.BookID
-	err := b.bagRepo.DeleteByUserAndBook(ctx, userId, bagId)
+	bagId := request.BookIDs
+	err := b.bagRepo.DeleteByUserAndSelectedBooks(ctx, userId, bagId)
 	if err != nil {
 		return apperror.NewCustomError(apperror.ErrInternalServer, `failed to delete user book in bag`, err)
 	}
@@ -147,8 +143,12 @@ func (b *bagUsecase) DeleteBookFromBag(ctx context.Context, request *requests.Ba
 }
 
 func (b *bagUsecase) EmptyBag(ctx context.Context) (customErr *apperror.CustomError) {
-	//TODO implement me
-	panic("implement me")
+	userId := ctx.Value(enums.UserID).(uint64)
+	err := b.bagRepo.DeleteUserBag(ctx, userId)
+	if err != nil {
+		return apperror.NewCustomError(apperror.ErrInternalServer, `failed to delete user book bag`, err)
+	}
+	return nil
 }
 
 var _ usecases_interfaces.BagUsecase = &bagUsecase{}

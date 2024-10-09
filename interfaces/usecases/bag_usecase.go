@@ -10,6 +10,6 @@ import (
 type BagUsecase interface {
 	AddBookToBag(ctx context.Context, request *requests.BagRequest) (result *responses.AddBagResponse, customErr *apperror.CustomError)
 	GetUserBag(ctx context.Context) (result *responses.GetAllBagsResponse, customErr *apperror.CustomError)
-	DeleteBookFromBag(ctx context.Context, request *requests.BagRequest) (customErr *apperror.CustomError)
+	DeleteBookFromBag(ctx context.Context, request *requests.DeleteBookBagRequest) (customErr *apperror.CustomError)
 	EmptyBag(ctx context.Context) (customErr *apperror.CustomError)
 }
