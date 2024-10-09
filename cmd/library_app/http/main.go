@@ -42,6 +42,12 @@ func main() {
 		log.Fatal(err)
 		return
 	}
+	err = app.Ping()
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
+
 	handlers := app.PrepareTheHandler()
 	r := mux.NewRouter()
 	routers := routes.NewEndpointRouters(handlers)

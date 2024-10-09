@@ -2,7 +2,6 @@ package apps
 
 import (
 	"context"
-	"database/sql"
 	"github.com/RandySteven/Library-GO/caches"
 	handlers2 "github.com/RandySteven/Library-GO/handlers"
 	algolia_client "github.com/RandySteven/Library-GO/pkg/algolia"
@@ -13,14 +12,13 @@ import (
 	repositories2 "github.com/RandySteven/Library-GO/repositories"
 	schedulers2 "github.com/RandySteven/Library-GO/schedulers"
 	usecases2 "github.com/RandySteven/Library-GO/usecases"
-	"github.com/go-redis/redis/v8"
 )
 
 type App struct {
 	AlgoliaSearch *algolia_client.AlgoliaAPISearchClient
 	AWSClient     *aws_client.AWSClient
-	MySQLDB       *sql.DB
-	Redis         *redis.Client
+	MySQLDB       *mysql_client.MySQLClient
+	Redis         *caches_client.RedisClient
 }
 
 func NewApp(config *configs.Config) (*App, error) {
@@ -50,28 +48,28 @@ func NewApp(config *configs.Config) (*App, error) {
 	}
 
 	return &App{
-		MySQLDB:       mysqlDB.Client(),
-		Redis:         redis.Client(),
+		MySQLDB:       mysqlDB,
+		Redis:         redis,
 		AWSClient:     aws,
 		AlgoliaSearch: algolia,
 	}, nil
 }
 
 func (app *App) PrepareTheHandler() *handlers2.Handlers {
-	repositories := repositories2.NewRepositories(app.MySQLDB)
-	caches := caches.NewCaches(app.Redis)
+	repositories := repositories2.NewRepositories(app.MySQLDB.Client())
+	caches := caches.NewCaches(app.Redis.Client())
 	usecases := usecases2.NewUsecases(repositories, caches, app.AWSClient, app.AlgoliaSearch)
 	return handlers2.NewHandlers(usecases)
 }
 
 func (app *App) PrepareScheduler() *schedulers2.Schedulers {
-	repositories := repositories2.NewRepositories(app.MySQLDB)
+	repositories := repositories2.NewRepositories(app.MySQLDB.Client())
 	schedulers := schedulers2.NewSchedulers(repositories)
 	return schedulers
 }
 
 func (app *App) RefreshRedis(ctx context.Context) error {
-	return app.Redis.FlushDB(ctx).Err()
+	return app.Redis.ClearCache(ctx)
 }
 
 func (a *App) Ping() error {
@@ -80,7 +78,7 @@ func (a *App) Ping() error {
 		return err
 	}
 
-	err = a.Redis.Ping(context.TODO()).Err()
+	err = a.Redis.Ping()
 	if err != nil {
 		return err
 	}
