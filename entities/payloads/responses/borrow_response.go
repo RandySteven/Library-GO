@@ -15,10 +15,9 @@ type (
 	}
 
 	BorrowListResponse struct {
-		ID           uint64    `json:"id"`
-		BorrowID     uint64    `json:"borrow_id"`
-		BorrowedDate time.Time `json:"borrowed_date"`
-		TotalItems   uint64    `json:"total_items"`
+		ID              uint64    `json:"id"`
+		BorrowReference string    `json:"borrow_id"`
+		BorrowedDate    time.Time `json:"borrowed_date"`
 	}
 
 	BorrowedBook struct {
@@ -33,6 +32,7 @@ type (
 	BorrowDetailResponse struct {
 		ID              uint64 `json:"id"`
 		BorrowReference string `json:"borrow_reference"`
+		TotalItems      int    `json:"total_items"`
 		User            struct {
 			ID   uint64 `json:"id"`
 			Name string `json:"name"`

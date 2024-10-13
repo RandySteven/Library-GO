@@ -132,8 +132,19 @@ func (b *borrowUsecase) BorrowTransaction(ctx context.Context) (result *response
 }
 
 func (b *borrowUsecase) GetAllBorrows(ctx context.Context) (result []*responses.BorrowListResponse, customErr *apperror.CustomError) {
-	//TODO implement me
-	panic("implement me")
+	userId := ctx.Value(enums.UserID).(uint64)
+	borrows, err := b.borrowRepo.FindByUserId(ctx, userId)
+	if err != nil {
+		return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to get borrows`, err)
+	}
+	for _, borrow := range borrows {
+		result = append(result, &responses.BorrowListResponse{
+			ID:              borrow.ID,
+			BorrowReference: borrow.BorrowReference,
+			BorrowedDate:    borrow.CreatedAt,
+		})
+	}
+	return result, nil
 }
 
 func (b *borrowUsecase) GetBorrowDetail(ctx context.Context, id uint64) (result *responses.BorrowDetailResponse, customErr *apperror.CustomError) {
@@ -207,6 +218,7 @@ func (b *borrowUsecase) GetBorrowDetail(ctx context.Context, id uint64) (result 
 		result = &responses.BorrowDetailResponse{
 			ID:              id,
 			BorrowReference: borrow.BorrowReference,
+			TotalItems:      len(bookDetailRes),
 			User: struct {
 				ID   uint64 `json:"id"`
 				Name string `json:"name"`

@@ -37,6 +37,7 @@ services:
       - MYSQL_ROOT_PASSWORD=password1234
       - MYSQL_DATABASE=library
       - MYSQL_USER=library-admin
+      - MYSQL_PASSWORD=password1234
 
   library-migration:
     image: library-migration

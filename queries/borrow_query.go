@@ -12,4 +12,9 @@ const (
 		FROM borrows
 		WHERE borrow_reference = ?
 	`
+	SelectBorrowUserIdQuery GoQuery = `
+		SELECT id, user_id, borrow_reference, created_at, updated_at, deleted_at
+		FROM borrows
+		WHERE user_id = ?
+	`
 )

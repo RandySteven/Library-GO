@@ -66,7 +66,20 @@ func (b *BorrowHandler) BorrowConfirmation(w http.ResponseWriter, r *http.Reques
 		utils.ResponseHandler(w, customErr.ErrCode(), `failed to borrow book`, nil, nil, customErr)
 	}
 	utils.ResponseHandler(w, http.StatusOK, `success to borrow book confirmation`, nil, nil, nil)
+}
 
+func (b *BorrowHandler) GetBorrowList(w http.ResponseWriter, r *http.Request) {
+	var (
+		rID     = uuid.NewString()
+		ctx     = context.WithValue(r.Context(), enums.RequestID, rID)
+		dataKey = `borrows`
+	)
+	result, customErr := b.usecase.GetAllBorrows(ctx)
+	if customErr != nil {
+		utils.ResponseHandler(w, customErr.ErrCode(), `failed to get borrow list`, nil, nil, customErr)
+		return
+	}
+	utils.ResponseHandler(w, http.StatusOK, `success get all borrow list`, &dataKey, result, nil)
 }
 
 var _ handlers_interfaces.BorrowHandler = &BorrowHandler{}

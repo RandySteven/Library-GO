@@ -60,7 +60,8 @@ func NewEndpointRouters(h *handlers.Handlers) map[enums.RouterPrefix][]*Router {
 	}
 
 	endpointRouters[enums.BorrowPrefix] = []*Router{
-		Get("", h.BorrowHandler.BorrowCheckout),
+		Get("/checkout", h.BorrowHandler.BorrowCheckout),
+		Get("", h.BorrowHandler.GetBorrowList),
 		Get("/{id}", h.BorrowHandler.GetBorrowDetail),
 		Post("/confirm", h.BorrowHandler.BorrowConfirmation),
 	}
