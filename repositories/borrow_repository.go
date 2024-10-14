@@ -96,7 +96,7 @@ func (b *borrowRepository) FindByReferenceID(ctx context.Context, referenceID st
 	return result, nil
 }
 
-func (b *borrowRepository) FindByUserId(ctx context.Context, userId int64) (result []*models.Borrow, err error) {
+func (b *borrowRepository) FindByUserId(ctx context.Context, userId uint64) (result []*models.Borrow, err error) {
 	rows, err := b.InitTrigger().QueryContext(ctx, queries.SelectBorrowUserIdQuery.ToString(), userId)
 	if err != nil {
 		return nil, err
