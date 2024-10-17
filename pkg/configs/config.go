@@ -49,5 +49,12 @@ type Config struct {
 			AppID  string `yaml:"appID"`
 			ApiKey string `yaml:"apiKey"`
 		} `yaml:"algolia"`
+
+		Mailtrap struct {
+			Host     string `yaml:"host"`
+			Port     int    `yaml:"port"`
+			Username string `yaml:"username"`
+			Password string `yaml:"password"`
+		}
 	} `yaml:"app"`
 }

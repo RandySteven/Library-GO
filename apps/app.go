@@ -8,6 +8,7 @@ import (
 	aws_client "github.com/RandySteven/Library-GO/pkg/aws"
 	"github.com/RandySteven/Library-GO/pkg/caches"
 	"github.com/RandySteven/Library-GO/pkg/configs"
+	emails_client "github.com/RandySteven/Library-GO/pkg/emails"
 	"github.com/RandySteven/Library-GO/pkg/mysql"
 	repositories2 "github.com/RandySteven/Library-GO/repositories"
 	schedulers2 "github.com/RandySteven/Library-GO/schedulers"
@@ -19,6 +20,7 @@ type App struct {
 	AWSClient     *aws_client.AWSClient
 	MySQLDB       *mysql_client.MySQLClient
 	Redis         *caches_client.RedisClient
+	Mailer        *emails_client.Mailer
 }
 
 func NewApp(config *configs.Config) (*App, error) {
@@ -47,11 +49,17 @@ func NewApp(config *configs.Config) (*App, error) {
 		return nil, err
 	}
 
+	mailer, err := emails_client.NewMailtrap(config)
+	if err != nil {
+		return nil, err
+	}
+
 	return &App{
 		MySQLDB:       mysqlDB,
 		Redis:         redis,
 		AWSClient:     aws,
 		AlgoliaSearch: algolia,
+		Mailer:        mailer,
 	}, nil
 }
 
