@@ -7,7 +7,7 @@ type (
 
 	ReturnRequest struct {
 		BorrowID string   `json:"borrow_id"`
-		BookIDs  []uint64 `json:"book_id"`
+		BookIDs  []uint64 `json:"book_ids"`
 	}
 
 	ConfirmBorrowRequest struct {

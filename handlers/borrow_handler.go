@@ -64,6 +64,7 @@ func (b *BorrowHandler) BorrowConfirmation(w http.ResponseWriter, r *http.Reques
 	customErr := b.usecase.BorrowConfirmation(ctx, request)
 	if customErr != nil {
 		utils.ResponseHandler(w, customErr.ErrCode(), `failed to borrow book`, nil, nil, customErr)
+		return
 	}
 	utils.ResponseHandler(w, http.StatusOK, `success to borrow book confirmation`, nil, nil, nil)
 }

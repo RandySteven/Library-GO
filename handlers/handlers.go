@@ -13,6 +13,7 @@ type Handlers struct {
 	BagHandler            handlers_interfaces.BagHandler
 	StoryGeneratorHandler handlers_interfaces.StoryGeneratorHandler
 	BorrowHandler         handlers_interfaces.BorrowHandler
+	ReturnHandler         handlers_interfaces.ReturnHandler
 }
 
 func NewHandlers(usecases *usecases.Usecases) *Handlers {
@@ -24,5 +25,6 @@ func NewHandlers(usecases *usecases.Usecases) *Handlers {
 		BagHandler:            newBagHandler(usecases.BagUsecase),
 		StoryGeneratorHandler: newStoryGeneratorHandler(usecases.StoryGeneratorUsecase),
 		BorrowHandler:         newBorrowHandler(usecases.BorrowUsecase),
+		ReturnHandler:         newReturnHandler(usecases.ReturnUsecase),
 	}
 }

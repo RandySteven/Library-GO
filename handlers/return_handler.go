@@ -27,6 +27,7 @@ func (r2 *ReturnHandler) ReturnBook(w http.ResponseWriter, r *http.Request) {
 	}
 	result, customErr := r2.usecase.ReturnBook(ctx, request)
 	if customErr != nil {
+		utils.ResponseHandler(w, customErr.ErrCode(), `failed to return book`, nil, nil, customErr)
 		return
 	}
 	utils.ResponseHandler(w, http.StatusOK, `success return book`, &dataKey, result, nil)
