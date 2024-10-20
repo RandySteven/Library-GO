@@ -117,4 +117,18 @@ const (
 		    deleted_at TIMESTAMP DEFAULT NULL
 		)
 	`
+
+	RatingMigration MigrationQuery = `
+		CREATE TABLE IF NOT EXISTS ratings (
+		    id BIGINT PRIMARY KEY NOT NULL AUTO_INCREMENT,
+		    book_id BIGINT NOT NULL,
+		    user_id BIGINT NOT NULL,
+		    score FLOAT NOT NULL,
+		    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		    deleted_at TIMESTAMP DEFAULT NULL,
+		    FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE CASCADE,
+		    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+		)
+	`
 )

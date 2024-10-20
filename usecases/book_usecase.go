@@ -30,6 +30,7 @@ type bookUsecase struct {
 	authorRepo     repositories_interfaces.AuthorRepository
 	authorBookRepo repositories_interfaces.AuthorBookRepository
 	bookGenreRepo  repositories_interfaces.BookGenreRepository
+	ratingRepo     repositories_interfaces.RatingRepository
 }
 
 func (b *bookUsecase) refreshTx(ctx context.Context) {
@@ -39,6 +40,7 @@ func (b *bookUsecase) refreshTx(ctx context.Context) {
 	b.authorRepo.SetTx(tx)
 	b.authorBookRepo.SetTx(tx)
 	b.bookGenreRepo.SetTx(tx)
+	b.ratingRepo.SetTx(tx)
 }
 
 func (b *bookUsecase) AddNewBook(ctx context.Context, request *requests.CreateBookRequest, fileHeader *multipart.FileHeader) (result *responses.CreateBookResponse, customErr *apperror.CustomError) {
@@ -275,6 +277,7 @@ func (b *bookUsecase) GetBookByID(ctx context.Context, id uint64) (result *respo
 		customErrCh = make(chan *apperror.CustomError)
 		genresCh    = make(chan []string)
 		authorsCh   = make(chan []string)
+		ratingCh    = make(chan *models.Rating)
 	)
 	book, err := b.bookRepo.FindByID(ctx, id)
 	if err != nil {
@@ -290,7 +293,7 @@ func (b *bookUsecase) GetBookByID(ctx context.Context, id uint64) (result *respo
 		CreatedAt:   book.CreatedAt.Local(),
 	}
 
-	wg.Add(2)
+	wg.Add(3)
 
 	go func() {
 		defer wg.Done()
@@ -340,10 +343,23 @@ func (b *bookUsecase) GetBookByID(ctx context.Context, id uint64) (result *respo
 	}()
 
 	go func() {
+		defer wg.Done()
+		rating, err := b.ratingRepo.FindRatingForBook(ctx, book.ID)
+		if err != nil {
+			rating = &models.Rating{}
+			rating.Score = 0
+			ratingCh <- rating
+			return
+		}
+		ratingCh <- rating
+	}()
+
+	go func() {
 		wg.Wait()
 		close(customErrCh)
 		close(genresCh)
 		close(authorsCh)
+		close(ratingCh)
 	}()
 
 	select {
@@ -352,6 +368,8 @@ func (b *bookUsecase) GetBookByID(ctx context.Context, id uint64) (result *respo
 	default:
 		result.Authors = <-authorsCh
 		result.Genres = <-genresCh
+		rating := <-ratingCh
+		result.Rating = rating.Score
 		return result, nil
 	}
 }
@@ -390,6 +408,7 @@ func newBookUsecase(
 	authorRepo repositories_interfaces.AuthorRepository,
 	authorBookRepo repositories_interfaces.AuthorBookRepository,
 	bookGenreRepo repositories_interfaces.BookGenreRepository,
+	ratingRepo repositories_interfaces.RatingRepository,
 	awsClient *aws_client.AWSClient,
 	algoClient *algolia_client.AlgoliaAPISearchClient) *bookUsecase {
 	return &bookUsecase{
@@ -399,6 +418,7 @@ func newBookUsecase(
 		authorRepo:     authorRepo,
 		authorBookRepo: authorBookRepo,
 		bookGenreRepo:  bookGenreRepo,
+		ratingRepo:     ratingRepo,
 		awsClient:      awsClient,
 		algoClient:     algoClient,
 	}

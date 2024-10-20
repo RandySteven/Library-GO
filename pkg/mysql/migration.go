@@ -18,6 +18,7 @@ func initTableMigration() []queries.MigrationQuery {
 		queries.BorrowMigration,
 		queries.BorrowDetailMigration,
 		queries.StoryGeneratorMigration,
+		queries.RatingMigration,
 	}
 }
 

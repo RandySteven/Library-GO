@@ -19,6 +19,7 @@ type (
 
 	BookDetailResponse struct {
 		ID          uint64    `json:"id"`
+		Rating      float32   `json:"rating"`
 		Image       string    `json:"image"`
 		Title       string    `json:"title"`
 		Status      string    `json:"status"`

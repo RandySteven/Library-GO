@@ -10,4 +10,5 @@ const (
 	DropBagTable          DropQuery = "DROP TABLE IF EXISTS bags"
 	DropBorrowTable       DropQuery = "DROP TABLE IF EXISTS borrows"
 	DropBorrowDetailTable DropQuery = "DROP TABLE IF EXISTS borrow_details"
+	DropRatingTable       DropQuery = "DROP TABLE IF EXISTS ratings"
 )
