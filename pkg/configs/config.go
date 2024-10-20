@@ -4,6 +4,7 @@ import "time"
 
 type Config struct {
 	Config struct {
+		Env    string `yaml:"env"`
 		Server struct {
 			Host    string `yaml:"host"`
 			Port    string `yaml:"port"`

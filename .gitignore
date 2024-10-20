@@ -3,6 +3,7 @@
 *.local.yml
 *.docker.yml
 *.prod.yml
+*.staging.yml
 temp-images
 temp-stories
 .env
