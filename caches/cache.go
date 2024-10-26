@@ -1,11 +1,20 @@
 package caches
 
-import "github.com/go-redis/redis/v8"
+import (
+	caches_interfaces "github.com/RandySteven/Library-GO/interfaces/caches"
+	"github.com/go-redis/redis/v8"
+)
 
 type Caches struct {
-	redis *redis.Client
+	BookCache   caches_interfaces.BookCache
+	BorrowCache caches_interfaces.BorrowCache
+	redis       *redis.Client
 }
 
 func NewCaches(redis *redis.Client) *Caches {
-	return &Caches{}
+	return &Caches{
+		BookCache:   newBookCache(redis),
+		BorrowCache: newBorrowCache(redis),
+		redis:       redis,
+	}
 }

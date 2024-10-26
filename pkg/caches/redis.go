@@ -6,8 +6,11 @@ import (
 	"github.com/RandySteven/Library-GO/pkg/configs"
 	"github.com/go-redis/redis/v8"
 	"log"
+	"os"
 	"time"
 )
+
+var redisTimeout = os.Getenv("REDIS_EXPIRATION")
 
 type RedisClient struct {
 	client *redis.Client

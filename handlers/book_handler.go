@@ -9,6 +9,7 @@ import (
 	"github.com/RandySteven/Library-GO/utils"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
+	"log"
 	"net/http"
 	"strconv"
 )
@@ -74,7 +75,9 @@ func (b *BookHandler) GetBookByID(w http.ResponseWriter, r *http.Request) {
 		dataKey = `book`
 		vars    = mux.Vars(r)
 		idStr   = vars[`id`]
+		id      = r.PathValue("id")
 	)
+	log.Println(id)
 	idUint64, err := strconv.ParseUint(idStr, 10, 64)
 	if err != nil {
 		utils.ResponseHandler(w, http.StatusBadRequest, `bad request`, nil, nil, err)
