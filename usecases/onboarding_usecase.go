@@ -157,10 +157,10 @@ func (o *onboardingUsecase) GetLoginUser(ctx context.Context) (result *responses
 		Email:       user.Email,
 		Password:    user.Password,
 		PhoneNumber: user.PhoneNumber,
+		Address:     user.Address,
 		DoB:         user.DoB,
 		CreatedAt:   user.CreatedAt,
 		UpdatedAt:   user.UpdatedAt,
-		VerifiedAt:  user.VerifiedAt,
 	}
 	return result, nil
 }

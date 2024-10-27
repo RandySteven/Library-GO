@@ -131,4 +131,20 @@ const (
 		    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 		)
 	`
+
+	CommentMigration MigrationQuery = `
+		CREATE TABLE IF NOT EXISTS comments (
+		    id BIGINT PRIMARY KEY NOT NULL AUTO_INCREMENT,
+		    user_id BIGINT NOT NULL,
+		    book_id BIGINT NOT NULL,
+		    parent_id BIGINT DEFAULT NULL,
+		    comment TEXT NOT NULL,
+		    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		    deleted_at TIMESTAMP DEFAULT NULL,
+		    FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE CASCADE,
+		    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+		    FOREIGN KEY (parent_id) REFERENCES comments(id) ON DELETE CASCADE
+		)
+	`
 )

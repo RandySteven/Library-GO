@@ -75,15 +75,15 @@ func (b *BookHandler) GetBookByID(w http.ResponseWriter, r *http.Request) {
 		dataKey = `book`
 		vars    = mux.Vars(r)
 		idStr   = vars[`id`]
-		id      = r.PathValue("id")
+		//id      = r.PathValue("id")
 	)
-	log.Println(id)
-	idUint64, err := strconv.ParseUint(idStr, 10, 64)
+	log.Println(idStr)
+	idUint64, err := strconv.Atoi(idStr)
 	if err != nil {
 		utils.ResponseHandler(w, http.StatusBadRequest, `bad request`, nil, nil, err)
 		return
 	}
-	result, customErr := b.usecase.GetBookByID(ctx, idUint64)
+	result, customErr := b.usecase.GetBookByID(ctx, uint64(idUint64))
 	if customErr != nil {
 		utils.ResponseHandler(w, customErr.ErrCode(), `internal server error`, nil, nil, customErr)
 		return

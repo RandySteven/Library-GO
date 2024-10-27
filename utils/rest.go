@@ -104,7 +104,7 @@ func ResponseHandler(w http.ResponseWriter, responseCode int, message string, da
 	if dataKey != nil && responseData != nil {
 		responseMap[*dataKey] = responseData
 	}
-	response := responses.NewResponse(message, responseMap, err)
+	response := responses.NewResponse(message, responseMap, err, responseCode)
 	log.Print(response)
 	err = json.NewEncoder(w).Encode(&response)
 	if err != nil {
@@ -137,6 +137,6 @@ func BindRequest(req *http.Request, request interface{}) error {
 
 func ErrorHandler(w http.ResponseWriter, customErr *apperror.CustomError) {
 	w.WriteHeader(customErr.ErrCode())
-	response := responses.NewResponse("", nil, customErr)
+	response := responses.NewResponse("", nil, customErr, 500)
 	json.NewEncoder(w).Encode(&response)
 }

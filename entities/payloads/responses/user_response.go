@@ -23,17 +23,14 @@ type (
 	}
 
 	LoginUserResponse struct {
-		ID          uint64     `json:"id"`
-		Name        string     `json:"name"`
-		Address     string     `json:"address"`
-		Email       string     `json:"email"`
-		PhoneNumber string     `json:"phone_number"`
-		Password    string     `json:"password"`
-		DoB         time.Time  `json:"date_of_birth"`
-		CreatedAt   time.Time  `json:"created_at"`
-		UpdatedAt   time.Time  `json:"updated_at"`
-		DeletedAt   *time.Time `json:"deleted_at"`
-
-		VerifiedAt *time.Time `json:"verified_at"`
+		ID          uint64    `json:"id"`
+		Name        string    `json:"name"`
+		Address     string    `json:"address"`
+		Email       string    `json:"email"`
+		PhoneNumber string    `json:"phone_number"`
+		Password    string    `json:"password"`
+		DoB         time.Time `json:"date_of_birth"`
+		CreatedAt   time.Time `json:"created_at"`
+		UpdatedAt   time.Time `json:"updated_at"`
 	}
 )
