@@ -12,6 +12,7 @@ type (
 		Image     string     `json:"image"`
 		Title     string     `json:"title"`
 		Status    string     `json:"status"`
+		Rating    float32    `json:"rating"`
 		CreatedAt time.Time  `json:"created_at"`
 		UpdatedAt time.Time  `json:"updated_at"`
 		DeletedAt *time.Time `json:"deleted_at"`

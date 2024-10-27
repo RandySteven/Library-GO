@@ -1,7 +1,9 @@
 package caches_interfaces
 
-import "github.com/RandySteven/Library-GO/entities/models"
+import (
+	"github.com/RandySteven/Library-GO/entities/payloads/responses"
+)
 
 type BookCache interface {
-	Cache[models.Book]
+	Cache[responses.BookDetailResponse, responses.ListBooksResponse]
 }

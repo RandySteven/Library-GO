@@ -2,9 +2,8 @@ package caches
 
 import (
 	"context"
-	"fmt"
 	"github.com/RandySteven/Library-GO/entities/models"
-	"github.com/RandySteven/Library-GO/enums"
+	"github.com/RandySteven/Library-GO/entities/payloads/responses"
 	caches_interfaces "github.com/RandySteven/Library-GO/interfaces/caches"
 	caches_client "github.com/RandySteven/Library-GO/pkg/caches"
 	"github.com/go-redis/redis/v8"
@@ -14,20 +13,24 @@ type borrowCache struct {
 	redis *redis.Client
 }
 
-func (b *borrowCache) Set(ctx context.Context, key string, value *models.Borrow) (err error) {
-	return caches_client.Set[models.Borrow](ctx, b.redis, fmt.Sprintf(enums.BorrowKey, key), value)
+func (b *borrowCache) Set(ctx context.Context, key string, value *responses.BorrowDetailResponse) (err error) {
+	//TODO implement me
+	panic("implement me")
 }
 
-func (b *borrowCache) Get(ctx context.Context, key string) (value *models.Borrow, err error) {
-	return caches_client.Get[models.Borrow](ctx, b.redis, fmt.Sprintf(enums.BorrowKey, key))
+func (b *borrowCache) Get(ctx context.Context, key string) (value *responses.BorrowDetailResponse, err error) {
+	//TODO implement me
+	panic("implement me")
 }
 
-func (b *borrowCache) SetMultiData(ctx context.Context, values []*models.Borrow) (err error) {
-	return caches_client.SetMultiple[models.Borrow](ctx, b.redis, enums.BorrowsKey, values)
+func (b *borrowCache) SetMultiData(ctx context.Context, values []*responses.BorrowListResponse) (err error) {
+	//TODO implement me
+	panic("implement me")
 }
 
-func (b *borrowCache) GetMultiData(ctx context.Context) (values []*models.Borrow, err error) {
-	return caches_client.GetMultiple[models.Borrow](ctx, b.redis, enums.BorrowsKey)
+func (b *borrowCache) GetMultiData(ctx context.Context) (values []*responses.BorrowListResponse, err error) {
+	//TODO implement me
+	panic("implement me")
 }
 
 func (b *borrowCache) Refresh(ctx context.Context, key string, update any) (value any, err error) {

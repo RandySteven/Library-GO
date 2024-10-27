@@ -258,10 +258,16 @@ func (b *bookUsecase) GetAllBooks(ctx context.Context) (result []*responses.List
 		return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to get books`, err)
 	}
 	for _, book := range books {
+		rating, err := b.ratingRepo.FindRatingForBook(ctx, book.ID)
+		if err != nil {
+			rating = &models.Rating{}
+			rating.Score = 0
+		}
 		result = append(result, &responses.ListBooksResponse{
 			ID:        book.ID,
 			Image:     book.Image,
 			Title:     book.Title,
+			Rating:    rating.Score,
 			Status:    book.Status.ToString(),
 			CreatedAt: book.CreatedAt.Local(),
 			UpdatedAt: book.UpdatedAt.Local(),

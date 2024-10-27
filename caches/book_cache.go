@@ -3,7 +3,7 @@ package caches
 import (
 	"context"
 	"fmt"
-	"github.com/RandySteven/Library-GO/entities/models"
+	"github.com/RandySteven/Library-GO/entities/payloads/responses"
 	"github.com/RandySteven/Library-GO/enums"
 	caches_interfaces "github.com/RandySteven/Library-GO/interfaces/caches"
 	caches_client "github.com/RandySteven/Library-GO/pkg/caches"
@@ -14,20 +14,22 @@ type bookCache struct {
 	redis *redis.Client
 }
 
-func (b *bookCache) Set(ctx context.Context, key string, value *models.Book) (err error) {
-	return caches_client.Set[models.Book](ctx, b.redis, fmt.Sprintf(enums.BookKey, key), value)
+func (b *bookCache) Set(ctx context.Context, key string, value *responses.BookDetailResponse) (err error) {
+	return caches_client.Set[responses.BookDetailResponse](ctx, b.redis, fmt.Sprintf(enums.BookKey, key), value)
 }
 
-func (b *bookCache) Get(ctx context.Context, key string) (value *models.Book, err error) {
-	return caches_client.Get[models.Book](ctx, b.redis, fmt.Sprintf(enums.BookKey, key))
+func (b *bookCache) Get(ctx context.Context, key string) (value *responses.BookDetailResponse, err error) {
+	return caches_client.Get[responses.BookDetailResponse](ctx, b.redis, fmt.Sprintf(enums.BookKey, key))
 }
 
-func (b *bookCache) SetMultiData(ctx context.Context, values []*models.Book) (err error) {
-	return caches_client.SetMultiple[models.Book](ctx, b.redis, enums.BooksKey, values)
+func (b *bookCache) SetMultiData(ctx context.Context, values []*responses.ListBooksResponse) (err error) {
+	//TODO implement me
+	panic("implement me")
 }
 
-func (b *bookCache) GetMultiData(ctx context.Context) (values []*models.Book, err error) {
-	return caches_client.GetMultiple[models.Book](ctx, b.redis, enums.BooksKey)
+func (b *bookCache) GetMultiData(ctx context.Context) (values []*responses.ListBooksResponse, err error) {
+	//TODO implement me
+	panic("implement me")
 }
 
 func (b *bookCache) Refresh(ctx context.Context, key string, update any) (value any, err error) {
@@ -35,10 +37,10 @@ func (b *bookCache) Refresh(ctx context.Context, key string, update any) (value 
 	if err != nil {
 		return nil, err
 	}
-	err = b.SetMultiData(ctx, update.([]*models.Book))
-	if err != nil {
-		return nil, err
-	}
+	//err = b.SetMultiData(ctx, update.([]*models.Book))
+	//if err != nil {
+	//	return nil, err
+	//}
 	return nil, nil
 }
 
