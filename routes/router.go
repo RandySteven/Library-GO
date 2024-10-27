@@ -34,7 +34,14 @@ func NewEndpointRouters(h *handlers.Handlers) map[enums.RouterPrefix][]*Router {
 		Post("/verify", h.OnboardingHandler.VerifyUser),
 	}
 
-	endpointRouters[enums.UserPrefix] = []*Router{}
+	endpointRouters[enums.OnboardedPrefix] = []*Router{
+		Get("", h.OnboardingHandler.GetLoginUser),
+	}
+
+	endpointRouters[enums.UserPrefix] = []*Router{
+		Get("/{id}", h.UserHandler.GetUserDetail),
+		Get("/", h.UserHandler.GetListOfUsers),
+	}
 
 	endpointRouters[enums.BookPrefix] = []*Router{
 		Post("", h.BookHandler.AddBook),
@@ -78,6 +85,13 @@ func InitRouters(routers map[enums.RouterPrefix][]*Router, r *mux.Router) {
 		onboardingRouter.HandleFunc(router.path, router.handler).Methods(router.method)
 	}
 
+	onboardedRouter := r.PathPrefix(enums.OnboardedPrefix.ToString()).Subrouter()
+	onboardedRouter.Use(middlewares.AuthenticationMiddleware)
+	for _, router := range routers[enums.OnboardedPrefix] {
+		router.RouterLog(enums.OnboardedPrefix.ToString())
+		onboardedRouter.HandleFunc(router.path, router.handler).Methods(router.method)
+	}
+
 	devRouter := r.PathPrefix(enums.DevPrefix.ToString()).Subrouter()
 	for _, router := range routers[enums.DevPrefix] {
 		router.RouterLog(enums.DevPrefix.ToString())
@@ -115,6 +129,13 @@ func InitRouters(routers map[enums.RouterPrefix][]*Router, r *mux.Router) {
 	for _, router := range routers[enums.BorrowPrefix] {
 		router.RouterLog(enums.BorrowPrefix.ToString())
 		borrowRouter.HandleFunc(router.path, router.handler).Methods(router.method)
+	}
+
+	userRouter := r.PathPrefix(enums.UserPrefix.ToString()).Subrouter()
+	userRouter.Use(middlewares.AuthenticationMiddleware)
+	for _, router := range routers[enums.UserPrefix] {
+		router.RouterLog(enums.UserPrefix.ToString())
+		userRouter.HandleFunc(router.path, router.handler).Methods(router.method)
 	}
 }
 

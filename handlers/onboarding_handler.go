@@ -15,6 +15,20 @@ type OnboardingHandler struct {
 	onboardingUsecase usecases_interfaces.OnboardingUsecase
 }
 
+func (o *OnboardingHandler) GetLoginUser(w http.ResponseWriter, r *http.Request) {
+	var (
+		rID     = uuid.NewString()
+		ctx     = context.WithValue(r.Context(), enums.RequestID, rID)
+		dataKey = `user`
+	)
+	result, customErr := o.onboardingUsecase.GetLoginUser(ctx)
+	if customErr != nil {
+		utils.ResponseHandler(w, customErr.ErrCode(), `internal server error`, nil, nil, customErr)
+		return
+	}
+	utils.ResponseHandler(w, http.StatusOK, `success register user`, &dataKey, result, nil)
+}
+
 func (o *OnboardingHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 	var (
 		rID     = uuid.NewString()

@@ -5,6 +5,7 @@ type RouterPrefix string
 const (
 	DevPrefix        RouterPrefix = "/dev"
 	OnboardingPrefix RouterPrefix = "/onboarding"
+	OnboardedPrefix  RouterPrefix = "/onboarded"
 	UserPrefix       RouterPrefix = "/users"
 	BookPrefix       RouterPrefix = "/books"
 	GenrePrefix      RouterPrefix = "/genres"

@@ -9,6 +9,7 @@ import (
 	"github.com/RandySteven/Library-GO/entities/models"
 	"github.com/RandySteven/Library-GO/entities/payloads/requests"
 	"github.com/RandySteven/Library-GO/entities/payloads/responses"
+	"github.com/RandySteven/Library-GO/enums"
 	repositories_interfaces "github.com/RandySteven/Library-GO/interfaces/repositories"
 	usecases_interfaces "github.com/RandySteven/Library-GO/interfaces/usecases"
 	jwt2 "github.com/RandySteven/Library-GO/pkg/jwt"
@@ -140,6 +141,26 @@ func (o *onboardingUsecase) LoginUser(ctx context.Context, request *requests.Use
 	}
 	result = &responses.UserLoginResponse{
 		Token: token,
+	}
+	return result, nil
+}
+
+func (o *onboardingUsecase) GetLoginUser(ctx context.Context) (result *responses.LoginUserResponse, customErr *apperror.CustomError) {
+	id := ctx.Value(enums.UserID).(uint64)
+	user, err := o.userRepo.FindByID(ctx, id)
+	if err != nil {
+		return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to get user login`, err)
+	}
+	result = &responses.LoginUserResponse{
+		ID:          user.ID,
+		Name:        user.Name,
+		Email:       user.Email,
+		Password:    user.Password,
+		PhoneNumber: user.PhoneNumber,
+		DoB:         user.DoB,
+		CreatedAt:   user.CreatedAt,
+		UpdatedAt:   user.UpdatedAt,
+		VerifiedAt:  user.VerifiedAt,
 	}
 	return result, nil
 }

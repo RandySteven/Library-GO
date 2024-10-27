@@ -32,5 +32,6 @@ func NewUsecases(repositories *repositories.Repositories, caches *caches.Caches,
 		StoryGeneratorUsecase: newStoryGeneratorUsecase(awsClient),
 		ReturnUsecase:         newReturnUsecase(repositories.BorrowRepo, repositories.BorrowDetailRepo, repositories.BookRepo, repositories.UserRepo),
 		RatingUsecase:         newRatingUsecase(repositories.RatingRepo),
+		UserUsecase:           newUserUsecase(repositories.UserRepo),
 	}
 }

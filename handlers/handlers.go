@@ -15,6 +15,7 @@ type Handlers struct {
 	BorrowHandler         handlers_interfaces.BorrowHandler
 	ReturnHandler         handlers_interfaces.ReturnHandler
 	RatingHandler         handlers_interfaces.RatingHandler
+	UserHandler           handlers_interfaces.UserHandler
 }
 
 func NewHandlers(usecases *usecases.Usecases) *Handlers {
@@ -28,5 +29,6 @@ func NewHandlers(usecases *usecases.Usecases) *Handlers {
 		BorrowHandler:         newBorrowHandler(usecases.BorrowUsecase),
 		ReturnHandler:         newReturnHandler(usecases.ReturnUsecase),
 		RatingHandler:         newRatingHandler(usecases.RatingUsecase),
+		UserHandler:           newUserHandler(usecases.UserUsecase),
 	}
 }
