@@ -1,9 +1,11 @@
 package routes
 
 import (
+	"fmt"
 	"github.com/RandySteven/Library-GO/enums"
 	"github.com/RandySteven/Library-GO/handlers"
 	"github.com/RandySteven/Library-GO/middlewares"
+	"github.com/RandySteven/Library-GO/utils"
 	"github.com/gorilla/mux"
 	"log"
 	"net/http"
@@ -26,6 +28,16 @@ func NewEndpointRouters(h *handlers.Handlers) map[enums.RouterPrefix][]*Router {
 		Get("/health-check", h.DevHandler.HealthCheck),
 		Post("/create-bucket", h.DevHandler.CreateBucket),
 		Get("/buckets", h.DevHandler.GetListBuckets),
+		Get("/check-points", func(writer http.ResponseWriter, request *http.Request) {
+			result := []string{}
+			for key, value := range endpointRouters {
+				for _, r := range value {
+					result = append(result, fmt.Sprintf("%s%s", key, r.path))
+				}
+			}
+			dataKey := `endpoints`
+			utils.ResponseHandler(writer, http.StatusOK, `success get list endpoint`, &dataKey, result, nil)
+		}),
 	}
 
 	endpointRouters[enums.OnboardingPrefix] = []*Router{
