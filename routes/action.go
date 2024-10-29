@@ -2,6 +2,10 @@ package routes
 
 import "net/http"
 
+type RouterAction interface {
+	Get(path string, handler HandlerFunc) *Router
+}
+
 func registerEndpointRouter(path, method string, handler HandlerFunc) *Router {
 	return &Router{path: path, handler: handler, method: method}
 }

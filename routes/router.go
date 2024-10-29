@@ -52,7 +52,7 @@ func NewEndpointRouters(h *handlers.Handlers) map[enums.RouterPrefix][]*Router {
 
 	endpointRouters[enums.UserPrefix] = []*Router{
 		Get("/{id}", h.UserHandler.GetUserDetail),
-		Get("/", h.UserHandler.GetListOfUsers),
+		Get("", h.UserHandler.GetListOfUsers),
 	}
 
 	endpointRouters[enums.BookPrefix] = []*Router{
@@ -85,6 +85,12 @@ func NewEndpointRouters(h *handlers.Handlers) map[enums.RouterPrefix][]*Router {
 		Get("/{id}", h.BorrowHandler.GetBorrowDetail),
 		Post("/confirm", h.BorrowHandler.BorrowConfirmation),
 		Post("/return", h.ReturnHandler.ReturnBook),
+	}
+
+	endpointRouters[enums.CommentPrefix] = []*Router{
+		Post("", h.CommentHandler.Comment),
+		Post("/reply", h.CommentHandler.Reply),
+		Post("get", h.CommentHandler.GetBookComment),
 	}
 
 	return endpointRouters
@@ -148,6 +154,13 @@ func InitRouters(routers map[enums.RouterPrefix][]*Router, r *mux.Router) {
 	for _, router := range routers[enums.UserPrefix] {
 		router.RouterLog(enums.UserPrefix.ToString())
 		userRouter.HandleFunc(router.path, router.handler).Methods(router.method)
+	}
+
+	commentRouter := r.PathPrefix(enums.CommentPrefix.ToString()).Subrouter()
+	commentRouter.Use(middlewares.AuthenticationMiddleware)
+	for _, router := range routers[enums.CommentPrefix] {
+		router.RouterLog(enums.CommentPrefix.ToString())
+		commentRouter.HandleFunc(router.path, router.handler).Methods(router.method)
 	}
 }
 

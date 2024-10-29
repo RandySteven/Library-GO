@@ -2,8 +2,10 @@ package caches
 
 import (
 	"context"
+	"fmt"
 	"github.com/RandySteven/Library-GO/entities/models"
 	"github.com/RandySteven/Library-GO/entities/payloads/responses"
+	"github.com/RandySteven/Library-GO/enums"
 	caches_interfaces "github.com/RandySteven/Library-GO/interfaces/caches"
 	caches_client "github.com/RandySteven/Library-GO/pkg/caches"
 	"github.com/go-redis/redis/v8"
@@ -14,13 +16,11 @@ type borrowCache struct {
 }
 
 func (b *borrowCache) Set(ctx context.Context, key string, value *responses.BorrowDetailResponse) (err error) {
-	//TODO implement me
-	panic("implement me")
+	return caches_client.Set[responses.BorrowDetailResponse](ctx, b.redis, fmt.Sprintf(enums.BorrowKey, key), value)
 }
 
 func (b *borrowCache) Get(ctx context.Context, key string) (value *responses.BorrowDetailResponse, err error) {
-	//TODO implement me
-	panic("implement me")
+	return caches_client.Get[responses.BorrowDetailResponse](ctx, b.redis, fmt.Sprintf(enums.BorrowKey, key))
 }
 
 func (b *borrowCache) SetMultiData(ctx context.Context, values []*responses.BorrowListResponse) (err error) {

@@ -16,6 +16,7 @@ type Repositories struct {
 	GenreRepo        repositories_interfaces.GenreRepository
 	UserRepo         repositories_interfaces.UserRepository
 	RatingRepo       repositories_interfaces.RatingRepository
+	CommentRepo      repositories_interfaces.CommentRepository
 }
 
 func NewRepositories(db *sql.DB) *Repositories {
@@ -30,5 +31,6 @@ func NewRepositories(db *sql.DB) *Repositories {
 		GenreRepo:        newGenreRepository(db),
 		UserRepo:         newUserRepository(db),
 		RatingRepo:       newRatingRepository(db),
+		CommentRepo:      newCommentRepository(db),
 	}
 }

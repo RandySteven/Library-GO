@@ -16,6 +16,7 @@ type Handlers struct {
 	ReturnHandler         handlers_interfaces.ReturnHandler
 	RatingHandler         handlers_interfaces.RatingHandler
 	UserHandler           handlers_interfaces.UserHandler
+	CommentHandler        handlers_interfaces.CommentHandler
 }
 
 func NewHandlers(usecases *usecases.Usecases) *Handlers {
@@ -30,5 +31,6 @@ func NewHandlers(usecases *usecases.Usecases) *Handlers {
 		ReturnHandler:         newReturnHandler(usecases.ReturnUsecase),
 		RatingHandler:         newRatingHandler(usecases.RatingUsecase),
 		UserHandler:           newUserHandler(usecases.UserUsecase),
+		CommentHandler:        newCommentHandler(usecases.CommentUsecase),
 	}
 }
