@@ -4,7 +4,10 @@
 *.docker.yml
 *.prod.yml
 *.staging.yml
+*.test.yml
 temp-images
 temp-stories
 .env
 mysql-data
+coverage.out
+mocks

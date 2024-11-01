@@ -42,3 +42,6 @@ refresh: drop migration seed
 
 scheduler:
 	${gorun} ${cmd_folder}scheduler -config ${yaml_file}
+
+test:
+	go test -coverprofile=coverage.out ./... ;    go tool cover -html=coverage.out
