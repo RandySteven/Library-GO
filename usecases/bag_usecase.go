@@ -2,11 +2,13 @@ package usecases
 
 import (
 	"context"
+	"fmt"
 	"github.com/RandySteven/Library-GO/apperror"
 	"github.com/RandySteven/Library-GO/entities/models"
 	"github.com/RandySteven/Library-GO/entities/payloads/requests"
 	"github.com/RandySteven/Library-GO/entities/payloads/responses"
 	"github.com/RandySteven/Library-GO/enums"
+	caches_interfaces "github.com/RandySteven/Library-GO/interfaces/caches"
 	repositories_interfaces "github.com/RandySteven/Library-GO/interfaces/repositories"
 	usecases_interfaces "github.com/RandySteven/Library-GO/interfaces/usecases"
 	"log"
@@ -17,6 +19,7 @@ type bagUsecase struct {
 	bagRepo  repositories_interfaces.BagRepository
 	bookRepo repositories_interfaces.BookRepository
 	userRepo repositories_interfaces.UserRepository
+	cache    caches_interfaces.BagCache
 }
 
 func (b *bagUsecase) setTx(ctx context.Context) {
@@ -117,6 +120,10 @@ func (b *bagUsecase) GetUserBag(ctx context.Context) (result *responses.GetAllBa
 	for _, bagBook := range bagBooks {
 		bookIds = append(bookIds, bagBook.BookID)
 	}
+	if len(bookIds) == 0 {
+		return nil, apperror.NewCustomError(apperror.ErrNotFound, `user doesn't have bag'`, fmt.Errorf(`user didn't have item'`))
+	}
+
 	books, err := b.bookRepo.FindSelectedBooksId(ctx, bookIds)
 	if err != nil {
 		return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to find bags`, err)
@@ -156,10 +163,12 @@ var _ usecases_interfaces.BagUsecase = &bagUsecase{}
 func newBagUsecase(
 	bagRepo repositories_interfaces.BagRepository,
 	bookRepo repositories_interfaces.BookRepository,
-	userRepo repositories_interfaces.UserRepository) *bagUsecase {
+	userRepo repositories_interfaces.UserRepository,
+	cache caches_interfaces.BagCache) *bagUsecase {
 	return &bagUsecase{
 		bagRepo:  bagRepo,
 		bookRepo: bookRepo,
 		userRepo: userRepo,
+		cache:    cache,
 	}
 }

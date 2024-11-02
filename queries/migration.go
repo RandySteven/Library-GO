@@ -147,4 +147,34 @@ const (
 		    FOREIGN KEY (parent_id) REFERENCES comments(id) ON DELETE CASCADE
 		)
 	`
+
+	EventMigration MigrationQuery = `
+		CREATE TABLE IF NOT EXISTS events (
+		    id BIGINT PRIMARY KEY NOT NULL AUTO_INCREMENT,
+		    title VARCHAR(122) NOT NULL,
+		    thumbnail VARCHAR(244) NOT NULL,
+		    description TEXT NOT NULL,
+		    participant_number INT NOT NULL,
+		    occupied_participant_number INT NOT NULL,
+		    date DATE NOT NULL,
+		    start_duration TIME NOT NULL,
+		    end_duration TIME NOT NULL,
+			created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		    deleted_at TIMESTAMP DEFAULT NULL
+		)
+	`
+
+	EventUserMigration MigrationQuery = `
+		CREATE TABLE IF NOT EXISTS event_users (
+		    id BIGINT PRIMARY KEY NOT NULL AUTO_INCREMENT,
+		    user_id BIGINT NOT NULL,
+		    event_id BIGINT NOT NULL,
+			created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		    deleted_at TIMESTAMP DEFAULT NULL,		    
+		    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+		    FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE
+		)
+	`
 )

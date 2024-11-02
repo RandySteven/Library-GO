@@ -3,10 +3,12 @@ package usecases
 import (
 	"context"
 	"github.com/RandySteven/Library-GO/apperror"
+	"github.com/RandySteven/Library-GO/entities/models"
 	"github.com/RandySteven/Library-GO/entities/payloads/requests"
 	"github.com/RandySteven/Library-GO/entities/payloads/responses"
 	repositories_interfaces "github.com/RandySteven/Library-GO/interfaces/repositories"
 	usecases_interfaces "github.com/RandySteven/Library-GO/interfaces/usecases"
+	"github.com/RandySteven/Library-GO/utils"
 )
 
 type genreUsecase struct {
@@ -64,8 +66,13 @@ func (g *genreUsecase) GetGenreDetail(ctx context.Context, id uint64) (result *r
 }
 
 func (g *genreUsecase) AddGenre(ctx context.Context, request *requests.GenreRequest) (idHash string, customErr *apperror.CustomError) {
-	//TODO implement me
-	panic("implement me")
+	genre, err := g.genreRepo.Save(ctx, &models.Genre{
+		Genre: request.Genre,
+	})
+	if err != nil {
+		return "", apperror.NewCustomError(apperror.ErrInternalServer, `failed to create genre`, err)
+	}
+	return utils.HashID(genre.ID), nil
 }
 
 func (g *genreUsecase) GetAllGenres(ctx context.Context) (result []*responses.ListGenresResponse, customErr *apperror.CustomError) {

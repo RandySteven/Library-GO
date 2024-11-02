@@ -20,6 +20,8 @@ func initTableMigration() []queries.MigrationQuery {
 		queries.StoryGeneratorMigration,
 		queries.RatingMigration,
 		queries.CommentMigration,
+		queries.EventMigration,
+		queries.EventUserMigration,
 	}
 }
 
