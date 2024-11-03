@@ -7,7 +7,6 @@ import (
 	"github.com/go-redis/redis/v8"
 	"log"
 	"os"
-	"time"
 )
 
 var redisTimeout = os.Getenv("REDIS_EXPIRATION")
@@ -20,14 +19,9 @@ func NewRedisCache(config *configs.Config) (*RedisClient, error) {
 	redisCfg := config.Config.Redis
 	addr := fmt.Sprintf("%s:%s", redisCfg.Host, redisCfg.Port)
 	log.Println("connecting to redis : ", addr)
-	client := redis.NewClient(&redis.Options{
-		Addr:         addr,
-		Password:     "",
-		MinIdleConns: redisCfg.MinIddleConns,
-		PoolSize:     redisCfg.PoolSize,
-		PoolTimeout:  time.Duration(redisCfg.PoolTimeout) * time.Second,
-		DB:           0,
-	})
+	opt, _ := redis.ParseURL(fmt.Sprintf(`rediss://default:%s@%s:%s`, redisCfg.Password, redisCfg.Host, redisCfg.Port))
+
+	client := redis.NewClient(opt)
 	return &RedisClient{
 		client: client,
 	}, nil
