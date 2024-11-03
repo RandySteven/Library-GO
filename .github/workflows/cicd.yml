@@ -58,7 +58,7 @@ jobs:
                 idle: 5
             mysql:
               host: "${{ env.MYSQL_HOST }}"
-              port: "3306"
+              port: "${{ env.MYSQL_PORT }}"
               username: "${{ env.MYSQL_USERNAME }}"
               password: "${{ secrets.MYSQL_PASSWORD }}"
               database: "${{ secrets.MYSQL_DATABASE }}"
