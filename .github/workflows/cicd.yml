@@ -20,9 +20,11 @@ jobs:
         uses: actions/setup-go@v3
         with:
           go-version: ${{ matrix.go-version }}
+      - name: Install Mockery
+        run: |
+          go install github.com/vektra/mockery/v2/...@latest
+          export PATH=$PATH:$(go env GOPATH)/bin
       - name: Build & Deploy
         run: |
           go version
-          go get github.com/vektra/mockery/v2/../
-          mockery --all --keeptree
           go mod tidy
