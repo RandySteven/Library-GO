@@ -3,24 +3,22 @@ name: Deploy
 on:
   push:
     branches: [ master ]
+  pull_request:
+    branches: [ master ]
 
 jobs:
   Deploy:
     name: Deploy to EC2
     runs-on: ubuntu-latest
     strategy:
-      go-version: ['1.22']
+      matrix:
+        go-version: [ '1.22' ]
 
     steps:
       - uses: actions/checkout@v2
       - name: Build & Deploy
         with:
           go-version: '1.22.x'
-        env:
-          PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-          HOSTNAME: ${{secrets.SSH_HOST}}
-          USER_NAME: ${{secrets.USER_NAME}}
-
         run: |
           go get .
           go mod tidy

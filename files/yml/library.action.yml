@@ -1,0 +1,35 @@
+app:
+  env: "local"
+  server:
+    host: "localhost"
+    port: "8081"
+    timeout:
+      server: 30
+      read: 15
+      write: 10
+      idle: 5
+  mysql:
+    host: "localhost"
+    port: "3306"
+    username: "root"
+    password: ""
+    database: "library"
+    connPool:
+      maxIdle: 15
+      connLimit: 100
+      idleTime: 600
+  aws:
+    accessKeyID: "${ACCESS_KEY}"
+    secretAccessKey: "${SECRET_KEY}"
+    region: "${REGION}"
+  redis:
+    host: "localhost"
+    port: "6379"
+    minIddleConns: 200
+    poolSize: 12000
+    poolTimeout: 1400
+    password: ""
+    db: 0
+  algolia:
+    appID: "${APP_ID}"
+    apiKey: "${API_KEY}"

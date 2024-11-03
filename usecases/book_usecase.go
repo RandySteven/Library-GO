@@ -8,6 +8,7 @@ import (
 	"github.com/RandySteven/Library-GO/entities/payloads/requests"
 	"github.com/RandySteven/Library-GO/entities/payloads/responses"
 	"github.com/RandySteven/Library-GO/enums"
+	caches_interfaces "github.com/RandySteven/Library-GO/interfaces/caches"
 	repositories_interfaces "github.com/RandySteven/Library-GO/interfaces/repositories"
 	usecases_interfaces "github.com/RandySteven/Library-GO/interfaces/usecases"
 	algolia_client "github.com/RandySteven/Library-GO/pkg/algolia"
@@ -31,6 +32,7 @@ type bookUsecase struct {
 	authorBookRepo repositories_interfaces.AuthorBookRepository
 	bookGenreRepo  repositories_interfaces.BookGenreRepository
 	ratingRepo     repositories_interfaces.RatingRepository
+	cache          caches_interfaces.BookCache
 }
 
 func (b *bookUsecase) refreshTx(ctx context.Context) {
@@ -416,7 +418,8 @@ func newBookUsecase(
 	bookGenreRepo repositories_interfaces.BookGenreRepository,
 	ratingRepo repositories_interfaces.RatingRepository,
 	awsClient *aws_client.AWSClient,
-	algoClient *algolia_client.AlgoliaAPISearchClient) *bookUsecase {
+	algoClient *algolia_client.AlgoliaAPISearchClient,
+	cache caches_interfaces.BookCache) *bookUsecase {
 	return &bookUsecase{
 		userRepo:       userRepo,
 		bookRepo:       bookRepo,
@@ -427,5 +430,6 @@ func newBookUsecase(
 		ratingRepo:     ratingRepo,
 		awsClient:      awsClient,
 		algoClient:     algoClient,
+		cache:          cache,
 	}
 }
