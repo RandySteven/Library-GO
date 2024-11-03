@@ -111,7 +111,7 @@ jobs:
         run: |
           go get .
           go mod tidy
-          go build -o bin/library_app/http ./cmd/library_app/http/main.go
+          go build -o bin/library_app/http ./cmd/library_app/http/main.go --config.yml
 
       - name: Zip the build
         run: |
