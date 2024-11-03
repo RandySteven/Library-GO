@@ -1,15 +1,14 @@
 package usecases_test
 
 import (
+	"github.com/stretchr/testify/suite"
 	"testing"
 )
 
-func TestAddNewBook(t *testing.T) {
+type BookUsecaseTestSuite struct {
+	suite.Suite
+}
 
-	t.Run("success to create add book", func(t *testing.T) {
-	})
-
-	t.Run("", func(t *testing.T) {
-
-	})
+func TestBookUsecaseTestSuite(t *testing.T) {
+	suite.Run(t, new(BookUsecaseTestSuite))
 }

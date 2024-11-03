@@ -7,12 +7,23 @@ on:
     branches: [ master ]
 
 jobs:
-  Deploy:
-    name: Deploy to EC2
+  test:
+    name: Test pipeline
     runs-on: ubuntu-latest
     strategy:
       matrix:
         go-version: [ '1.22' ]
+
+    env:
+      MYSQL_HOST: ${{ secrets.MYSQL_HOST }}
+      MYSQL_PORT: ${{ secrets.MYSQL_PORT }}
+      MYSQL_USERNAME: ${{ secrets.MYSQL_USERNAME }}
+      MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      REDIS_HOST: ${{ secrets.REDIS_HOST }}
+      ALGOLIA_APP_ID: ${{ secrets.ALGOLIA_APP_ID }}
+      ALGOLIA_API_KEY: ${{ secrets.ALGOLIA_API_KEY }}
 
     steps:
       - name: Checkout code
@@ -32,6 +43,41 @@ jobs:
           key: ${{ runner.os }}-go-${{ matrix.go-version }}-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             ${{ runner.os }}-go-${{ matrix.go-version }}-
+
+      - name: Create configuration file
+        run: |
+          cat <<EOF > config.yml
+          app:
+            server:
+              host: "localhost"
+              port: "8080"
+              timeout:
+                server: 30
+                read: 15
+                write: 10
+                idle: 5
+            mysql:
+              host: "${{ env.MYSQL_HOST }}"
+              port: "3306"
+              username: "${{ env.MYSQL_USERNAME }}"
+              password: "${{ secrets.MYSQL_PASSWORD }}"
+              database: "${{ secrets.MYSQL_DATABASE }}"
+            aws:
+              accessKeyID: "${{ env.AWS_ACCESS_KEY_ID }}"
+              secretAccessKey: "${{ secrets.AWS_SECRET_ACCESS_KEY }}"
+              region: "${{ secrets.AWS_REGION }}"
+            redis:
+              host: "${{ env.REDIS_HOST }}"
+              port: "6379"
+              minIddleConns: 200
+              poolSize: 12000
+              poolTimeout: 1400
+              password: "${{ secrets.REDIS_PASSWORD }}"
+              db: 0
+            algolia:
+              appID: "${{ env.ALGOLIA_APP_ID }}"
+              apiKey: "${{ env.ALGOLIA_API_KEY }}"
+          EOF
 
       - name: Install Mockery v2.43.1
         run: |
