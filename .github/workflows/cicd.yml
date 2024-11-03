@@ -22,7 +22,7 @@ jobs:
           go-version: ${{ matrix.go-version }}
       - name: Install Mockery
         run: |
-          go install github.com/vektra/mockery/v2/...@latest
+          go install github.com/vektra/mockery/v1.1.2
           export PATH=$PATH:$(go env GOPATH)/bin
       - name: Build & Deploy
         run: |
