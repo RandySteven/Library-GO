@@ -19,7 +19,12 @@ jobs:
       MYSQL_PORT: ${{ secrets.MYSQL_PORT }}
       MYSQL_USERNAME: ${{ secrets.MYSQL_USERNAME }}
       MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_REGION: ${{ secrets.AWS_REGION }}
+      AWS_INSTANCE_ID: ${{ secrets.AWS_INSTANCE_ID }}
       REDIS_HOST: ${{ secrets.REDIS_HOST }}
+      EC2_PUBLIC_IP: ${{ secrets.EC2_PUBLIC_IP }}
       REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
       ALGOLIA_APP_ID: ${{ secrets.ALGOLIA_APP_ID }}
       ALGOLIA_API_KEY: ${{ secrets.ALGOLIA_API_KEY }}
@@ -61,9 +66,16 @@ jobs:
               username: "${{ env.MYSQL_USERNAME }}"
               password: "${{ secrets.MYSQL_PASSWORD }}"
               database: "${{ secrets.MYSQL_DATABASE }}"
+            aws:
+              accessKeyID: "${{ env.AWS_ACCESS_KEY_ID }}"
+              secretAccessKey: "${{ secrets.AWS_SECRET_ACCESS_KEY }}"
+              region: "${{ secrets.AWS_REGION }}"
             redis:
               host: "${{ env.REDIS_HOST }}"
               port: "6379"
+              minIddleConns: 200
+              poolSize: 12000
+              poolTimeout: 1400
               password: "${{ secrets.REDIS_PASSWORD }}"
               db: 0
             algolia:
@@ -77,16 +89,21 @@ jobs:
           SCHEDULER_UPDATE_BOOK_STATUS="@daily"
           SCHEDULER_REFRESH_CACHE_REDIS="@hourly"
           SCHEDULER_LOG_TEST="*/10 * * * * *"
+          SCHEDULER_DELETE_FILE="* * */1 * * *"
+          PASSWORD_DEFAULT="library_1234"
+          SERVER_TIMEOUT=30
+          REDIS_EXPIRATION=600
           EOF
 
-      - name: Install Mockery
+      - name: Install Mockery v2.43.1
         run: |
           go install github.com/vektra/mockery/v2/...@v2.43.1
+          export PATH=$PATH:$(go env GOPATH)/bin
 
       - name: Execute unit test
         run: |
           mockery --all --keeptree
-          go test -coverprofile=coverage.out ./... ; go tool cover -html=coverage.out
+          go test -coverprofile=coverage.out ./... ;    go tool cover -html=coverage.out
 
       - name: Upload coverage report
         uses: actions/upload-artifact@v3
@@ -94,69 +111,31 @@ jobs:
           name: coverage-report
           path: coverage.out
 
-  build:
-    name: Build App
-    runs-on: ubuntu-latest
-    needs: test
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Set up Go
-        uses: actions/setup-go@v3
-        with:
-          go-version: '1.22'
-
       - name: Build the app
         run: |
-          go get .
+          go version
           go mod tidy
-          go build -o bin/library_app/http ./cmd/library_app/http/main.go --config.yml
+          go build -o bin/library_app/http ./cmd/library_app/http/main.go
 
       - name: Zip the build
         run: |
-          zip deployment.zip bin/library_app/http config.yml
-
-      - name: Upload Deployment Package
-        uses: actions/upload-artifact@v3
-        with:
-          name: deployment-package
-          path: deployment.zip
-
-  deploy:
-    name: Deploy to EC2
-    runs-on: ubuntu-latest
-    needs: build
-    env:
-      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      AWS_REGION: ${{ secrets.AWS_REGION }}
-      EC2_INSTANCE_ID: ${{ secrets.EC2_INSTANCE_ID }}
-      EC2_PUBLIC_IP: ${{ secrets.EC2_PUBLIC_IP }}
-
-    steps:
-      - name: Download Deployment Package
-        uses: actions/download-artifact@v3
-        with:
-          name: deployment-package
-          path: .
+          zip deployment.zip library_app config.yml
 
       - name: Install AWS CLI
         run: |
           sudo apt-get update
           sudo apt-get install -y awscli
 
-      - name: Send SSH Key
+      - name: Deploy to EC2
         run: |
           aws ec2-instance-connect send-ssh-public-key \
-            --instance-id $EC2_INSTANCE_ID \
-            --availability-zone us-west-2a \
+            --instance-id $AWS_INSTANCE_ID \
+            --availability-zone $AWS_REGION \
             --instance-os-user ec2-user \
             --ssh-public-key file://path-to-your-public-key.pub
 
-      - name: Deploy to EC2
-        run: |
           scp -i /path-to-your-private-key.pem deployment.zip ec2-user@$EC2_PUBLIC_IP:~
+
           ssh -i /path-to-your-private-key.pem ec2-user@$EC2_PUBLIC_IP << 'EOF'
             unzip -o deployment.zip -d ~/app
             cd ~/app
