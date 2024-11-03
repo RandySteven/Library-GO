@@ -24,4 +24,13 @@ func TestQueryValidation(t *testing.T) {
 
 		assert.NoError(t, err)
 	})
+
+	t.Run("test query with invalid validation", func(t *testing.T) {
+		var query queries.GoQuery = `SELECT pg_dump`
+		queryAction := `INSERT`
+
+		err := QueryValidation(query, queryAction)
+
+		assert.Error(t, err)
+	})
 }
