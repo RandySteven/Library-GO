@@ -61,7 +61,7 @@ func (o *onboardingUsecase) RegisterUser(ctx context.Context, request *requests.
 		defer wg.Done()
 		_, err = o.userRepo.FindByEmail(ctx, request.Email)
 		if err != nil {
-			if !errors.As(err, &sql.ErrNoRows) {
+			if errors.Is(err, sql.ErrNoRows) {
 				customErrCh <- apperror.NewCustomError(apperror.ErrInternalServer, `failed to find user by email "`+request.Email+`"`, err)
 				return
 			}
@@ -73,7 +73,7 @@ func (o *onboardingUsecase) RegisterUser(ctx context.Context, request *requests.
 		defer wg.Done()
 		_, err = o.userRepo.FindByPhoneNumber(ctx, request.PhoneNumber)
 		if err != nil {
-			if !errors.As(err, &sql.ErrNoRows) {
+			if errors.Is(err, sql.ErrNoRows) {
 				customErrCh <- apperror.NewCustomError(apperror.ErrInternalServer, `failed to find user by phone number "`+request.PhoneNumber+`"`, err)
 				return
 			}
@@ -117,7 +117,7 @@ func (o *onboardingUsecase) RegisterUser(ctx context.Context, request *requests.
 func (o *onboardingUsecase) LoginUser(ctx context.Context, request *requests.UserLoginRequest) (result *responses.UserLoginResponse, customErr *apperror.CustomError) {
 	user, err := o.userRepo.FindByEmail(ctx, request.Email)
 	if err != nil {
-		if errors.As(err, &sql.ErrNoRows) {
+		if errors.Is(err, sql.ErrNoRows) {
 			return nil, apperror.NewCustomError(apperror.ErrNotFound, `failed to login email not found`, err)
 		}
 		return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to connect db`, err)
