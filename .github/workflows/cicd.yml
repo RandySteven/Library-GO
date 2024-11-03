@@ -81,7 +81,7 @@ jobs:
 
       - name: Create .env file
         run: |
-          cat <<EOF > .env
+          cat <<EOF > ./files/env/.env
           SCHEDULER_UPDATE_BOOK_STATUS="@daily"
           SCHEDULER_REFRESH_CACHE_REDIS="@hourly"
           SCHEDULER_LOG_TEST="*/10 * * * * *"
