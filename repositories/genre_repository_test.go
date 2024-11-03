@@ -3,6 +3,7 @@ package repositories_test
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/RandySteven/Library-GO/entities/models"
 	"github.com/RandySteven/Library-GO/queries"
@@ -54,6 +55,19 @@ func (suite *GenreRepositoryTestSuite) TestSave() {
 		suite.NoError(err)
 		suite.Equal(uint64(1), savedGenre.ID)
 		suite.Equal(genre.Genre, savedGenre.Genre)
+	})
+
+	suite.Run("failed to save genre", func() {
+		genre := &models.Genre{
+			Genre: "genre",
+		}
+		suite.mock.ExpectPrepare("^INSERT INTO genres \\(genre\\) VALUES \\(\\?\\)$").
+			ExpectExec().
+			WillReturnError(fmt.Errorf(`failed to save genre`))
+
+		savedGenre, err := suite.repo.GenreRepo.Save(context.Background(), genre)
+		suite.Error(err)
+		suite.Nil(savedGenre)
 	})
 }
 

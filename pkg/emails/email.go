@@ -8,8 +8,7 @@ import (
 
 type Mailer struct {
 	Dialer   *gomail.Dialer
-	To       string
-	Subject  string
+	Message  *gomail.Message
 	Metadata map[string]interface{}
 }
 
@@ -23,6 +22,7 @@ func NewMailtrap(config *configs.Config) (*Mailer, error) {
 	dialer := gomail.NewDialer(host, port, username, password)
 	dialer.TLSConfig = &tls.Config{InsecureSkipVerify: true}
 	return &Mailer{
-		Dialer: dialer,
+		Dialer:  dialer,
+		Message: gomail.NewMessage(),
 	}, nil
 }

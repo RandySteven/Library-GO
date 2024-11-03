@@ -44,7 +44,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-go-${{ matrix.go-version }}-
 
-      - name: Create configuration file
+      - name: Create configuration yaml file
         run: |
           cat <<EOF > config.yml
           app:
@@ -79,6 +79,18 @@ jobs:
               apiKey: "${{ env.ALGOLIA_API_KEY }}"
           EOF
 
+      - name: Create .env file
+        run: |
+          cat <<EOF > .env
+          SCHEDULER_UPDATE_BOOK_STATUS="@daily"
+          SCHEDULER_REFRESH_CACHE_REDIS="@hourly"
+          SCHEDULER_LOG_TEST="*/10 * * * * *"
+          SCHEDULER_DELETE_FILE="* * */1 * * *"
+          PASSWORD_DEFAULT="library_1234"
+          SERVER_TIMEOUT=30
+          REDIS_EXPIRATION=600
+          EOF
+
       - name: Install Mockery v2.43.1
         run: |
           go install github.com/vektra/mockery/v2/...@v2.43.1
@@ -89,7 +101,6 @@ jobs:
           go version
           mockery --all --keeptree
           go mod tidy
-          go run ./cmd/library_app/http --config config.yml
 
       - name: Execute unit test
         run: |

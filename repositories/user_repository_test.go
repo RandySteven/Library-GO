@@ -61,6 +61,33 @@ func (u *UserRepositoryTestSuite) TestFindByEmail() {
 		u.Equal(expectedUser, user)
 		u.NoError(mock.ExpectationsWereMet())
 	})
+
+	u.Run("failed to find user email", func() {
+		db, mock, err := sqlmock.New()
+		u.NoError(err)
+		defer db.Close()
+
+		email := "test@example.com"
+		expectedUser := &models.User{
+			ID:          1,
+			Name:        "Test User",
+			Email:       email,
+			PhoneNumber: "123456789",
+			DoB:         time.Now(),
+			CreatedAt:   time.Now(),
+			UpdatedAt:   time.Now(),
+		}
+
+		// Mock the query result
+		rows := sqlmock.NewRows([]string{"id", "name", "address", "email", "phone", "password", "dob", "created_at", "updated_at", "deleted_at", "verified_at"}).
+			AddRow(expectedUser.ID, expectedUser.Name, "", expectedUser.Email, expectedUser.PhoneNumber, "", expectedUser.DoB, expectedUser.CreatedAt, expectedUser.UpdatedAt, nil, nil)
+		mock.ExpectQuery("SELECT .* FROM users WHERE email = ?").WithArgs("test").WillReturnRows(rows)
+
+		repo := repositories.NewRepositories(db)
+		_, err = repo.UserRepo.FindByEmail(context.Background(), email)
+
+		u.Error(err)
+	})
 }
 
 func (u *UserRepositoryTestSuite) TestFindByPhoneNumber() {
@@ -93,6 +120,33 @@ func (u *UserRepositoryTestSuite) TestFindByPhoneNumber() {
 		u.Equal(expectedUser, user)
 		u.NoError(mock.ExpectationsWereMet())
 	})
+
+	u.Run("failed find user by phone", func() {
+		db, mock, err := sqlmock.New()
+		u.NoError(err)
+		defer db.Close()
+
+		email := "test@example.com"
+		expectedUser := &models.User{
+			ID:          1,
+			Name:        "Test User",
+			Email:       email,
+			PhoneNumber: "123456789",
+			DoB:         time.Now(),
+			CreatedAt:   time.Now(),
+			UpdatedAt:   time.Now(),
+		}
+
+		// Mock the query result
+		rows := sqlmock.NewRows([]string{"id", "name", "address", "email", "phone", "password", "dob", "created_at", "updated_at", "deleted_at", "verified_at"}).
+			AddRow(expectedUser.ID, expectedUser.Name, "", expectedUser.Email, expectedUser.PhoneNumber, "", expectedUser.DoB, expectedUser.CreatedAt, expectedUser.UpdatedAt, nil, nil)
+		mock.ExpectQuery("SELECT .* FROM users WHERE phone_number = ?").WithArgs("test").WillReturnRows(rows)
+
+		repo := repositories.NewRepositories(db)
+		_, err = repo.UserRepo.FindByEmail(context.Background(), email)
+
+		u.Error(err)
+	})
 }
 
 func (u *UserRepositoryTestSuite) TestSave() {
@@ -124,6 +178,32 @@ func (u *UserRepositoryTestSuite) TestSave() {
 		u.Equal(uint64(1), savedUser.ID)
 		u.Equal(user.Email, savedUser.Email)
 		u.NoError(mock.ExpectationsWereMet())
+	})
+
+	u.Run("failed to save user", func() {
+		db, mock, err := sqlmock.New()
+		u.NoError(err)
+		defer db.Close()
+
+		// Create a user to be saved
+		user := &models.User{
+			Name:        "New User",
+			Address:     "123 Street",
+			Email:       "newuser@example.com",
+			PhoneNumber: "987654321",
+			Password:    "password",
+			DoB:         time.Now(),
+		}
+
+		// Mock the insert query result
+		mock.ExpectPrepare("^INSERT INTO users \\(name, address, email, phone_number, password, dob\\) VALUES \\(\\?, \\?, \\?, \\?, \\?, \\?\\)$").
+			ExpectExec().
+			WillReturnError(fmt.Errorf(`error db`))
+
+		repo := repositories.NewRepositories(db)
+		_, err = repo.UserRepo.Save(context.Background(), user)
+
+		u.Error(err)
 	})
 }
 
@@ -177,6 +257,24 @@ func (u *UserRepositoryTestSuite) TestFindByID() {
 		u.WithinDuration(expectedUser.UpdatedAt, user.UpdatedAt, time.Second)
 
 		u.NoError(mock.ExpectationsWereMet())
+	})
+
+	u.Run("failed to find by id", func() {
+		db, mock, err := sqlmock.New()
+		u.NoError(err)
+		defer db.Close()
+
+		id := uint64(1)
+
+		// Ensure the query is matched correctly
+		mock.ExpectPrepare(`SELECT id, name, address, email, phone_number, password, dob, created_at, updated_at, deleted_at, verified_at FROM users WHERE id = ?`).
+			ExpectQuery().
+			WillReturnError(fmt.Errorf(`error db`))
+
+		repo := repositories.NewRepositories(db)
+		_, err = repo.UserRepo.FindByID(context.Background(), id)
+
+		u.Error(err)
 	})
 }
 
