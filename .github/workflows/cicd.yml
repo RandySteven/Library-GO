@@ -16,9 +16,11 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      - name: Build & Deploy
+      - name: Set up Go
+        uses: actions/setup-go@v3
         with:
-          go-version: '1.22.x'
+          go-version: ${{ matrix.go-version }}
+      - name: Build & Deploy
         run: |
           go version
           go get .
