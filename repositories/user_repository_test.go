@@ -3,6 +3,7 @@ package repositories_test
 import (
 	"context"
 	_ "database/sql"
+	"errors"
 	_ "errors"
 	"fmt"
 	"github.com/stretchr/testify/suite"
@@ -190,6 +191,19 @@ func (u *UserRepositoryTestSuite) TestBeginTx() {
 		err = repo.UserRepo.BeginTx(context.Background())
 		u.NoError(err)
 		u.NotNil(repo.UserRepo.GetTx(context.Background()))
+		u.NoError(mock.ExpectationsWereMet())
+	})
+
+	u.Run("begin tx return error", func() {
+		db, mock, err := sqlmock.New()
+		u.NoError(err)
+		defer db.Close()
+
+		mock.ExpectBegin().WillReturnError(errors.New("failed to begin transaction"))
+		repo := repositories.NewRepositories(db)
+		err = repo.UserRepo.BeginTx(context.Background())
+		u.Error(err)
+		u.Nil(repo.UserRepo.GetTx(context.Background()))
 		u.NoError(mock.ExpectationsWereMet())
 	})
 }
