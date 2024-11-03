@@ -97,13 +97,13 @@ jobs:
           go install github.com/vektra/mockery/v2/...@v2.43.1
           export PATH=$PATH:$(go env GOPATH)/bin
 
+      - name: Execute unit test
+        run: |
+          mockery --all --keeptree
+          go test -coverprofile=coverage.out ./... ;    go tool cover -html=coverage.out
+
       - name: Build & Deploy
         run: |
           go version
-          mockery --all --keeptree
           go mod tidy
           go run ./cmd/library_app/http --config config.yml
-
-      - name: Execute unit test
-        run: |
-          go test -coverprofile=coverage.out ./... ;    go tool cover -html=coverage.out
