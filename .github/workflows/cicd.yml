@@ -23,5 +23,4 @@ jobs:
       - name: Build & Deploy
         run: |
           go version
-          go get .
           go mod tidy
