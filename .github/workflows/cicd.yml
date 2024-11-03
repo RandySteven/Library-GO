@@ -112,4 +112,5 @@ jobs:
         run: |
           go version
           go mod tidy
-          go build ./cmd/library_app/http --config config.yml
+          go build -o bin/library_app/http ./cmd/library_app/http/main.go
+          ./bin/library_app/http --config config.yml
