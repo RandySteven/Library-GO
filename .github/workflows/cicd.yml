@@ -21,6 +21,7 @@ jobs:
       MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_INSTANCE_ID: ${{ secrets.AWS_INSTANCE_ID }}
       REDIS_HOST: ${{ secrets.REDIS_HOST }}
       REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
       ALGOLIA_APP_ID: ${{ secrets.ALGOLIA_APP_ID }}
@@ -108,9 +109,36 @@ jobs:
           name: coverage-report
           path: coverage.out
 
-      - name: Build & Deploy
+      - name: Build the app
         run: |
           go version
           go mod tidy
           go build -o bin/library_app/http ./cmd/library_app/http/main.go
-          ./bin/library_app/http --config config.yml
+
+      - name: Zip the build
+        run: |
+          zip deployment.zip library_app config.yml
+
+      - name: Install AWS CLI
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y awscli
+
+      - name: Deploy to EC2
+        run: |
+          aws ec2-instance-connect send-ssh-public-key \
+            --instance-id $EC2_INSTANCE_ID \
+            --availability-zone us-west-2a \
+            --instance-os-user ec2-user \
+            --ssh-public-key file://path-to-your-public-key.pub
+
+          scp -i /path-to-your-private-key.pem deployment.zip ec2-user@$EC2_PUBLIC_IP:~
+
+          ssh -i /path-to-your-private-key.pem ec2-user@$EC2_PUBLIC_IP << 'EOF'
+            unzip -o deployment.zip -d ~/app
+            cd ~/app
+            nohup ./library_app --config config.yml &
+          EOF
+
+      - name: Cleanup
+        run: rm -f deployment.zip
