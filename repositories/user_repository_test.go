@@ -4,19 +4,37 @@ import (
 	"context"
 	_ "database/sql"
 	_ "errors"
+	"fmt"
+	"github.com/stretchr/testify/suite"
+	"log"
 	"testing"
 	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/RandySteven/Library-GO/entities/models"
 	"github.com/RandySteven/Library-GO/repositories"
-	"github.com/stretchr/testify/assert"
 )
 
-func TestFindByEmail(t *testing.T) {
-	t.Run("success find user by email", func(t *testing.T) {
+type UserRepositoryTestSuite struct {
+	suite.Suite
+}
+
+func (u *UserRepositoryTestSuite) SetupSuite() {
+	log.Println("Setup suite")
+}
+
+func (u *UserRepositoryTestSuite) TearDownSuite() {
+	fmt.Println(">>> From TearDownSuite")
+}
+
+func TestUserRepositoryTestSuite(t *testing.T) {
+	suite.Run(t, new(UserRepositoryTestSuite))
+}
+
+func (u *UserRepositoryTestSuite) TestFindByEmail() {
+	u.Run("success find user by email", func() {
 		db, mock, err := sqlmock.New()
-		assert.NoError(t, err)
+		u.NoError(err)
 		defer db.Close()
 
 		email := "test@example.com"
@@ -38,20 +56,16 @@ func TestFindByEmail(t *testing.T) {
 		repo := repositories.NewRepositories(db)
 		user, err := repo.UserRepo.FindByEmail(context.Background(), email)
 
-		assert.NoError(t, err)
-		assert.Equal(t, expectedUser, user)
-		assert.NoError(t, mock.ExpectationsWereMet())
-	})
-
-	t.Run("failed to search user by email", func(t *testing.T) {
-
+		u.NoError(err)
+		u.Equal(expectedUser, user)
+		u.NoError(mock.ExpectationsWereMet())
 	})
 }
 
-func TestFindByPhoneNumber(t *testing.T) {
-	t.Run("success find user by email", func(t *testing.T) {
+func (u *UserRepositoryTestSuite) TestFindByPhoneNumber() {
+	u.Run("success find user by email", func() {
 		db, mock, err := sqlmock.New()
-		assert.NoError(t, err)
+		u.NoError(err)
 		defer db.Close()
 
 		email := "test@example.com"
@@ -74,20 +88,16 @@ func TestFindByPhoneNumber(t *testing.T) {
 		repo := repositories.NewRepositories(db)
 		user, err := repo.UserRepo.FindByPhoneNumber(context.Background(), phone)
 
-		assert.NoError(t, err)
-		assert.Equal(t, expectedUser, user)
-		assert.NoError(t, mock.ExpectationsWereMet())
-	})
-
-	t.Run("failed to search user by email", func(t *testing.T) {
-
+		u.NoError(err)
+		u.Equal(expectedUser, user)
+		u.NoError(mock.ExpectationsWereMet())
 	})
 }
 
-func TestSave(t *testing.T) {
-	t.Run("success to save user", func(t *testing.T) {
+func (u *UserRepositoryTestSuite) TestSave() {
+	u.Run("success to save user", func() {
 		db, mock, err := sqlmock.New()
-		assert.NoError(t, err)
+		u.NoError(err)
 		defer db.Close()
 
 		// Create a user to be saved
@@ -109,17 +119,17 @@ func TestSave(t *testing.T) {
 		repo := repositories.NewRepositories(db)
 		savedUser, err := repo.UserRepo.Save(context.Background(), user)
 
-		assert.NoError(t, err)
-		assert.Equal(t, uint64(1), savedUser.ID)
-		assert.Equal(t, user.Email, savedUser.Email)
-		assert.NoError(t, mock.ExpectationsWereMet())
+		u.NoError(err)
+		u.Equal(uint64(1), savedUser.ID)
+		u.Equal(user.Email, savedUser.Email)
+		u.NoError(mock.ExpectationsWereMet())
 	})
 }
 
-func TestFindByID(t *testing.T) {
-	t.Run("success find user by id", func(t *testing.T) {
+func (u *UserRepositoryTestSuite) TestFindByID() {
+	u.Run("success find user by id", func() {
 		db, mock, err := sqlmock.New()
-		assert.NoError(t, err)
+		u.NoError(err)
 		defer db.Close()
 
 		id := uint64(1)
@@ -151,60 +161,60 @@ func TestFindByID(t *testing.T) {
 		repo := repositories.NewRepositories(db)
 		user, err := repo.UserRepo.FindByID(context.Background(), id)
 
-		assert.NoError(t, err)
+		u.NoError(err)
 
-		assert.Equal(t, expectedUser.ID, user.ID)
-		assert.Equal(t, expectedUser.Name, user.Name)
-		assert.Equal(t, expectedUser.Address, user.Address)
-		assert.Equal(t, expectedUser.Email, user.Email)
-		assert.Equal(t, expectedUser.PhoneNumber, user.PhoneNumber)
-		assert.Equal(t, expectedUser.Password, user.Password)
+		u.Equal(expectedUser.ID, user.ID)
+		u.Equal(expectedUser.Name, user.Name)
+		u.Equal(expectedUser.Address, user.Address)
+		u.Equal(expectedUser.Email, user.Email)
+		u.Equal(expectedUser.PhoneNumber, user.PhoneNumber)
+		u.Equal(expectedUser.Password, user.Password)
 
 		// Use WithinDuration to allow for minor differences in time fields
-		assert.WithinDuration(t, expectedUser.DoB, user.DoB, time.Second)
-		assert.WithinDuration(t, expectedUser.CreatedAt, user.CreatedAt, time.Second)
-		assert.WithinDuration(t, expectedUser.UpdatedAt, user.UpdatedAt, time.Second)
+		u.WithinDuration(expectedUser.DoB, user.DoB, time.Second)
+		u.WithinDuration(expectedUser.CreatedAt, user.CreatedAt, time.Second)
+		u.WithinDuration(expectedUser.UpdatedAt, user.UpdatedAt, time.Second)
 
-		assert.NoError(t, mock.ExpectationsWereMet())
+		u.NoError(mock.ExpectationsWereMet())
 	})
 }
 
-func TestBeginTx(t *testing.T) {
-	t.Run("success test begin tx", func(t *testing.T) {
+func (u *UserRepositoryTestSuite) TestBeginTx() {
+	u.Run("success test begin tx", func() {
 		db, mock, err := sqlmock.New()
-		assert.NoError(t, err)
+		u.NoError(err)
 		defer db.Close()
 
 		mock.ExpectBegin()
 		repo := repositories.NewRepositories(db)
 		err = repo.UserRepo.BeginTx(context.Background())
-		assert.NoError(t, err)
-		assert.NotNil(t, repo.UserRepo.GetTx(context.Background()))
-		assert.NoError(t, mock.ExpectationsWereMet())
+		u.NoError(err)
+		u.NotNil(repo.UserRepo.GetTx(context.Background()))
+		u.NoError(mock.ExpectationsWereMet())
 	})
 }
 
-func TestSetTx(t *testing.T) {
-	t.Run("success to set tx", func(t *testing.T) {
+func (u *UserRepositoryTestSuite) TestSetTx() {
+	u.Run("success to set tx", func() {
 		ctx := context.Background()
 		db, mock, err := sqlmock.New()
-		assert.NoError(t, err)
+		u.NoError(err)
 		defer db.Close()
 		tx, _ := db.BeginTx(ctx, nil)
 
 		repo := repositories.NewRepositories(db)
 		repo.UserRepo.SetTx(tx)
 
-		assert.NoError(t, err)
-		assert.Equal(t, repo.UserRepo.GetTx(ctx), tx)
-		assert.NoError(t, mock.ExpectationsWereMet())
+		u.NoError(err)
+		u.Equal(repo.UserRepo.GetTx(ctx), tx)
+		u.NoError(mock.ExpectationsWereMet())
 	})
 }
 
-func TestCommitTx(t *testing.T) {
-	t.Run("success test commit tx", func(t *testing.T) {
+func (u *UserRepositoryTestSuite) TestCommitTx() {
+	u.Run("success test commit tx", func() {
 		db, mock, err := sqlmock.New()
-		assert.NoError(t, err)
+		u.NoError(err)
 		defer db.Close()
 
 		mock.ExpectBegin()
@@ -213,14 +223,14 @@ func TestCommitTx(t *testing.T) {
 		repo := repositories.NewRepositories(db)
 		_ = repo.UserRepo.BeginTx(context.Background())
 		err = repo.UserRepo.CommitTx(context.Background())
-		assert.NoError(t, err)
-		assert.NoError(t, mock.ExpectationsWereMet())
+		u.NoError(err)
+		u.NoError(mock.ExpectationsWereMet())
 	})
 }
 
-func TestRollbackTx(t *testing.T) {
+func (u *UserRepositoryTestSuite) TestRollbackTx() {
 	db, mock, err := sqlmock.New()
-	assert.NoError(t, err)
+	u.NoError(err)
 	defer db.Close()
 
 	mock.ExpectBegin()
@@ -229,6 +239,34 @@ func TestRollbackTx(t *testing.T) {
 	repo := repositories.NewRepositories(db)
 	_ = repo.UserRepo.BeginTx(context.Background())
 	err = repo.UserRepo.RollbackTx(context.Background())
-	assert.NoError(t, err)
-	assert.NoError(t, mock.ExpectationsWereMet())
+	u.NoError(err)
+	u.NoError(mock.ExpectationsWereMet())
+}
+
+func (u *UserRepositoryTestSuite) TestInitTrigger() {
+	u.Run("success return trigger by db", func() {
+		ctx := context.Background()
+		db, _, err := sqlmock.New()
+		u.NoError(err)
+		defer db.Close()
+
+		repo := repositories.NewRepositories(db)
+		repo.UserRepo.InitTrigger()
+
+		u.Nil(repo.UserRepo.GetTx(ctx))
+	})
+
+	u.Run("success return trigger by tx", func() {
+		ctx := context.Background()
+		db, mock, err := sqlmock.New()
+		u.NoError(err)
+		defer db.Close()
+		mock.ExpectBegin()
+
+		repo := repositories.NewRepositories(db)
+		repo.UserRepo.BeginTx(ctx)
+		repo.UserRepo.InitTrigger()
+
+		u.NotNil(repo.UserRepo.GetTx(ctx))
+	})
 }
