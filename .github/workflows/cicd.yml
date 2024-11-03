@@ -101,6 +101,7 @@ jobs:
           go version
           mockery --all --keeptree
           go mod tidy
+          go run ./cmd/library_app/http --config config.yml
 
       - name: Execute unit test
         run: |
