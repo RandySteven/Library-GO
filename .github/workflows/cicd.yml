@@ -28,6 +28,7 @@ jobs:
       REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
       ALGOLIA_APP_ID: ${{ secrets.ALGOLIA_APP_ID }}
       ALGOLIA_API_KEY: ${{ secrets.ALGOLIA_API_KEY }}
+      SSH_PUBLIC_KEY: ${{ secrets.SSH_PUBLIC_KEY }}
 
     steps:
       - name: Checkout code
@@ -144,3 +145,14 @@ jobs:
 
       - name: Cleanup
         run: rm -f deployment.zip
+
+      - name: Create SSH public key file
+        run: echo "${{ env.SSH_PUBLIC_KEY }}" > ~/.ssh/my-key.pub
+
+      - name: Send SSH public key
+        run: |
+          aws ec2-instance-connect send-ssh-public-key \
+            --instance-id ${{ secrets.AWS_INSTANCE_ID }} \
+            --availability-zone us-west-2a \
+            --instance-os-user ec2-user \
+            --ssh-public-key file://~/.ssh/my-key.pub
