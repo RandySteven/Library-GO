@@ -127,13 +127,24 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y awscli
 
+      - name: Create SSH public key file
+        run: echo "${{ env.SSH_PUBLIC_KEY }}" > ~/.ssh/my-key.pub
+
+      - name: Send SSH public key
+        run: |
+          aws ec2-instance-connect send-ssh-public-key \
+            --instance-id ${{ secrets.AWS_INSTANCE_ID }} \
+            --availability-zone us-west-2a \
+            --instance-os-user ec2-user \
+            --ssh-public-key file://~/.ssh/my-key.pub
+
       - name: Deploy to EC2
         run: |
           aws ec2-instance-connect send-ssh-public-key \
             --instance-id $AWS_INSTANCE_ID \
             --availability-zone $AWS_REGION \
             --instance-os-user ec2-user \
-            --ssh-public-key file://path-to-your-public-key.pub
+            --ssh-public-key file://~/.ssh/my-key.pub
 
           scp -i /path-to-your-private-key.pem deployment.zip ec2-user@$EC2_PUBLIC_IP:~
 
@@ -145,14 +156,3 @@ jobs:
 
       - name: Cleanup
         run: rm -f deployment.zip
-
-      - name: Create SSH public key file
-        run: echo "${{ env.SSH_PUBLIC_KEY }}" > ~/.ssh/my-key.pub
-
-      - name: Send SSH public key
-        run: |
-          aws ec2-instance-connect send-ssh-public-key \
-            --instance-id ${{ secrets.AWS_INSTANCE_ID }} \
-            --availability-zone us-west-2a \
-            --instance-os-user ec2-user \
-            --ssh-public-key file://~/.ssh/my-key.pub
