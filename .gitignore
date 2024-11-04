@@ -11,3 +11,4 @@ temp-stories
 mysql-data
 coverage.out
 mocks
+rewrite.yml
