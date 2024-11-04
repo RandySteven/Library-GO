@@ -109,7 +109,7 @@ func (u *userRepository) findUser(ctx context.Context, by string, identifier str
 	result := &models.User{}
 	err := u.InitTrigger().QueryRowContext(ctx, query, identifier).Scan(
 		&result.ID, &result.Name, &result.Address, &result.Email,
-		&result.PhoneNumber, &result.Password, &result.DoB, &result.CreatedAt, &result.UpdatedAt, &result.DeletedAt, &result.VerifiedAt)
+		&result.PhoneNumber, &result.Password, &result.DoB, &result.ProfilePicture, &result.CreatedAt, &result.UpdatedAt, &result.DeletedAt, &result.VerifiedAt)
 	if err != nil {
 		return nil, err
 	}

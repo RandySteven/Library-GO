@@ -90,7 +90,7 @@ func NewEndpointRouters(h *handlers.Handlers) map[enums.RouterPrefix][]*Router {
 	endpointRouters[enums.CommentPrefix] = []*Router{
 		Post("", h.CommentHandler.Comment),
 		Post("/reply", h.CommentHandler.Reply),
-		Post("get", h.CommentHandler.GetBookComment),
+		Post("/get", h.CommentHandler.GetBookComment),
 	}
 
 	return endpointRouters

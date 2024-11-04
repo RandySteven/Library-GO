@@ -1,9 +1,12 @@
 package mysql_client
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"github.com/RandySteven/Library-GO/pkg/configs"
+	"github.com/RandySteven/Library-GO/queries"
+	"github.com/RandySteven/Library-GO/utils"
 	_ "github.com/go-sql-driver/mysql"
 	"log"
 	"time"
@@ -42,4 +45,24 @@ func (c *MySQLClient) Ping() error {
 
 func (c *MySQLClient) Client() *sql.DB {
 	return c.db
+}
+
+func (c *MySQLClient) Alter(ctx context.Context, queryScript queries.GoQuery) error {
+	err := utils.QueryValidation(queryScript, `ALTER`)
+	if err != nil {
+		return err
+	}
+	isExec := ``
+	fmt.Printf("Are u sure want to exec this query %s ? [y/n]:", queryScript.ToString())
+	fmt.Scanln(&isExec)
+
+	if isExec == `n` || isExec == `N` {
+		return fmt.Errorf(`execution terminate`)
+	}
+
+	_, err = c.db.ExecContext(ctx, queryScript.ToString())
+	if err != nil {
+		return err
+	}
+	return nil
 }

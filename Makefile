@@ -38,6 +38,9 @@ seed:
 drop:
 	${gorun} ${cmd_folder}drop -config ${yaml_file}
 
+alter:
+	${gorun} ${cmd_folder}alter -config ${yaml_file}
+
 refresh: drop migration seed
 
 scheduler:
