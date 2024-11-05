@@ -41,6 +41,9 @@ drop:
 alter:
 	${gorun} ${cmd_folder}alter -config ${yaml_file}
 
+build:
+	@go build -o /bin/http
+
 refresh: drop migration seed
 
 scheduler:

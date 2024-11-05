@@ -11,6 +11,7 @@ import (
 	caches_interfaces "github.com/RandySteven/Library-GO/interfaces/caches"
 	repositories_interfaces "github.com/RandySteven/Library-GO/interfaces/repositories"
 	usecases_interfaces "github.com/RandySteven/Library-GO/interfaces/usecases"
+	"github.com/RandySteven/Library-GO/utils"
 	"log"
 	"sync"
 )
@@ -107,11 +108,17 @@ func (b *bagUsecase) AddBookToBag(ctx context.Context, request *requests.BagRequ
 	result = &responses.AddBagResponse{
 		BookID: bag.BookID,
 	}
+	b.cache.Del(ctx, fmt.Sprintf(enums.UserBagKey, utils.HashID(userId)))
 	return result, nil
 }
 
 func (b *bagUsecase) GetUserBag(ctx context.Context) (result *responses.GetAllBagsResponse, customErr *apperror.CustomError) {
 	userId := ctx.Value(enums.UserID).(uint64)
+	bookBagList, _ := b.cache.GetUserBagCache(ctx, userId)
+	if bookBagList != nil {
+		result.Books = bookBagList
+		return result, nil
+	}
 	bagBooks, err := b.bagRepo.FindBagByUser(ctx, userId)
 	if err != nil {
 		return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to find bag`, err)
@@ -136,6 +143,7 @@ func (b *bagUsecase) GetUserBag(ctx context.Context) (result *responses.GetAllBa
 			Image: book.Image,
 		})
 	}
+	b.cache.SetUserBagCache(ctx, userId, result.Books)
 	return result, nil
 }
 

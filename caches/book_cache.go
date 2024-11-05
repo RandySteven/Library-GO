@@ -23,13 +23,11 @@ func (b *bookCache) Get(ctx context.Context, key string) (value *responses.BookD
 }
 
 func (b *bookCache) SetMultiData(ctx context.Context, values []*responses.ListBooksResponse) (err error) {
-	//TODO implement me
-	panic("implement me")
+	return caches_client.SetMultiple[responses.ListBooksResponse](ctx, b.redis, enums.BooksKey, values)
 }
 
 func (b *bookCache) GetMultiData(ctx context.Context) (values []*responses.ListBooksResponse, err error) {
-	//TODO implement me
-	panic("implement me")
+	return caches_client.GetMultiple[responses.ListBooksResponse](ctx, b.redis, enums.BooksKey)
 }
 
 func (b *bookCache) Refresh(ctx context.Context, key string, update any) (value any, err error) {

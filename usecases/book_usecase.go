@@ -126,6 +126,7 @@ func (b *bookUsecase) AddNewBook(ctx context.Context, request *requests.CreateBo
 		return nil, apperror.NewCustomError(apperror.ErrInternalServer, "failed to save book", err)
 	}
 
+	b.cache.Del(ctx, enums.BooksKey)
 	result = &responses.CreateBookResponse{
 		ID: hashedID,
 	}
@@ -255,6 +256,10 @@ func (b *bookUsecase) createBookGenreRelations(ctx context.Context, genreIDs []*
 
 func (b *bookUsecase) GetAllBooks(ctx context.Context) (result []*responses.ListBooksResponse, customErr *apperror.CustomError) {
 	result = []*responses.ListBooksResponse{}
+	result, _ = b.cache.GetMultiData(ctx)
+	if result != nil {
+		return result, nil
+	}
 	books, err := b.bookRepo.FindAll(ctx, 0, 0)
 	if err != nil {
 		return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to get books`, err)
@@ -276,6 +281,7 @@ func (b *bookUsecase) GetAllBooks(ctx context.Context) (result []*responses.List
 			DeletedAt: book.DeletedAt,
 		})
 	}
+	_ = b.cache.SetMultiData(ctx, result)
 	return result, nil
 }
 
