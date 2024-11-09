@@ -2,6 +2,7 @@ package usecases
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/RandySteven/Library-GO/apperror"
 	"github.com/RandySteven/Library-GO/entities/models"
@@ -15,6 +16,7 @@ import (
 	aws_client "github.com/RandySteven/Library-GO/pkg/aws"
 	"github.com/RandySteven/Library-GO/utils"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"github.com/go-redis/redis/v8"
 	"io/ioutil"
 	"log"
 	"mime/multipart"
@@ -256,7 +258,12 @@ func (b *bookUsecase) createBookGenreRelations(ctx context.Context, genreIDs []*
 
 func (b *bookUsecase) GetAllBooks(ctx context.Context) (result []*responses.ListBooksResponse, customErr *apperror.CustomError) {
 	result = []*responses.ListBooksResponse{}
-	result, _ = b.cache.GetMultiData(ctx)
+	result, err := b.cache.GetMultiData(ctx)
+	if err != nil {
+		if !errors.Is(err, redis.Nil) {
+			return nil, apperror.NewCustomError(apperror.ErrInternalServer, `redis issue : `, err)
+		}
+	}
 	if result != nil {
 		return result, nil
 	}
@@ -281,7 +288,10 @@ func (b *bookUsecase) GetAllBooks(ctx context.Context) (result []*responses.List
 			DeletedAt: book.DeletedAt,
 		})
 	}
-	_ = b.cache.SetMultiData(ctx, result)
+	err = b.cache.SetMultiData(ctx, result)
+	if err != nil {
+		return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to insert to redis`, err)
+	}
 	return result, nil
 }
 

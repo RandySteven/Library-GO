@@ -12,7 +12,7 @@ import (
 func getRedisTimeout() time.Duration {
 	redisDurrTime, _ := strconv.Atoi(redisTimeout)
 	redisDurrTime64 := int64(redisDurrTime)
-	return time.Duration(redisDurrTime64)
+	return time.Duration(redisDurrTime64) * time.Second
 }
 
 func Set[T any](ctx context.Context, redis *redis.Client, key string, value *T) (err error) {
@@ -46,7 +46,7 @@ func SetMultiple[T any](ctx context.Context, redis *redis.Client, key string, va
 func GetMultiple[T any](ctx context.Context, redis *redis.Client, key string) (value []*T, err error) {
 	val, err := redis.Get(ctx, key).Bytes()
 	if err != nil {
-		return nil, fmt.Errorf("get err: %v", err)
+		return nil, err
 	}
 	err = json.Unmarshal(val, &value)
 	if err != nil {
