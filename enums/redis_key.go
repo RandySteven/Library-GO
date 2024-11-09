@@ -8,4 +8,5 @@ const (
 	BorrowsKey = `cache_all_borrows`
 
 	UserBagKey = `cache_user_bag.%s`
+	BookBagKey = `cache_book_at_bag.%s`
 )

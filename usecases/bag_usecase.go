@@ -68,15 +68,24 @@ func (b *bagUsecase) AddBookToBag(ctx context.Context, request *requests.BagRequ
 	go func() {
 		defer wg.Done()
 		//1. check if book status avail
+
 		book, err := b.bookRepo.FindByID(ctx, bag.BookID)
 		if err != nil {
 			customErrCh <- apperror.NewCustomError(apperror.ErrInternalServer, `failed to find book`, err)
 			return
 		}
+		//bookBagCache, err := b.cache.GetBookBagCache(ctx, utils.HashID(request.BookID))
+		//if err != nil {
+		//	if !errors.Is(err, redis.Nil) {
+		//		customErrCh <- apperror.NewCustomError(apperror.ErrInternalServer, `redis error`, err)
+		//	}
+		//	return
+		//}
 		if book.Status != enums.Available {
 			customErrCh <- apperror.NewCustomError(apperror.ErrBadRequest, `book already not available`, err)
 			return
 		}
+
 	}()
 
 	go func() {
@@ -108,7 +117,12 @@ func (b *bagUsecase) AddBookToBag(ctx context.Context, request *requests.BagRequ
 	result = &responses.AddBagResponse{
 		BookID: bag.BookID,
 	}
-	b.cache.Del(ctx, fmt.Sprintf(enums.UserBagKey, utils.HashID(userId)))
+	_ = b.cache.Del(ctx, fmt.Sprintf(enums.UserBagKey, utils.HashID(userId)))
+	_ = b.cache.SetBookBagCache(ctx, &models.BookBagCache{
+		BookID: utils.HashID(bag.BookID),
+		UserID: utils.HashID(userId),
+		Status: enums.AtBag.ToString(),
+	})
 	return result, nil
 }
 

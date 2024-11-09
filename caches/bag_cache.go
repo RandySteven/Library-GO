@@ -3,6 +3,7 @@ package caches
 import (
 	"context"
 	"fmt"
+	"github.com/RandySteven/Library-GO/entities/models"
 	"github.com/RandySteven/Library-GO/entities/payloads/responses"
 	"github.com/RandySteven/Library-GO/enums"
 	caches_interfaces "github.com/RandySteven/Library-GO/interfaces/caches"
@@ -24,7 +25,15 @@ func (b *bagCache) GetUserBagCache(ctx context.Context, userId uint64) (result [
 }
 
 func (b *bagCache) Del(ctx context.Context, key string) (err error) {
-	return caches_client.Del[responses.BookBagResponse](ctx, b.redis, fmt.Sprintf(enums.UserBagKey, utils.HashID(ctx.Value(enums.UserID).(uint64))))
+	return caches_client.Del[responses.BookBagResponse](ctx, b.redis, key)
+}
+
+func (b *bagCache) SetBookBagCache(ctx context.Context, bookBagCache *models.BookBagCache) (err error) {
+	return caches_client.Set[models.BookBagCache](ctx, b.redis, fmt.Sprintf(enums.BookBagKey, bookBagCache.BookID), bookBagCache)
+}
+
+func (b *bagCache) GetBookBagCache(ctx context.Context, bookId string) (result *models.BookBagCache, err error) {
+	return caches_client.Get[models.BookBagCache](ctx, b.redis, fmt.Sprintf(enums.BookBagKey, bookId))
 }
 
 var _ caches_interfaces.BagCache = &bagCache{}

@@ -23,10 +23,10 @@ func Set[T any](ctx context.Context, redis *redis.Client, key string, value *T) 
 	return redis.Set(ctx, key, jsonData, getRedisTimeout()).Err()
 }
 
-func Get[T any](ctx context.Context, redis *redis.Client, key string) (value *T, err error) {
-	val, err := redis.Get(ctx, key).Bytes()
+func Get[T any](ctx context.Context, client *redis.Client, key string) (value *T, err error) {
+	val, err := client.Get(ctx, key).Bytes()
 	if err != nil {
-		return nil, fmt.Errorf("get err: %v", err)
+		return nil, err
 	}
 	err = json.Unmarshal(val, &value)
 	if err != nil {
