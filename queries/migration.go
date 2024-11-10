@@ -183,4 +183,27 @@ const (
 		    FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE
 		)
 	`
+
+	RoomChatMigration MigrationQuery = `
+		CREATE TABLE IF NOT EXISTS room_chats (
+		    id BIGINT PRIMARY KEY NOT NULL AUTO_INCREMENT,
+		    room_name VARCHAR(64) NOT NULL,
+		    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+		    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		    deleted_at TIMESTAMP DEFAULT NULL
+		)
+	`
+
+	RoomChatUserMigration MigrationQuery = `
+		CREATE TABLE IF NOT EXISTS room_chat_users (
+		    id BIGINT PRIMARY KEY NOT NULL AUTO_INCREMENT,
+		    room_chat_id BIGINT NOT NULL,
+		    user_id BIGINT NOT NULL,
+		    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+		    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		    deleted_at TIMESTAMP DEFAULT NULL,
+		    FOREIGN KEY room_chat_id REFERENCES room_chats(id) ON DELETE CASCADE,
+		    FOREIGN KEY user_id REFERENCES users(id) ON DELETE CASCADE
+		)
+	`
 )

@@ -16,6 +16,17 @@ type Config struct {
 			} `yaml:"timeout"`
 		} `yaml:"server"`
 
+		Ws struct {
+			Host    string `yaml:"host"`
+			Port    string `yaml:"port"`
+			Timeout struct {
+				Server time.Duration `yaml:"server"`
+				Read   time.Duration `yaml:"read"`
+				Write  time.Duration `yaml:"write"`
+				Idle   time.Duration `yaml:"idle"`
+			} `yaml:"timeout"`
+		} `yaml:"ws"`
+
 		MySQL struct {
 			Host     string `yaml:"host"`
 			Port     string `yaml:"port"`
