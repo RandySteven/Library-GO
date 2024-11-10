@@ -75,16 +75,6 @@ func (g *genreRepository) FindSelectedGenresByID(ctx context.Context, ids []uint
 	return result, nil
 }
 
-func (g *genreRepository) DeleteByID(ctx context.Context, id uint64) (err error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (g *genreRepository) Update(ctx context.Context, entity *models.Genre) (result *models.Genre, err error) {
-	//TODO implement me
-	panic("implement me")
-}
-
 func (g *genreRepository) BeginTx(ctx context.Context) error {
 	tx, err := g.db.BeginTx(ctx, nil)
 	if err != nil {

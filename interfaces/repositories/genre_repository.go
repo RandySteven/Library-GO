@@ -6,7 +6,8 @@ import (
 )
 
 type GenreRepository interface {
-	Repository[models.Genre]
+	Saver[models.Genre]
+	Finder[models.Genre]
 	UnitOfWork
 	FindSelectedGenresByID(ctx context.Context, id []uint64) (result []*models.Genre, err error)
 }

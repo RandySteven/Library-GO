@@ -24,26 +24,6 @@ func (b *borrowDetailRepository) Save(ctx context.Context, entity *models.Borrow
 	return result, nil
 }
 
-func (b *borrowDetailRepository) FindByID(ctx context.Context, id uint64) (result *models.BorrowDetail, err error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (b *borrowDetailRepository) FindAll(ctx context.Context, skip uint64, take uint64) ([]*models.BorrowDetail, error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (b *borrowDetailRepository) DeleteByID(ctx context.Context, id uint64) (err error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (b *borrowDetailRepository) Update(ctx context.Context, entity *models.BorrowDetail) (result *models.BorrowDetail, err error) {
-	//TODO implement me
-	panic("implement me")
-}
-
 func (b *borrowDetailRepository) InitTrigger() repositories_interfaces.Trigger {
 	var trigger repositories_interfaces.Trigger = b.db
 	if b.tx != nil {

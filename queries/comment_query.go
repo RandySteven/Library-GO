@@ -2,9 +2,9 @@ package queries
 
 const (
 	InsertCommentQuery GoQuery = `
-		INSERT INTO comments (user_id, book_id, parent_id, comment)
+		INSERT INTO comments (user_id, book_id, parent_id, reply_id, comment)
 		VALUES 
-		    (?, ?, ?, ?)
+		    (?, ?, ?, ?, ?)
 	`
 
 	SelectBookCommentsQuery GoQuery = `

@@ -56,16 +56,6 @@ func (u *userRepository) FindAll(ctx context.Context, skip uint64, take uint64) 
 	panic("implement me")
 }
 
-func (u *userRepository) DeleteByID(ctx context.Context, id uint64) (err error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (u *userRepository) Update(ctx context.Context, entity *models.User) (result *models.User, err error) {
-	//TODO implement me
-	panic("implement me")
-}
-
 func (u *userRepository) BeginTx(ctx context.Context) error {
 	tx, err := u.db.BeginTx(ctx, nil)
 	if err != nil {

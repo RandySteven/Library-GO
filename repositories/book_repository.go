@@ -75,16 +75,6 @@ func (b *bookRepository) FindAll(ctx context.Context, skip uint64, take uint64) 
 	return utils.FindAll[models.Book](ctx, b.InitTrigger(), queries.SelectBooksQuery)
 }
 
-func (b *bookRepository) DeleteByID(ctx context.Context, id uint64) (err error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (b *bookRepository) Update(ctx context.Context, entity *models.Book) (result *models.Book, err error) {
-	//TODO implement me
-	panic("implement me")
-}
-
 func (b *bookRepository) FindSelectedBooksId(ctx context.Context, ids []uint64) (results []*models.Book, err error) {
 	queryIn := ` WHERE id IN (%s)`
 	wildCards := []string{}

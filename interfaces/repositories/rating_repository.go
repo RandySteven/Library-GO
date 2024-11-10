@@ -6,7 +6,7 @@ import (
 )
 
 type RatingRepository interface {
-	Repository[models.Rating]
+	Saver[models.Rating]
 	UnitOfWork
 	FindRatingForBook(ctx context.Context, bookId uint64) (result *models.Rating, err error)
 }

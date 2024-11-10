@@ -24,26 +24,6 @@ func (a *authorBookRepository) Save(ctx context.Context, entity *models.AuthorBo
 	return result, nil
 }
 
-func (a *authorBookRepository) FindByID(ctx context.Context, id uint64) (result *models.AuthorBook, err error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (a *authorBookRepository) FindAll(ctx context.Context, skip uint64, take uint64) ([]*models.AuthorBook, error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (a *authorBookRepository) DeleteByID(ctx context.Context, id uint64) (err error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (a *authorBookRepository) Update(ctx context.Context, entity *models.AuthorBook) (result *models.AuthorBook, err error) {
-	//TODO implement me
-	panic("implement me")
-}
-
 func (a *authorBookRepository) InitTrigger() repositories_interfaces.Trigger {
 	var trigger repositories_interfaces.Trigger = a.db
 	if a.tx != nil {

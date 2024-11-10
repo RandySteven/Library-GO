@@ -6,6 +6,7 @@ type Event struct {
 	ID                        uint64
 	Title                     string
 	Thumbnail                 string
+	Price                     *uint64
 	Description               string
 	ParticipantNumber         uint64
 	OccupiedParticipantNumber uint64

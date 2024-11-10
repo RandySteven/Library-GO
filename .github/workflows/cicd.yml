@@ -1,158 +1,158 @@
-name: Deploy
-
-on:
-  push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
-
-jobs:
-  test:
-    name: Test pipeline
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        go-version: [ '1.22' ]
-
-    env:
-      MYSQL_HOST: ${{ secrets.MYSQL_HOST }}
-      MYSQL_PORT: ${{ secrets.MYSQL_PORT }}
-      MYSQL_USERNAME: ${{ secrets.MYSQL_USERNAME }}
-      MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
-      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      AWS_REGION: ${{ secrets.AWS_REGION }}
-      AWS_INSTANCE_ID: ${{ secrets.AWS_INSTANCE_ID }}
-      REDIS_HOST: ${{ secrets.REDIS_HOST }}
-      EC2_PUBLIC_IP: ${{ secrets.EC2_PUBLIC_IP }}
-      REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
-      ALGOLIA_APP_ID: ${{ secrets.ALGOLIA_APP_ID }}
-      ALGOLIA_API_KEY: ${{ secrets.ALGOLIA_API_KEY }}
-      SSH_PUBLIC_KEY: ${{ secrets.SSH_PUBLIC_KEY }}
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Set up Go
-        uses: actions/setup-go@v3
-        with:
-          go-version: ${{ matrix.go-version }}
-
-      - name: Cache Go Modules
-        uses: actions/cache@v2
-        with:
-          path: |
-            ~/.cache/go-build
-            ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ matrix.go-version }}-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-${{ matrix.go-version }}-
-
-      - name: Create configuration yaml file
-        run: |
-          cat <<EOF > config.yml
-          app:
-            server:
-              host: "localhost"
-              port: "8080"
-              timeout:
-                server: 30
-                read: 15
-                write: 10
-                idle: 5
-            mysql:
-              host: "${{ env.MYSQL_HOST }}"
-              port: "${{ env.MYSQL_PORT }}"
-              username: "${{ env.MYSQL_USERNAME }}"
-              password: "${{ secrets.MYSQL_PASSWORD }}"
-              database: "${{ secrets.MYSQL_DATABASE }}"
-            aws:
-              accessKeyID: "${{ env.AWS_ACCESS_KEY_ID }}"
-              secretAccessKey: "${{ secrets.AWS_SECRET_ACCESS_KEY }}"
-              region: "${{ secrets.AWS_REGION }}"
-            redis:
-              host: "${{ env.REDIS_HOST }}"
-              port: "6379"
-              minIddleConns: 200
-              poolSize: 12000
-              poolTimeout: 1400
-              password: "${{ secrets.REDIS_PASSWORD }}"
-              db: 0
-            algolia:
-              appID: "${{ env.ALGOLIA_APP_ID }}"
-              apiKey: "${{ env.ALGOLIA_API_KEY }}"
-          EOF
-
-      - name: Create .env file
-        run: |
-          cat <<EOF > ./files/env/.env
-          SCHEDULER_UPDATE_BOOK_STATUS="@daily"
-          SCHEDULER_REFRESH_CACHE_REDIS="@hourly"
-          SCHEDULER_LOG_TEST="*/10 * * * * *"
-          SCHEDULER_DELETE_FILE="* * */1 * * *"
-          PASSWORD_DEFAULT="library_1234"
-          SERVER_TIMEOUT=30
-          REDIS_EXPIRATION=600
-          EOF
-
-      - name: Install Mockery v2.43.1
-        run: |
-          go install github.com/vektra/mockery/v2/...@v2.43.1
-          export PATH=$PATH:$(go env GOPATH)/bin
-
-      - name: Execute unit test
-        run: |
-          mockery --all --keeptree
-          go test -coverprofile=coverage.out ./... ;    go tool cover -html=coverage.out
-
-      - name: Upload coverage report
-        uses: actions/upload-artifact@v3
-        with:
-          name: coverage-report
-          path: coverage.out
-
-      - name: Build the app
-        run: |
-          go version
-          go mod tidy
-          go build -o bin/library_app/http ./cmd/library_app/http/main.go
-
-      - name: Zip the build
-        run: |
-          zip deployment.zip library_app config.yml
-
-      - name: Install AWS CLI
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y awscli
-
-      - name: Create SSH public key file
-        run: echo "${{ env.SSH_PUBLIC_KEY }}" > ~/.ssh/my-key.pub
-
-      - name: Send SSH public key
-        run: |
-          aws ec2-instance-connect send-ssh-public-key \
-            --instance-id ${{ secrets.AWS_INSTANCE_ID }} \
-            --availability-zone us-west-2a \
-            --instance-os-user ec2-user \
-            --ssh-public-key file://~/.ssh/my-key.pub
-
-      - name: Deploy to EC2
-        run: |
-          aws ec2-instance-connect send-ssh-public-key \
-            --instance-id $AWS_INSTANCE_ID \
-            --availability-zone $AWS_REGION \
-            --instance-os-user ec2-user \
-            --ssh-public-key file://~/.ssh/my-key.pub
-
-          scp -i /path-to-your-private-key.pem deployment.zip ec2-user@$EC2_PUBLIC_IP:~
-
-          ssh -i /path-to-your-private-key.pem ec2-user@$EC2_PUBLIC_IP << 'EOF'
-            unzip -o deployment.zip -d ~/app
-            cd ~/app
-            nohup ./library_app --config config.yml &
-          EOF
-
-      - name: Cleanup
-        run: rm -f deployment.zip
+#name: Deploy
+#
+#on:
+#  push:
+#    branches: [ master ]
+#  pull_request:
+#    branches: [ master ]
+#
+#jobs:
+#  test:
+#    name: Test pipeline
+#    runs-on: ubuntu-latest
+#    strategy:
+#      matrix:
+#        go-version: [ '1.22' ]
+#
+#    env:
+#      MYSQL_HOST: ${{ secrets.MYSQL_HOST }}
+#      MYSQL_PORT: ${{ secrets.MYSQL_PORT }}
+#      MYSQL_USERNAME: ${{ secrets.MYSQL_USERNAME }}
+#      MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
+#      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+#      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+#      AWS_REGION: ${{ secrets.AWS_REGION }}
+#      AWS_INSTANCE_ID: ${{ secrets.AWS_INSTANCE_ID }}
+#      REDIS_HOST: ${{ secrets.REDIS_HOST }}
+#      EC2_PUBLIC_IP: ${{ secrets.EC2_PUBLIC_IP }}
+#      REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
+#      ALGOLIA_APP_ID: ${{ secrets.ALGOLIA_APP_ID }}
+#      ALGOLIA_API_KEY: ${{ secrets.ALGOLIA_API_KEY }}
+#      SSH_PUBLIC_KEY: ${{ secrets.SSH_PUBLIC_KEY }}
+#
+#    steps:
+#      - name: Checkout code
+#        uses: actions/checkout@v2
+#
+#      - name: Set up Go
+#        uses: actions/setup-go@v3
+#        with:
+#          go-version: ${{ matrix.go-version }}
+#
+#      - name: Cache Go Modules
+#        uses: actions/cache@v2
+#        with:
+#          path: |
+#            ~/.cache/go-build
+#            ~/go/pkg/mod
+#          key: ${{ runner.os }}-go-${{ matrix.go-version }}-${{ hashFiles('**/go.sum') }}
+#          restore-keys: |
+#            ${{ runner.os }}-go-${{ matrix.go-version }}-
+#
+#      - name: Create configuration yaml file
+#        run: |
+#          cat <<EOF > config.yml
+#          app:
+#            server:
+#              host: "localhost"
+#              port: "8080"
+#              timeout:
+#                server: 30
+#                read: 15
+#                write: 10
+#                idle: 5
+#            mysql:
+#              host: "${{ env.MYSQL_HOST }}"
+#              port: "${{ env.MYSQL_PORT }}"
+#              username: "${{ env.MYSQL_USERNAME }}"
+#              password: "${{ secrets.MYSQL_PASSWORD }}"
+#              database: "${{ secrets.MYSQL_DATABASE }}"
+#            aws:
+#              accessKeyID: "${{ env.AWS_ACCESS_KEY_ID }}"
+#              secretAccessKey: "${{ secrets.AWS_SECRET_ACCESS_KEY }}"
+#              region: "${{ secrets.AWS_REGION }}"
+#            redis:
+#              host: "${{ env.REDIS_HOST }}"
+#              port: "6379"
+#              minIddleConns: 200
+#              poolSize: 12000
+#              poolTimeout: 1400
+#              password: "${{ secrets.REDIS_PASSWORD }}"
+#              db: 0
+#            algolia:
+#              appID: "${{ env.ALGOLIA_APP_ID }}"
+#              apiKey: "${{ env.ALGOLIA_API_KEY }}"
+#          EOF
+#
+#      - name: Create .env file
+#        run: |
+#          cat <<EOF > ./files/env/.env
+#          SCHEDULER_UPDATE_BOOK_STATUS="@daily"
+#          SCHEDULER_REFRESH_CACHE_REDIS="@hourly"
+#          SCHEDULER_LOG_TEST="*/10 * * * * *"
+#          SCHEDULER_DELETE_FILE="* * */1 * * *"
+#          PASSWORD_DEFAULT="library_1234"
+#          SERVER_TIMEOUT=30
+#          REDIS_EXPIRATION=600
+#          EOF
+#
+#      - name: Install Mockery v2.43.1
+#        run: |
+#          go install github.com/vektra/mockery/v2/...@v2.43.1
+#          export PATH=$PATH:$(go env GOPATH)/bin
+#
+#      - name: Execute unit test
+#        run: |
+#          mockery --all --keeptree
+#          go test -coverprofile=coverage.out ./... ;    go tool cover -html=coverage.out
+#
+#      - name: Upload coverage report
+#        uses: actions/upload-artifact@v3
+#        with:
+#          name: coverage-report
+#          path: coverage.out
+#
+#      - name: Build the app
+#        run: |
+#          go version
+#          go mod tidy
+#          go build -o bin/library_app/http ./cmd/library_app/http/main.go
+#
+#      - name: Zip the build
+#        run: |
+#          zip deployment.zip library_app config.yml
+#
+#      - name: Install AWS CLI
+#        run: |
+#          sudo apt-get update
+#          sudo apt-get install -y awscli
+#
+#      - name: Create SSH public key file
+#        run: echo "${{ env.SSH_PUBLIC_KEY }}" > ~/.ssh/my-key.pub
+#
+#      - name: Send SSH public key
+#        run: |
+#          aws ec2-instance-connect send-ssh-public-key \
+#            --instance-id ${{ secrets.AWS_INSTANCE_ID }} \
+#            --availability-zone us-west-2a \
+#            --instance-os-user ec2-user \
+#            --ssh-public-key file://~/.ssh/my-key.pub
+#
+#      - name: Deploy to EC2
+#        run: |
+#          aws ec2-instance-connect send-ssh-public-key \
+#            --instance-id $AWS_INSTANCE_ID \
+#            --availability-zone $AWS_REGION \
+#            --instance-os-user ec2-user \
+#            --ssh-public-key file://~/.ssh/my-key.pub
+#
+#          scp -i /path-to-your-private-key.pem deployment.zip ec2-user@$EC2_PUBLIC_IP:~
+#
+#          ssh -i /path-to-your-private-key.pem ec2-user@$EC2_PUBLIC_IP << 'EOF'
+#            unzip -o deployment.zip -d ~/app
+#            cd ~/app
+#            nohup ./library_app --config config.yml &
+#          EOF
+#
+#      - name: Cleanup
+#        run: rm -f deployment.zip

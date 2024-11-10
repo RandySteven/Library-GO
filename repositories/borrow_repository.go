@@ -70,16 +70,6 @@ func (b *borrowRepository) FindAll(ctx context.Context, skip uint64, take uint64
 	panic("implement me")
 }
 
-func (b *borrowRepository) DeleteByID(ctx context.Context, id uint64) (err error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (b *borrowRepository) Update(ctx context.Context, entity *models.Borrow) (result *models.Borrow, err error) {
-	//TODO implement me
-	panic("implement me")
-}
-
 func (b *borrowRepository) FindByReferenceID(ctx context.Context, referenceID string) (result *models.Borrow, err error) {
 	result = &models.Borrow{}
 	err = b.InitTrigger().QueryRowContext(ctx, queries.SelectBorrowByReference.ToString(), referenceID).

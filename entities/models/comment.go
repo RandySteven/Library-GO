@@ -7,6 +7,7 @@ type Comment struct {
 	UserID    uint64
 	BookID    uint64
 	ParentID  *uint64
+	ReplyID   *uint64
 	Comment   string
 	CreatedAt time.Time
 	UpdatedAt time.Time

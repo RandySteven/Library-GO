@@ -23,26 +23,6 @@ func (r *ratingRepository) Save(ctx context.Context, entity *models.Rating) (res
 	return entity, nil
 }
 
-func (r *ratingRepository) FindByID(ctx context.Context, id uint64) (result *models.Rating, err error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (r *ratingRepository) FindAll(ctx context.Context, skip uint64, take uint64) ([]*models.Rating, error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (r *ratingRepository) DeleteByID(ctx context.Context, id uint64) (err error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (r *ratingRepository) Update(ctx context.Context, entity *models.Rating) (result *models.Rating, err error) {
-	//TODO implement me
-	panic("implement me")
-}
-
 func (r *ratingRepository) InitTrigger() repositories_interfaces.Trigger {
 	var trigger repositories_interfaces.Trigger = r.db
 	if r.tx != nil {

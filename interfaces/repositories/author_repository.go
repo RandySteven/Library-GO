@@ -6,7 +6,8 @@ import (
 )
 
 type AuthorRepository interface {
-	Repository[models.Author]
+	Saver[models.Author]
+	Finder[models.Author]
 	UnitOfWork
 	FindSelectedAuthorsByID(ctx context.Context, id []uint64) (result []*models.Author, err error)
 }

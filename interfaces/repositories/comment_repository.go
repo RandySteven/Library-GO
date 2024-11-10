@@ -6,7 +6,8 @@ import (
 )
 
 type CommentRepository interface {
-	Repository[models.Comment]
+	Saver[models.Comment]
+	Finder[models.Comment]
 	UnitOfWork
 	FindCommentsByBookID(ctx context.Context, bookID uint64) (result []*models.Comment, err error)
 }

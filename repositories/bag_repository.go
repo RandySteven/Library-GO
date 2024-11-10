@@ -53,26 +53,6 @@ func (b *bagRepository) Save(ctx context.Context, entity *models.Bag) (result *m
 	return result, nil
 }
 
-func (b *bagRepository) FindByID(ctx context.Context, id uint64) (result *models.Bag, err error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (b *bagRepository) FindAll(ctx context.Context, skip uint64, take uint64) ([]*models.Bag, error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (b *bagRepository) DeleteByID(ctx context.Context, id uint64) (err error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (b *bagRepository) Update(ctx context.Context, entity *models.Bag) (result *models.Bag, err error) {
-	//TODO implement me
-	panic("implement me")
-}
-
 func (b *bagRepository) DeleteByUserAndSelectedBooks(ctx context.Context, userId uint64, bookIds []uint64) error {
 	queryIn := ` AND book_id IN (%s)`
 	wildCards := []string{}

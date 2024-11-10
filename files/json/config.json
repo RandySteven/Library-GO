@@ -1,0 +1,23 @@
+{
+  "appName": "Library App",
+  "configs": [
+    {
+      "env": "DEV",
+      "mysql": {
+
+      }
+    },
+    {
+      "env": "STAGING",
+      "mysql": {
+
+      }
+    },
+    {
+      "env": "PROD",
+      "mysql": {
+
+      }
+    }
+  ]
+}

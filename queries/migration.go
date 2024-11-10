@@ -138,13 +138,15 @@ const (
 		    user_id BIGINT NOT NULL,
 		    book_id BIGINT NOT NULL,
 		    parent_id BIGINT DEFAULT NULL,
+		    reply_id BIGINT DEFAULT NULL,
 		    comment TEXT NOT NULL,
 		    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 		    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 		    deleted_at TIMESTAMP DEFAULT NULL,
 		    FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE CASCADE,
 		    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-		    FOREIGN KEY (parent_id) REFERENCES comments(id) ON DELETE CASCADE
+		    FOREIGN KEY (parent_id) REFERENCES comments(id) ON DELETE CASCADE,
+		    FOREIGN KEY (reply_id) REFERENCES comments(id) ON DELETE CASCADE
 		)
 	`
 
@@ -153,6 +155,7 @@ const (
 		    id BIGINT PRIMARY KEY NOT NULL AUTO_INCREMENT,
 		    title VARCHAR(122) NOT NULL,
 		    thumbnail VARCHAR(244) NOT NULL,
+		    price INT NULLABLE,
 		    description TEXT NOT NULL,
 		    participant_number INT NOT NULL,
 		    occupied_participant_number INT NOT NULL,
@@ -170,6 +173,9 @@ const (
 		    id BIGINT PRIMARY KEY NOT NULL AUTO_INCREMENT,
 		    user_id BIGINT NOT NULL,
 		    event_id BIGINT NOT NULL,
+		    payed BOOLEAN DEFAULT FALSE,
+		    event_code VARCHAR(16) NOT NULL,
+		    redeem_status INT NOT NULL,
 			created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 		    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 		    deleted_at TIMESTAMP DEFAULT NULL,		    

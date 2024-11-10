@@ -50,16 +50,6 @@ func (a *authorRepository) FindAll(ctx context.Context, skip uint64, take uint64
 	panic("implement me")
 }
 
-func (a *authorRepository) DeleteByID(ctx context.Context, id uint64) (err error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (a *authorRepository) Update(ctx context.Context, entity *models.Author) (result *models.Author, err error) {
-	//TODO implement me
-	panic("implement me")
-}
-
 func (a *authorRepository) BeginTx(ctx context.Context) error {
 	tx, err := a.db.BeginTx(ctx, nil)
 	if err != nil {

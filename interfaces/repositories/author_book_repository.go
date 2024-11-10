@@ -6,7 +6,7 @@ import (
 )
 
 type AuthorBookRepository interface {
-	Repository[models.AuthorBook]
+	Saver[models.AuthorBook]
 	UnitOfWork
 	FindAuthorBookByBookID(ctx context.Context, bookID uint64) (result []*models.AuthorBook, err error)
 }

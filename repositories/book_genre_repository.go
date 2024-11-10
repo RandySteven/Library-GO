@@ -7,7 +7,6 @@ import (
 	repositories_interfaces "github.com/RandySteven/Library-GO/interfaces/repositories"
 	"github.com/RandySteven/Library-GO/queries"
 	"github.com/RandySteven/Library-GO/utils"
-	"log"
 )
 
 type bookGenreRepository struct {
@@ -16,8 +15,6 @@ type bookGenreRepository struct {
 }
 
 func (b *bookGenreRepository) Save(ctx context.Context, entity *models.BookGenre) (result *models.BookGenre, err error) {
-	log.Println("book id ", entity.BookID)
-	log.Println("genre id ", entity.GenreID)
 	id, err := utils.Save[models.BookGenre](ctx, b.InitTrigger(), queries.InsertBookGenreQuery, &entity.BookID, &entity.GenreID)
 	if err != nil {
 		return nil, err
@@ -25,25 +22,6 @@ func (b *bookGenreRepository) Save(ctx context.Context, entity *models.BookGenre
 	result = entity
 	result.ID = *id
 	return result, nil
-}
-
-func (b *bookGenreRepository) FindByID(ctx context.Context, id uint64) (result *models.BookGenre, err error) {
-	return
-}
-
-func (b *bookGenreRepository) FindAll(ctx context.Context, skip uint64, take uint64) ([]*models.BookGenre, error) {
-	//TODO implement me
-	return nil, nil
-}
-
-func (b *bookGenreRepository) DeleteByID(ctx context.Context, id uint64) (err error) {
-	//TODO implement me
-	return
-}
-
-func (b *bookGenreRepository) Update(ctx context.Context, entity *models.BookGenre) (result *models.BookGenre, err error) {
-	//TODO implement me
-	return
 }
 
 func (b *bookGenreRepository) InitTrigger() repositories_interfaces.Trigger {

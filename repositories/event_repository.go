@@ -27,11 +27,6 @@ func (e *eventRepository) FindAll(ctx context.Context, skip uint64, take uint64)
 	panic("implement me")
 }
 
-func (e *eventRepository) DeleteByID(ctx context.Context, id uint64) (err error) {
-	//TODO implement me
-	panic("implement me")
-}
-
 func (e *eventRepository) Update(ctx context.Context, entity *models.Event) (result *models.Event, err error) {
 	//TODO implement me
 	panic("implement me")

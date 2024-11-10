@@ -3,6 +3,7 @@ package repositories_interfaces
 import "github.com/RandySteven/Library-GO/entities/models"
 
 type EventUserRepository interface {
-	Repository[models.EventUser]
+	Saver[models.EventUser]
+	Finder[models.EventUser]
 	UnitOfWork
 }

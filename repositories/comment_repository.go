@@ -37,16 +37,6 @@ func (c *commentRepository) FindAll(ctx context.Context, skip uint64, take uint6
 	panic("implement me")
 }
 
-func (c *commentRepository) DeleteByID(ctx context.Context, id uint64) (err error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (c *commentRepository) Update(ctx context.Context, entity *models.Comment) (result *models.Comment, err error) {
-	//TODO implement me
-	panic("implement me")
-}
-
 func (c *commentRepository) FindCommentsByBookID(ctx context.Context, bookID uint64) (result []*models.Comment, err error) {
 	rows, err := c.InitTrigger().QueryContext(ctx, queries.SelectBookCommentsQuery.ToString(), bookID)
 	for rows.Next() {
