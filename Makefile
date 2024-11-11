@@ -49,5 +49,8 @@ refresh: drop migration seed
 scheduler:
 	${gorun} ${cmd_folder}scheduler -config ${yaml_file}
 
+docker_run:
+	docker compose build && docker compose run library-app
+
 test:
 	go test -coverprofile=coverage.out ./... ;    go tool cover -html=coverage.out
