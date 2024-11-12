@@ -6,5 +6,6 @@ type (
 	RoomChatRepository interface {
 		Saver[models.RoomChat]
 		Finder[models.RoomChat]
+		UnitOfWork
 	}
 )
