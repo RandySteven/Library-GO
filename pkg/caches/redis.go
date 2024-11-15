@@ -13,6 +13,8 @@ import (
 )
 
 var redisTimeout = os.Getenv("REDIS_EXPIRATION")
+var client *redis.Client
+var limiter *redis_rate.Limiter
 
 type RedisClient struct {
 	client  *redis.Client
@@ -25,8 +27,8 @@ func NewRedisCache(config *configs.Config) (*RedisClient, error) {
 	log.Println("connecting to redis : ", addr)
 	opt, _ := redis.ParseURL(fmt.Sprintf(`rediss://default:%s@%s:%s`, redisCfg.Password, redisCfg.Host, redisCfg.Port))
 
-	client := redis.NewClient(opt)
-	limiter := redis_rate.NewLimiter(client)
+	client = redis.NewClient(opt)
+	limiter = redis_rate.NewLimiter(client)
 	return &RedisClient{
 		client:  client,
 		limiter: limiter,
@@ -45,9 +47,9 @@ func (c *RedisClient) ClearCache(ctx context.Context) error {
 	return c.client.FlushDB(ctx).Err()
 }
 
-func (c *RedisClient) RateLimiter(ctx context.Context) error {
+func RateLimiter(ctx context.Context) error {
 	clientIP := ctx.Value(enums.ClientIP).(string)
-	res, err := c.limiter.Allow(ctx, clientIP, redis_rate.PerMinute(10))
+	res, err := limiter.Allow(ctx, clientIP, redis_rate.PerMinute(10))
 	if err != nil {
 		return err
 	}

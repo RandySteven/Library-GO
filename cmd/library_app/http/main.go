@@ -55,6 +55,7 @@ func main() {
 		middlewares.LoggingMiddleware,
 		middlewares.CorsMiddleware,
 		middlewares.TimeoutMiddleware,
+		middlewares.RateLimiterMiddleware,
 	)
 	routes.InitRouters(routers, r)
 	go config.Run(r)
