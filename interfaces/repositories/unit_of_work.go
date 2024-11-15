@@ -21,4 +21,8 @@ type (
 		QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error)
 		QueryRowContext(ctx context.Context, query string, args ...interface{}) *sql.Row
 	}
+
+	Transaction interface {
+		RunInTx(ctx context.Context, fn func(ctx context.Context, tx *sql.Tx, request any) (any, error)) (result any, err error)
+	}
 )

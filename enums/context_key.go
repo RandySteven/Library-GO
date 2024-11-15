@@ -7,6 +7,7 @@ const (
 	RoleID               = `role_id`
 	RequestID            = `request_id`
 	Env                  = `env`
+	ClientIP             = `client_ip`
 )
 
 func (c ContextKey) ToString() string {

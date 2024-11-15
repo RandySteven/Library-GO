@@ -7,6 +7,7 @@ import (
 	"github.com/RandySteven/Library-GO/entities/models"
 	"github.com/RandySteven/Library-GO/entities/payloads/requests"
 	"github.com/RandySteven/Library-GO/entities/payloads/responses"
+	"github.com/RandySteven/Library-GO/enums"
 	repositories_interfaces "github.com/RandySteven/Library-GO/interfaces/repositories"
 	usecases_interfaces "github.com/RandySteven/Library-GO/interfaces/usecases"
 	"github.com/RandySteven/Library-GO/utils"
@@ -72,6 +73,18 @@ func (c *chatUsecase) CreateRoomChat(ctx context.Context, request *requests.Crea
 }
 
 func (c *chatUsecase) ListRooms(ctx context.Context) (result []*responses.ListRoomChatsResponse, customErr *apperror.CustomError) {
+	userId := ctx.Value(enums.UserID).(uint64)
+	log.Println(userId)
+
+	roomChatUsers, err := c.roomChatUserRepo.FindUserRooms(ctx, userId)
+	if err != nil {
+		return nil, apperror.NewCustomError(apperror.ErrInternalServer, `error find room chat users`, err)
+	}
+
+	for _, roomChatUser := range roomChatUsers {
+		log.Println(roomChatUser.RoomChatID)
+	}
+
 	return
 }
 

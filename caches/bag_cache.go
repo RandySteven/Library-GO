@@ -9,7 +9,7 @@ import (
 	caches_interfaces "github.com/RandySteven/Library-GO/interfaces/caches"
 	caches_client "github.com/RandySteven/Library-GO/pkg/caches"
 	"github.com/RandySteven/Library-GO/utils"
-	"github.com/go-redis/redis/v8"
+	"github.com/redis/go-redis/v9"
 )
 
 type bagCache struct {

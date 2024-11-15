@@ -8,7 +8,7 @@ import (
 	"github.com/RandySteven/Library-GO/enums"
 	caches_interfaces "github.com/RandySteven/Library-GO/interfaces/caches"
 	caches_client "github.com/RandySteven/Library-GO/pkg/caches"
-	"github.com/go-redis/redis/v8"
+	"github.com/redis/go-redis/v9"
 )
 
 type borrowCache struct {

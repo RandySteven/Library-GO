@@ -2,7 +2,7 @@ package caches
 
 import (
 	caches_interfaces "github.com/RandySteven/Library-GO/interfaces/caches"
-	"github.com/go-redis/redis/v8"
+	"github.com/redis/go-redis/v9"
 )
 
 type Caches struct {
