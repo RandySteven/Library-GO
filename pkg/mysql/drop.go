@@ -8,6 +8,9 @@ import (
 
 func initDrop() []queries.DropQuery {
 	return []queries.DropQuery{
+		queries.DropChatTable,
+		queries.DropRoomChatUserTable,
+		queries.DropRoomChatTable,
 		queries.DropEventUserTable,
 		queries.DropEventTable,
 		queries.DropCommentTable,

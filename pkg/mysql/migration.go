@@ -24,6 +24,7 @@ func initTableMigration() []queries.MigrationQuery {
 		queries.EventUserMigration,
 		queries.RoomChatMigration,
 		queries.RoomChatUserMigration,
+		queries.ChatMigration,
 	}
 }
 

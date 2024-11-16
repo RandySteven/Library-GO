@@ -73,8 +73,8 @@ func (c *chatUsecase) CreateRoomChat(ctx context.Context, request *requests.Crea
 }
 
 func (c *chatUsecase) ListRooms(ctx context.Context) (result []*responses.ListRoomChatsResponse, customErr *apperror.CustomError) {
+	result = []*responses.ListRoomChatsResponse{}
 	userId := ctx.Value(enums.UserID).(uint64)
-	log.Println(userId)
 
 	roomChatUsers, err := c.roomChatUserRepo.FindUserRooms(ctx, userId)
 	if err != nil {
@@ -82,11 +82,16 @@ func (c *chatUsecase) ListRooms(ctx context.Context) (result []*responses.ListRo
 	}
 
 	for _, roomChatUser := range roomChatUsers {
-		log.Println(roomChatUser.RoomChatID)
+		result = append(result, &responses.ListRoomChatsResponse{
+			RoomChatID:   roomChatUser.RoomChatID,
+			RoomChatName: "Room Chat",
+		})
 	}
 
-	return
+	return result, nil
 }
+
+func (c *chatUsecase) findUsersInRoom(ctx context.Context, roomId uint64) {}
 
 func (c *chatUsecase) GetRoomDetail(ctx context.Context, roomId uint64) (result *responses.RoomChatsResponse, customErr *apperror.CustomError) {
 	return

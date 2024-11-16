@@ -14,4 +14,7 @@ const (
 	DropCommentTable      DropQuery = "DROP TABLE IF EXISTS comments"
 	DropEventTable        DropQuery = "DROP TABLE IF EXISTS events"
 	DropEventUserTable    DropQuery = "DROP TABLE IF EXISTS event_users"
+	DropRoomChatTable     DropQuery = "DROP TABLE IF EXISTS room_chats"
+	DropRoomChatUserTable DropQuery = "DROP TABLE IF EXISTS room_chat_users"
+	DropChatTable         DropQuery = "DROP TABLE IF EXISTS chats"
 )
