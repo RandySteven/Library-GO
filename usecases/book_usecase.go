@@ -192,6 +192,12 @@ func (b *bookUsecase) createBook(ctx context.Context, request *requests.CreateBo
 	}
 	defer imageFile.Close()
 
+	err = utils.ResizeImage(tempFile.Name(), tempFile.Name(), 600, 900)
+	if err != nil {
+		errCh <- apperror.NewCustomError(apperror.ErrInternalServer, `failed to resize image`, err)
+		return
+	}
+
 	renamedImage := utils.RenameFileWithDateAndUUID(tempFile.Name()[len(`./temp-images/`):])
 
 	buckets, err := b.awsClient.ListBucket()
