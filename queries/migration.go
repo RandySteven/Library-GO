@@ -155,7 +155,7 @@ const (
 		    id BIGINT PRIMARY KEY NOT NULL AUTO_INCREMENT,
 		    title VARCHAR(122) NOT NULL,
 		    thumbnail VARCHAR(244) NOT NULL,
-		    price INT NULLABLE,
+		    price INT,
 		    description TEXT NOT NULL,
 		    participant_number INT NOT NULL,
 		    occupied_participant_number INT NOT NULL,
@@ -188,7 +188,7 @@ const (
 		CREATE TABLE IF NOT EXISTS room_chats (
 		    id BIGINT PRIMARY KEY NOT NULL AUTO_INCREMENT,
 		    room_name VARCHAR(64) NOT NULL,
-		    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+		    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 		    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 		    deleted_at TIMESTAMP DEFAULT NULL
 		)

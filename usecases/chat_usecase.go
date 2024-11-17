@@ -82,9 +82,13 @@ func (c *chatUsecase) ListRooms(ctx context.Context) (result []*responses.ListRo
 	}
 
 	for _, roomChatUser := range roomChatUsers {
+		roomChat, err := c.roomChatRepo.FindByID(ctx, roomChatUser.RoomChatID)
+		if err != nil {
+			return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to get room chat`, err)
+		}
 		result = append(result, &responses.ListRoomChatsResponse{
 			RoomChatID:   roomChatUser.RoomChatID,
-			RoomChatName: "Room Chat",
+			RoomChatName: roomChat.RoomName,
 		})
 	}
 
