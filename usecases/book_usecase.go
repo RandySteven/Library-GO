@@ -35,7 +35,7 @@ type bookUsecase struct {
 	cache          caches_interfaces.BookCache
 }
 
-func (b *bookUsecase) refreshTx(ctx context.Context) {
+func (b *bookUsecase) setTx(ctx context.Context) {
 	tx := b.bookRepo.GetTx(ctx)
 	b.userRepo.SetTx(tx)
 	b.genreRepo.SetTx(tx)
@@ -43,6 +43,11 @@ func (b *bookUsecase) refreshTx(ctx context.Context) {
 	b.authorBookRepo.SetTx(tx)
 	b.bookGenreRepo.SetTx(tx)
 	b.ratingRepo.SetTx(tx)
+}
+
+func (b *bookUsecase) refreshTx(ctx context.Context) {
+	b.bookRepo.SetTx(nil)
+	b.setTx(ctx)
 }
 
 func (b *bookUsecase) AddNewBook(ctx context.Context, request *requests.CreateBookRequest, fileHeader *multipart.FileHeader) (result *responses.CreateBookResponse, customErr *apperror.CustomError) {
@@ -70,9 +75,10 @@ func (b *bookUsecase) AddNewBook(ctx context.Context, request *requests.CreateBo
 		} else if err = b.bookRepo.CommitTx(ctx); err != nil {
 			log.Println("failed to commit transaction:", err)
 		}
-		b.bookRepo.SetTx(nil)
+		b.setTx(nil)
+		b.refreshTx(ctx)
 	}()
-	b.refreshTx(ctx)
+	b.setTx(ctx)
 
 	// 2. Search authors, genres, and insert book concurrently
 	wg.Add(3)
