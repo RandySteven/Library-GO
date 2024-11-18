@@ -14,6 +14,7 @@ func RateLimiterMiddleware(next http.Handler) http.Handler {
 		ctx := context.WithValue(r.Context(), enums.ClientIP, clientIp)
 		if err := caches_client.RateLimiter(ctx); err != nil {
 			w.WriteHeader(http.StatusTooManyRequests)
+			return
 		}
 		next.ServeHTTP(w, r)
 	})

@@ -309,8 +309,8 @@ func (b *bookUsecase) GetBookByID(ctx context.Context, id uint64) (result *respo
 	var (
 		wg          sync.WaitGroup
 		customErrCh = make(chan *apperror.CustomError)
-		genresCh    = make(chan []string)
-		authorsCh   = make(chan []string)
+		genresCh    = make(chan []*responses.GenreBookResponse)
+		authorsCh   = make(chan []*responses.AuthorBookResponse)
 		ratingCh    = make(chan *models.Rating)
 	)
 	book, err := b.bookRepo.FindByID(ctx, id)
@@ -331,7 +331,7 @@ func (b *bookUsecase) GetBookByID(ctx context.Context, id uint64) (result *respo
 
 	go func() {
 		defer wg.Done()
-		var authorNames []string
+		var authorNames = []*responses.AuthorBookResponse{}
 		authorBooks, err := b.authorBookRepo.FindAuthorBookByBookID(ctx, book.ID)
 		if err != nil {
 			customErrCh <- apperror.NewCustomError(apperror.ErrInternalServer, `failed to get author book by id`, err)
@@ -347,14 +347,17 @@ func (b *bookUsecase) GetBookByID(ctx context.Context, id uint64) (result *respo
 			return
 		}
 		for _, author := range authors {
-			authorNames = append(authorNames, author.Name)
+			authorNames = append(authorNames, &responses.AuthorBookResponse{
+				ID:   author.ID,
+				Name: author.Name,
+			})
 		}
 		authorsCh <- authorNames
 	}()
 
 	go func() {
 		defer wg.Done()
-		genreNames := []string{}
+		genreNames := []*responses.GenreBookResponse{}
 		bookGenres, err := b.bookGenreRepo.FindBookGenreByBookID(ctx, book.ID)
 		if err != nil {
 			customErrCh <- apperror.NewCustomError(apperror.ErrInternalServer, `failed to get book genre by id`, err)
@@ -371,7 +374,10 @@ func (b *bookUsecase) GetBookByID(ctx context.Context, id uint64) (result *respo
 			return
 		}
 		for _, genre := range genres {
-			genreNames = append(genreNames, genre.Genre)
+			genreNames = append(genreNames, &responses.GenreBookResponse{
+				ID:    genre.ID,
+				Genre: genre.Genre,
+			})
 		}
 		genresCh <- genreNames
 	}()
