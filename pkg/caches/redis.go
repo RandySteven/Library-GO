@@ -12,9 +12,11 @@ import (
 	"os"
 )
 
-var redisTimeout = os.Getenv("REDIS_EXPIRATION")
-var client *redis.Client
-var limiter *redis_rate.Limiter
+var (
+	redisTimeout = os.Getenv("REDIS_EXPIRATION")
+	client       *redis.Client
+	limiter      *redis_rate.Limiter
+)
 
 type RedisClient struct {
 	client  *redis.Client
