@@ -15,7 +15,7 @@ type ratingRepository struct {
 }
 
 func (r *ratingRepository) Save(ctx context.Context, entity *models.Rating) (result *models.Rating, err error) {
-	id, err := utils.Save[models.Rating](ctx, r.InitTrigger(), queries.InsertIntoRatingQuery, &entity.BookID, &entity.UserID, &entity.Score)
+	id, err := utils.Save[models.Rating](ctx, r.Trigger(), queries.InsertIntoRatingQuery, &entity.BookID, &entity.UserID, &entity.Score)
 	if err != nil {
 		return nil, err
 	}
@@ -23,12 +23,8 @@ func (r *ratingRepository) Save(ctx context.Context, entity *models.Rating) (res
 	return entity, nil
 }
 
-func (r *ratingRepository) InitTrigger() repositories_interfaces.Trigger {
-	var trigger repositories_interfaces.Trigger = r.db
-	if r.tx != nil {
-		trigger = r.tx
-	}
-	return trigger
+func (r *ratingRepository) Trigger() repositories_interfaces.Trigger {
+	return utils.InitTrigger(r.db, r.tx)
 }
 
 func (r *ratingRepository) BeginTx(ctx context.Context) error {
@@ -58,7 +54,7 @@ func (r *ratingRepository) GetTx(ctx context.Context) *sql.Tx {
 
 func (r *ratingRepository) FindRatingForBook(ctx context.Context, bookId uint64) (result *models.Rating, err error) {
 	result = &models.Rating{}
-	err = r.InitTrigger().QueryRowContext(ctx, queries.SelectRatingValue.ToString(), bookId).
+	err = r.Trigger().QueryRowContext(ctx, queries.SelectRatingValue.ToString(), bookId).
 		Scan(&result.BookID, &result.Score)
 	if err != nil {
 		return nil, err

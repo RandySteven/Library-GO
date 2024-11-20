@@ -19,12 +19,8 @@ type bookRepository struct {
 	tx *sql.Tx
 }
 
-func (b *bookRepository) InitTrigger() repositories_interfaces.Trigger {
-	var trigger repositories_interfaces.Trigger = b.db
-	if b.tx != nil {
-		trigger = b.tx
-	}
-	return trigger
+func (b *bookRepository) Trigger() repositories_interfaces.Trigger {
+	return utils.InitTrigger(b.db, b.tx)
 }
 
 func (b *bookRepository) BeginTx(ctx context.Context) error {
@@ -53,7 +49,7 @@ func (b *bookRepository) GetTx(ctx context.Context) *sql.Tx {
 }
 
 func (b *bookRepository) Save(ctx context.Context, entity *models.Book) (result *models.Book, err error) {
-	id, err := utils.Save[models.Book](ctx, b.InitTrigger(), queries.InsertBookQuery, entity.Title, entity.Description, entity.Image, entity.Status)
+	id, err := utils.Save[models.Book](ctx, b.Trigger(), queries.InsertBookQuery, entity.Title, entity.Description, entity.Image, entity.Status)
 	if err != nil {
 		return nil, err
 	}
@@ -64,7 +60,7 @@ func (b *bookRepository) Save(ctx context.Context, entity *models.Book) (result 
 
 func (b *bookRepository) FindByID(ctx context.Context, id uint64) (result *models.Book, err error) {
 	result = &models.Book{}
-	err = utils.FindByID[models.Book](ctx, b.InitTrigger(), queries.SelectBookByIDQuery, id, result)
+	err = utils.FindByID[models.Book](ctx, b.Trigger(), queries.SelectBookByIDQuery, id, result)
 	if err != nil {
 		return nil, err
 	}
@@ -72,7 +68,7 @@ func (b *bookRepository) FindByID(ctx context.Context, id uint64) (result *model
 }
 
 func (b *bookRepository) FindAll(ctx context.Context, skip uint64, take uint64) ([]*models.Book, error) {
-	return utils.FindAll[models.Book](ctx, b.InitTrigger(), queries.SelectBooksQuery)
+	return utils.FindAll[models.Book](ctx, b.Trigger(), queries.SelectBooksQuery)
 }
 
 func (b *bookRepository) FindSelectedBooksId(ctx context.Context, ids []uint64) (results []*models.Book, err error) {
@@ -103,7 +99,7 @@ func (b *bookRepository) FindSelectedBooksId(ctx context.Context, ids []uint64) 
 
 func (b *bookRepository) FindBookStatus(ctx context.Context, id uint64, status enums.BookStatus) (isExist bool, err error) {
 	result := &models.Book{}
-	err = b.InitTrigger().QueryRowContext(ctx, queries.SelectBookAndStatus.ToString(), id, status).Scan(
+	err = b.Trigger().QueryRowContext(ctx, queries.SelectBookAndStatus.ToString(), id, status).Scan(
 		&result.ID, &result.Title, &result.Description, &result.Image, &result.Status, &result.CreatedAt, &result.UpdatedAt, &result.DeletedAt)
 	if err != nil {
 		return false, err
@@ -112,7 +108,7 @@ func (b *bookRepository) FindBookStatus(ctx context.Context, id uint64, status e
 }
 
 func (b *bookRepository) UpdateBookStatus(ctx context.Context, id uint64, status enums.BookStatus) error {
-	_, err := b.InitTrigger().ExecContext(ctx, queries.UpdateBookStatusQuery.ToString(), status, id)
+	_, err := b.Trigger().ExecContext(ctx, queries.UpdateBookStatusQuery.ToString(), status, id)
 	if err != nil {
 		return err
 	}

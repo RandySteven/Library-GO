@@ -15,7 +15,7 @@ type commentRepository struct {
 }
 
 func (c *commentRepository) Save(ctx context.Context, entity *models.Comment) (result *models.Comment, err error) {
-	id, err := utils.Save[models.Comment](ctx, c.InitTrigger(), queries.InsertCommentQuery, &entity.UserID, &entity.BookID, &entity.ParentID, &entity.Comment)
+	id, err := utils.Save[models.Comment](ctx, c.Trigger(), queries.InsertCommentQuery, &entity.UserID, &entity.BookID, &entity.ParentID, &entity.Comment)
 	if err != nil {
 		return nil, err
 	}
@@ -25,7 +25,7 @@ func (c *commentRepository) Save(ctx context.Context, entity *models.Comment) (r
 
 func (c *commentRepository) FindByID(ctx context.Context, id uint64) (result *models.Comment, err error) {
 	result = &models.Comment{}
-	err = utils.FindByID[models.Comment](ctx, c.InitTrigger(), queries.SelectCommentByIDQuery, id, result)
+	err = utils.FindByID[models.Comment](ctx, c.Trigger(), queries.SelectCommentByIDQuery, id, result)
 	if err != nil {
 		return nil, err
 	}
@@ -38,7 +38,7 @@ func (c *commentRepository) FindAll(ctx context.Context, skip uint64, take uint6
 }
 
 func (c *commentRepository) FindCommentsByBookID(ctx context.Context, bookID uint64) (result []*models.Comment, err error) {
-	rows, err := c.InitTrigger().QueryContext(ctx, queries.SelectBookCommentsQuery.ToString(), bookID)
+	rows, err := c.Trigger().QueryContext(ctx, queries.SelectBookCommentsQuery.ToString(), bookID)
 	for rows.Next() {
 		comment := &models.Comment{}
 		err = rows.Scan(
@@ -52,12 +52,8 @@ func (c *commentRepository) FindCommentsByBookID(ctx context.Context, bookID uin
 	return result, nil
 }
 
-func (c *commentRepository) InitTrigger() repositories_interfaces.Trigger {
-	var trigger repositories_interfaces.Trigger = c.db
-	if c.tx != nil {
-		trigger = c.tx
-	}
-	return trigger
+func (c *commentRepository) Trigger() repositories_interfaces.Trigger {
+	return utils.InitTrigger(c.db, c.tx)
 }
 
 func (c *commentRepository) BeginTx(ctx context.Context) error {

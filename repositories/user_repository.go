@@ -14,12 +14,8 @@ type userRepository struct {
 	tx *sql.Tx
 }
 
-func (u *userRepository) InitTrigger() repositories_interfaces.Trigger {
-	var trigger repositories_interfaces.Trigger = u.db
-	if u.tx != nil {
-		trigger = u.tx
-	}
-	return trigger
+func (u *userRepository) Trigger() repositories_interfaces.Trigger {
+	return utils.InitTrigger(u.db, u.tx)
 }
 
 func (u *userRepository) FindByEmail(ctx context.Context, email string) (*models.User, error) {
@@ -32,7 +28,7 @@ func (u *userRepository) FindByPhoneNumber(ctx context.Context, phoneNumber stri
 
 func (u *userRepository) Save(ctx context.Context, entity *models.User) (result *models.User, err error) {
 	result = &models.User{}
-	id, err := utils.Save[models.User](ctx, u.InitTrigger(), queries.InsertUserQuery,
+	id, err := utils.Save[models.User](ctx, u.Trigger(), queries.InsertUserQuery,
 		&entity.Name, &entity.Address, &entity.Email, &entity.PhoneNumber, &entity.Password, &entity.DoB)
 	if err != nil {
 		return nil, err
@@ -44,7 +40,7 @@ func (u *userRepository) Save(ctx context.Context, entity *models.User) (result 
 
 func (u *userRepository) FindByID(ctx context.Context, id uint64) (result *models.User, err error) {
 	result = &models.User{}
-	err = utils.FindByID[models.User](ctx, u.InitTrigger(), queries.SelectUserByIDQuery, id, result)
+	err = utils.FindByID[models.User](ctx, u.Trigger(), queries.SelectUserByIDQuery, id, result)
 	if err != nil {
 		return nil, err
 	}
@@ -97,7 +93,7 @@ func (u *userRepository) findUser(ctx context.Context, by string, identifier str
 		query = queries.SelectUserByEmailQuery.ToString()
 	}
 	result := &models.User{}
-	err := u.InitTrigger().QueryRowContext(ctx, query, identifier).Scan(
+	err := u.Trigger().QueryRowContext(ctx, query, identifier).Scan(
 		&result.ID, &result.Name, &result.Address, &result.Email,
 		&result.PhoneNumber, &result.Password, &result.DoB, &result.ProfilePicture, &result.CreatedAt, &result.UpdatedAt, &result.DeletedAt, &result.VerifiedAt)
 	if err != nil {

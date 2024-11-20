@@ -15,7 +15,7 @@ type bookGenreRepository struct {
 }
 
 func (b *bookGenreRepository) Save(ctx context.Context, entity *models.BookGenre) (result *models.BookGenre, err error) {
-	id, err := utils.Save[models.BookGenre](ctx, b.InitTrigger(), queries.InsertBookGenreQuery, &entity.BookID, &entity.GenreID)
+	id, err := utils.Save[models.BookGenre](ctx, b.Trigger(), queries.InsertBookGenreQuery, &entity.BookID, &entity.GenreID)
 	if err != nil {
 		return nil, err
 	}
@@ -24,12 +24,8 @@ func (b *bookGenreRepository) Save(ctx context.Context, entity *models.BookGenre
 	return result, nil
 }
 
-func (b *bookGenreRepository) InitTrigger() repositories_interfaces.Trigger {
-	var trigger repositories_interfaces.Trigger = b.db
-	if b.tx != nil {
-		trigger = b.tx
-	}
-	return trigger
+func (b *bookGenreRepository) Trigger() repositories_interfaces.Trigger {
+	return utils.InitTrigger(b.db, b.tx)
 }
 
 func (b *bookGenreRepository) BeginTx(ctx context.Context) error {
@@ -58,7 +54,7 @@ func (b *bookGenreRepository) GetTx(ctx context.Context) *sql.Tx {
 }
 
 func (b *bookGenreRepository) FindBookGenreByBookID(ctx context.Context, bookID uint64) (result []*models.BookGenre, err error) {
-	rows, err := b.InitTrigger().QueryContext(ctx, queries.SelectBookGenreByBookIDQuery.ToString(), bookID)
+	rows, err := b.Trigger().QueryContext(ctx, queries.SelectBookGenreByBookIDQuery.ToString(), bookID)
 	if err != nil {
 		return nil, err
 	}
@@ -75,7 +71,7 @@ func (b *bookGenreRepository) FindBookGenreByBookID(ctx context.Context, bookID 
 }
 
 func (b *bookGenreRepository) FindBookGenreByGenreID(ctx context.Context, genreID uint64) (result []*models.BookGenre, err error) {
-	rows, err := b.InitTrigger().QueryContext(ctx, queries.SelectBookGenreByGenreIDQuery.ToString(), genreID)
+	rows, err := b.Trigger().QueryContext(ctx, queries.SelectBookGenreByGenreIDQuery.ToString(), genreID)
 	if err != nil {
 		return nil, err
 	}

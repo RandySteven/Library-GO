@@ -20,7 +20,7 @@ type bagRepository struct {
 
 func (b *bagRepository) CheckBagExists(ctx context.Context, bag *models.Bag) (bool, error) {
 	exists := 1
-	err := b.InitTrigger().QueryRowContext(ctx, queries.SelectExistBookAlreadyInBag.ToString(), &bag.BookID, &bag.UserID).Scan(&exists)
+	err := b.Trigger().QueryRowContext(ctx, queries.SelectExistBookAlreadyInBag.ToString(), &bag.BookID, &bag.UserID).Scan(&exists)
 	if err != nil {
 		return false, err
 	}
@@ -28,7 +28,7 @@ func (b *bagRepository) CheckBagExists(ctx context.Context, bag *models.Bag) (bo
 }
 
 func (b *bagRepository) FindBagByUser(ctx context.Context, userID uint64) (result []*models.Bag, err error) {
-	rows, err := b.InitTrigger().QueryContext(ctx, queries.SelectBagByUserQuery.ToString(), userID)
+	rows, err := b.Trigger().QueryContext(ctx, queries.SelectBagByUserQuery.ToString(), userID)
 	if err != nil {
 		return nil, err
 	}
@@ -44,7 +44,7 @@ func (b *bagRepository) FindBagByUser(ctx context.Context, userID uint64) (resul
 }
 
 func (b *bagRepository) Save(ctx context.Context, entity *models.Bag) (result *models.Bag, err error) {
-	id, err := utils.Save[models.Bag](ctx, b.InitTrigger(), queries.InsertBagQuery, &entity.UserID, &entity.BookID)
+	id, err := utils.Save[models.Bag](ctx, b.Trigger(), queries.InsertBagQuery, &entity.UserID, &entity.BookID)
 	if err != nil {
 		return nil, err
 	}
@@ -63,19 +63,15 @@ func (b *bagRepository) DeleteByUserAndSelectedBooks(ctx context.Context, userId
 	queryIn = fmt.Sprintf(queryIn, wildCardStr)
 	selectStr := queries.DeleteUserBagQuery.ToString() + queryIn
 	log.Printf(selectStr)
-	_, err := b.InitTrigger().ExecContext(ctx, selectStr, userId)
+	_, err := b.Trigger().ExecContext(ctx, selectStr, userId)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (b *bagRepository) InitTrigger() repositories_interfaces.Trigger {
-	var trigger repositories_interfaces.Trigger = b.db
-	if b.tx != nil {
-		trigger = b.tx
-	}
-	return trigger
+func (b *bagRepository) Trigger() repositories_interfaces.Trigger {
+	return utils.InitTrigger(b.db, b.tx)
 }
 
 func (b *bagRepository) BeginTx(ctx context.Context) error {
@@ -104,7 +100,7 @@ func (b *bagRepository) GetTx(ctx context.Context) *sql.Tx {
 }
 
 func (b *bagRepository) DeleteUserBag(ctx context.Context, userId uint64) error {
-	_, err := b.InitTrigger().ExecContext(ctx, queries.DeleteUserBagQuery.ToString(), userId)
+	_, err := b.Trigger().ExecContext(ctx, queries.DeleteUserBagQuery.ToString(), userId)
 	if err != nil {
 		return err
 	}

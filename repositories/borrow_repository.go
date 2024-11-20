@@ -14,12 +14,8 @@ type borrowRepository struct {
 	tx *sql.Tx
 }
 
-func (b *borrowRepository) InitTrigger() repositories_interfaces.Trigger {
-	var trigger repositories_interfaces.Trigger = b.db
-	if b.tx != nil {
-		trigger = b.tx
-	}
-	return trigger
+func (b *borrowRepository) Trigger() repositories_interfaces.Trigger {
+	return utils.InitTrigger(b.db, b.tx)
 }
 
 func (b *borrowRepository) BeginTx(ctx context.Context) error {
@@ -48,7 +44,7 @@ func (b *borrowRepository) GetTx(ctx context.Context) *sql.Tx {
 }
 
 func (b *borrowRepository) Save(ctx context.Context, entity *models.Borrow) (result *models.Borrow, err error) {
-	id, err := utils.Save[models.Borrow](ctx, b.InitTrigger(), queries.InsertBorrowQuery, &entity.UserID, &entity.BorrowReference)
+	id, err := utils.Save[models.Borrow](ctx, b.Trigger(), queries.InsertBorrowQuery, &entity.UserID, &entity.BorrowReference)
 	if err != nil {
 		return nil, err
 	}
@@ -58,7 +54,7 @@ func (b *borrowRepository) Save(ctx context.Context, entity *models.Borrow) (res
 
 func (b *borrowRepository) FindByID(ctx context.Context, id uint64) (result *models.Borrow, err error) {
 	result = &models.Borrow{}
-	err = utils.FindByID[models.Borrow](ctx, b.InitTrigger(), queries.SelectBorrowByIDQuery, id, result)
+	err = utils.FindByID[models.Borrow](ctx, b.Trigger(), queries.SelectBorrowByIDQuery, id, result)
 	if err != nil {
 		return nil, err
 	}
@@ -72,7 +68,7 @@ func (b *borrowRepository) FindAll(ctx context.Context, skip uint64, take uint64
 
 func (b *borrowRepository) FindByReferenceID(ctx context.Context, referenceID string) (result *models.Borrow, err error) {
 	result = &models.Borrow{}
-	err = b.InitTrigger().QueryRowContext(ctx, queries.SelectBorrowByReference.ToString(), referenceID).
+	err = b.Trigger().QueryRowContext(ctx, queries.SelectBorrowByReference.ToString(), referenceID).
 		Scan(
 			&result.ID,
 			&result.UserID,
@@ -87,7 +83,7 @@ func (b *borrowRepository) FindByReferenceID(ctx context.Context, referenceID st
 }
 
 func (b *borrowRepository) FindByUserId(ctx context.Context, userId uint64) (result []*models.Borrow, err error) {
-	rows, err := b.InitTrigger().QueryContext(ctx, queries.SelectBorrowUserIdQuery.ToString(), userId)
+	rows, err := b.Trigger().QueryContext(ctx, queries.SelectBorrowUserIdQuery.ToString(), userId)
 	if err != nil {
 		return nil, err
 	}

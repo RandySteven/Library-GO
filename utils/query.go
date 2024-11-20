@@ -157,3 +157,16 @@ func Update[T any](ctx context.Context, db *sql.DB, query queries.GoQuery, reque
 	}
 	return nil
 }
+
+func InitTrigger(db *sql.DB, tx *sql.Tx) (trigger repositories_interfaces.Trigger) {
+	trigger = db
+	if tx != nil {
+		trigger = tx
+	}
+	return trigger
+}
+
+//func ExecTx(ctx context.Context, fn func(ctx context.Context, tx *sql.Tx) error) error {
+//err := fn (ctx, tx)
+//return err
+//}

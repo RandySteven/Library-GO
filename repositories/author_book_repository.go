@@ -15,7 +15,7 @@ type authorBookRepository struct {
 }
 
 func (a *authorBookRepository) Save(ctx context.Context, entity *models.AuthorBook) (result *models.AuthorBook, err error) {
-	id, err := utils.Save[models.AuthorBook](ctx, a.InitTrigger(), queries.InsertAuthorBookQuery, &entity.AuthorID, &entity.BookID)
+	id, err := utils.Save[models.AuthorBook](ctx, a.Trigger(), queries.InsertAuthorBookQuery, &entity.AuthorID, &entity.BookID)
 	if err != nil {
 		return nil, err
 	}
@@ -24,12 +24,8 @@ func (a *authorBookRepository) Save(ctx context.Context, entity *models.AuthorBo
 	return result, nil
 }
 
-func (a *authorBookRepository) InitTrigger() repositories_interfaces.Trigger {
-	var trigger repositories_interfaces.Trigger = a.db
-	if a.tx != nil {
-		trigger = a.tx
-	}
-	return trigger
+func (a *authorBookRepository) Trigger() repositories_interfaces.Trigger {
+	return utils.InitTrigger(a.db, a.tx)
 }
 
 func (a *authorBookRepository) BeginTx(ctx context.Context) error {
@@ -60,7 +56,7 @@ func (a *authorBookRepository) GetTx(ctx context.Context) *sql.Tx {
 }
 
 func (a *authorBookRepository) FindAuthorBookByBookID(ctx context.Context, bookID uint64) (result []*models.AuthorBook, err error) {
-	rows, err := a.InitTrigger().QueryContext(ctx, queries.SelectAuthorBookByBookIDQuery.ToString(), bookID)
+	rows, err := a.Trigger().QueryContext(ctx, queries.SelectAuthorBookByBookIDQuery.ToString(), bookID)
 	if err != nil {
 		return nil, err
 	}

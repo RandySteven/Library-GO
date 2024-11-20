@@ -32,7 +32,7 @@ func (e *eventRepository) Update(ctx context.Context, entity *models.Event) (res
 	panic("implement me")
 }
 
-func (e *eventRepository) InitTrigger() repositories_interfaces.Trigger {
+func (e *eventRepository) Trigger() repositories_interfaces.Trigger {
 	//TODO implement me
 	panic("implement me")
 }

@@ -18,16 +18,12 @@ type authorRepository struct {
 	tx *sql.Tx
 }
 
-func (a *authorRepository) InitTrigger() repositories_interfaces.Trigger {
-	var trigger repositories_interfaces.Trigger = a.db
-	if a.tx != nil {
-		trigger = a.tx
-	}
-	return trigger
+func (a *authorRepository) Trigger() repositories_interfaces.Trigger {
+	return utils.InitTrigger(a.db, a.tx)
 }
 
 func (a *authorRepository) Save(ctx context.Context, entity *models.Author) (result *models.Author, err error) {
-	id, err := utils.Save[models.Author](ctx, a.InitTrigger(), ``, &entity.Name, &entity.Nationality)
+	id, err := utils.Save[models.Author](ctx, a.Trigger(), ``, &entity.Name, &entity.Nationality)
 	if err != nil {
 		return nil, err
 	}
@@ -38,7 +34,7 @@ func (a *authorRepository) Save(ctx context.Context, entity *models.Author) (res
 
 func (a *authorRepository) FindByID(ctx context.Context, id uint64) (result *models.Author, err error) {
 	result = &models.Author{}
-	err = utils.FindByID[models.Author](ctx, a.InitTrigger(), queries.SelectAuthorByID, id, result)
+	err = utils.FindByID[models.Author](ctx, a.Trigger(), queries.SelectAuthorByID, id, result)
 	if err != nil {
 		return nil, err
 	}
@@ -85,7 +81,7 @@ func (a *authorRepository) FindSelectedAuthorsByID(ctx context.Context, ids []ui
 	queryIn = fmt.Sprintf(queryIn, wildCardStr)
 	selectStr := queries.SelectAuthorQuery.ToString() + queryIn
 	log.Println(selectStr)
-	rows, err := a.InitTrigger().QueryContext(ctx, selectStr)
+	rows, err := a.Trigger().QueryContext(ctx, selectStr)
 	if err != nil {
 		return nil, err
 	}

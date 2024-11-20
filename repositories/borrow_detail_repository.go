@@ -16,7 +16,7 @@ type borrowDetailRepository struct {
 
 func (b *borrowDetailRepository) Save(ctx context.Context, entity *models.BorrowDetail) (result *models.BorrowDetail, err error) {
 	result = entity
-	id, err := utils.Save[models.BorrowDetail](ctx, b.InitTrigger(), queries.InsertBorrowDetailQuery, &entity.BorrowID, &entity.BookID, &entity.ReturnedDate)
+	id, err := utils.Save[models.BorrowDetail](ctx, b.Trigger(), queries.InsertBorrowDetailQuery, &entity.BorrowID, &entity.BookID, &entity.ReturnedDate)
 	if err != nil {
 		return nil, err
 	}
@@ -24,12 +24,8 @@ func (b *borrowDetailRepository) Save(ctx context.Context, entity *models.Borrow
 	return result, nil
 }
 
-func (b *borrowDetailRepository) InitTrigger() repositories_interfaces.Trigger {
-	var trigger repositories_interfaces.Trigger = b.db
-	if b.tx != nil {
-		trigger = b.tx
-	}
-	return trigger
+func (b *borrowDetailRepository) Trigger() repositories_interfaces.Trigger {
+	return utils.InitTrigger(b.db, b.tx)
 }
 
 func (b *borrowDetailRepository) BeginTx(ctx context.Context) error {
@@ -58,7 +54,7 @@ func (b *borrowDetailRepository) GetTx(ctx context.Context) *sql.Tx {
 }
 
 func (b *borrowDetailRepository) FindByBorrowID(ctx context.Context, borrowID uint64) (results []*models.BorrowDetail, err error) {
-	rows, err := b.InitTrigger().QueryContext(ctx, queries.SelectBorrowDetailByBorrowIDQuery.ToString(), borrowID)
+	rows, err := b.Trigger().QueryContext(ctx, queries.SelectBorrowDetailByBorrowIDQuery.ToString(), borrowID)
 	if err != nil {
 		return nil, err
 	}
@@ -77,7 +73,7 @@ func (b *borrowDetailRepository) FindByBorrowID(ctx context.Context, borrowID ui
 }
 
 func (b *borrowDetailRepository) FindCurrReturnDate(ctx context.Context) (results []*models.BorrowDetail, err error) {
-	rows, err := b.InitTrigger().QueryContext(ctx, queries.SelectBorrowDetailReturnedDateTodayQuery.ToString())
+	rows, err := b.Trigger().QueryContext(ctx, queries.SelectBorrowDetailReturnedDateTodayQuery.ToString())
 	if err != nil {
 		return nil, err
 	}
@@ -105,7 +101,7 @@ func (b *borrowDetailRepository) FindCurrReturnDate(ctx context.Context) (result
 
 func (b *borrowDetailRepository) FindByBorrowIDAndBookID(ctx context.Context, borrowID uint64, bookID uint64) (result *models.BorrowDetail, err error) {
 	result = &models.BorrowDetail{}
-	err = b.InitTrigger().QueryRowContext(ctx, queries.SelectBorrowDetailByBorrowAndBookQuery.ToString(), borrowID, bookID).
+	err = b.Trigger().QueryRowContext(ctx, queries.SelectBorrowDetailByBorrowAndBookQuery.ToString(), borrowID, bookID).
 		Scan(
 			&result.ID,
 			&result.BorrowID,
@@ -124,7 +120,7 @@ func (b *borrowDetailRepository) FindByBorrowIDAndBookID(ctx context.Context, bo
 
 func (b *borrowDetailRepository) UpdateReturnDateByBorrowIDAndBookID(ctx context.Context, borrowID uint64, bookID uint64) (result *models.BorrowDetail, err error) {
 	result = &models.BorrowDetail{}
-	_, err = b.InitTrigger().ExecContext(ctx, queries.UpdateBorrowReturnDateByBorrowAndBookQuery.ToString(), borrowID, bookID)
+	_, err = b.Trigger().ExecContext(ctx, queries.UpdateBorrowReturnDateByBorrowAndBookQuery.ToString(), borrowID, bookID)
 	if err != nil {
 		return nil, err
 	}
