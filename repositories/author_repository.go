@@ -42,8 +42,7 @@ func (a *authorRepository) FindByID(ctx context.Context, id uint64) (result *mod
 }
 
 func (a *authorRepository) FindAll(ctx context.Context, skip uint64, take uint64) ([]*models.Author, error) {
-	//TODO implement me
-	panic("implement me")
+	return utils.FindAll[models.Author](ctx, a.Trigger(), queries.SelectAuthorQuery)
 }
 
 func (a *authorRepository) BeginTx(ctx context.Context) error {
