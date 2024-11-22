@@ -68,5 +68,9 @@ type Config struct {
 			Username string `yaml:"username"`
 			Password string `yaml:"password"`
 		}
+
+		Kafka struct {
+			Addrs []string `yaml:"addrs"`
+		}
 	} `yaml:"app"`
 }
