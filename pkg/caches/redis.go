@@ -10,12 +10,14 @@ import (
 	"github.com/redis/go-redis/v9"
 	"log"
 	"os"
+	"strconv"
 )
 
 var (
 	redisTimeout = os.Getenv("REDIS_EXPIRATION")
 	client       *redis.Client
 	limiter      *redis_rate.Limiter
+	rateLimiter  = os.Getenv("RATE_LIMITER")
 )
 
 type RedisClient struct {
@@ -50,8 +52,9 @@ func (c *RedisClient) ClearCache(ctx context.Context) error {
 }
 
 func RateLimiter(ctx context.Context) error {
+	rateLimiterInt, _ := strconv.Atoi(rateLimiter)
 	clientIP := ctx.Value(enums.ClientIP).(string)
-	res, err := limiter.Allow(ctx, clientIP, redis_rate.PerMinute(10))
+	res, err := limiter.Allow(ctx, clientIP, redis_rate.PerMinute(rateLimiterInt))
 	if err != nil {
 		return err
 	}
