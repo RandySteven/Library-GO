@@ -63,7 +63,11 @@ func (a *authorBookRepository) FindAuthorBookByBookID(ctx context.Context, bookI
 	defer rows.Close()
 	for rows.Next() {
 		authorBook := new(models.AuthorBook)
-		err = rows.Scan(&authorBook.ID, &authorBook.AuthorID, &authorBook.BookID, &authorBook.CreatedAt, &authorBook.UpdatedAt, &authorBook.DeletedAt)
+		err = rows.Scan(
+			&authorBook.ID, &authorBook.AuthorID, &authorBook.BookID, &authorBook.CreatedAt, &authorBook.UpdatedAt, &authorBook.DeletedAt,
+			&authorBook.Book.ID, &authorBook.Book.Title, &authorBook.Book.Description, &authorBook.Book.Image, &authorBook.Book.Status, &authorBook.Book.CreatedAt, &authorBook.Book.UpdatedAt, &authorBook.Book.DeletedAt,
+			&authorBook.Author.ID, &authorBook.Author.Name, &authorBook.Author.Nationality, &authorBook.Author.CreatedAt, &authorBook.Author.UpdatedAt, &authorBook.Author.DeletedAt,
+		)
 		if err != nil {
 			return nil, err
 		}

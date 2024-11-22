@@ -61,7 +61,10 @@ func (b *bookGenreRepository) FindBookGenreByBookID(ctx context.Context, bookID 
 	defer rows.Close()
 	for rows.Next() {
 		bookGenre := new(models.BookGenre)
-		err = rows.Scan(&bookGenre.ID, &bookGenre.BookID, &bookGenre.GenreID, &bookGenre.CreatedAt, &bookGenre.UpdatedAt, &bookGenre.DeletedAt)
+		err = rows.Scan(
+			&bookGenre.ID, &bookGenre.BookID, &bookGenre.GenreID, &bookGenre.CreatedAt, &bookGenre.UpdatedAt, &bookGenre.DeletedAt,
+			&bookGenre.Book.ID, &bookGenre.Book.Title, &bookGenre.Book.Description, &bookGenre.Book.Image, &bookGenre.Book.Status, &bookGenre.Book.CreatedAt, &bookGenre.Book.UpdatedAt, &bookGenre.Book.DeletedAt,
+			&bookGenre.Genre.ID, &bookGenre.Genre.Genre, &bookGenre.Genre.CreatedAt, &bookGenre.Genre.UpdatedAt, &bookGenre.Genre.DeletedAt)
 		if err != nil {
 			return nil, err
 		}
@@ -78,7 +81,9 @@ func (b *bookGenreRepository) FindBookGenreByGenreID(ctx context.Context, genreI
 	defer rows.Close()
 	for rows.Next() {
 		bookGenre := new(models.BookGenre)
-		err = rows.Scan(&bookGenre.ID, &bookGenre.BookID, &bookGenre.GenreID, &bookGenre.CreatedAt, &bookGenre.UpdatedAt, &bookGenre.DeletedAt)
+		err = rows.Scan(&bookGenre.ID, &bookGenre.BookID, &bookGenre.GenreID, &bookGenre.CreatedAt, &bookGenre.UpdatedAt, &bookGenre.DeletedAt,
+			&bookGenre.Book.ID, &bookGenre.Book.Title, &bookGenre.Book.Description, &bookGenre.Book.Image, &bookGenre.Book.Status, &bookGenre.Book.CreatedAt, &bookGenre.Book.UpdatedAt, &bookGenre.Book.DeletedAt,
+			&bookGenre.Genre.ID, &bookGenre.Genre.Genre, &bookGenre.Genre.CreatedAt, &bookGenre.Genre.UpdatedAt, &bookGenre.Genre.DeletedAt)
 		if err != nil {
 			return nil, err
 		}

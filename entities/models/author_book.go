@@ -9,4 +9,7 @@ type AuthorBook struct {
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	DeletedAt *time.Time
+
+	Book   Book
+	Author Author
 }

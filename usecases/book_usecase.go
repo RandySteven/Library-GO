@@ -337,19 +337,10 @@ func (b *bookUsecase) GetBookByID(ctx context.Context, id uint64) (result *respo
 			customErrCh <- apperror.NewCustomError(apperror.ErrInternalServer, `failed to get author book by id`, err)
 			return
 		}
-		var authorIDs []uint64
-		for _, authorBook := range authorBooks {
-			authorIDs = append(authorIDs, authorBook.AuthorID)
-		}
-		authors, err := b.authorRepo.FindSelectedAuthorsByID(ctx, authorIDs)
-		if err != nil {
-			customErrCh <- apperror.NewCustomError(apperror.ErrInternalServer, `failed to get author book by id`, err)
-			return
-		}
-		for _, author := range authors {
+		for _, author := range authorBooks {
 			authorNames = append(authorNames, &responses.AuthorBookResponse{
-				ID:   author.ID,
-				Name: author.Name,
+				ID:   author.Author.ID,
+				Name: author.Author.Name,
 			})
 		}
 		authorsCh <- authorNames
@@ -363,20 +354,10 @@ func (b *bookUsecase) GetBookByID(ctx context.Context, id uint64) (result *respo
 			customErrCh <- apperror.NewCustomError(apperror.ErrInternalServer, `failed to get book genre by id`, err)
 			return
 		}
-		genreIDs := []uint64{}
-		for _, bookGenre := range bookGenres {
-			genreIDs = append(genreIDs, bookGenre.ID)
-		}
-
-		genres, err := b.genreRepo.FindSelectedGenresByID(ctx, genreIDs)
-		if err != nil {
-			customErrCh <- apperror.NewCustomError(apperror.ErrInternalServer, `failed to get book genre by id`, err)
-			return
-		}
-		for _, genre := range genres {
+		for _, genre := range bookGenres {
 			genreNames = append(genreNames, &responses.GenreBookResponse{
-				ID:    genre.ID,
-				Genre: genre.Genre,
+				ID:    genre.Genre.ID,
+				Genre: genre.Genre.Genre,
 			})
 		}
 		genresCh <- genreNames
