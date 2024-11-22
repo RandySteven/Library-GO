@@ -9,4 +9,7 @@ type RoomChatUser struct {
 	CreatedAt  time.Time
 	UpdatedAt  time.Time
 	DeletedAt  *time.Time
+
+	RoomChat RoomChat
+	User     User
 }

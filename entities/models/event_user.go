@@ -15,4 +15,7 @@ type EventUser struct {
 	CreatedAt    time.Time
 	UpdatedAt    time.Time
 	DeletedAt    *time.Time
+
+	User  User
+	Event Event
 }

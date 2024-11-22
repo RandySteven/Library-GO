@@ -19,7 +19,6 @@ type genreUsecase struct {
 
 func (g *genreUsecase) GetGenreDetail(ctx context.Context, id uint64) (result *responses.GenreResponseDetail, customErr *apperror.CustomError) {
 	var (
-		bookIDs       = []uint64{}
 		bookResponses = []*responses.ListBooksResponse{}
 	)
 	genre, err := g.genreRepo.FindByID(ctx, id)
@@ -32,24 +31,16 @@ func (g *genreUsecase) GetGenreDetail(ctx context.Context, id uint64) (result *r
 		return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to get genre id`, err)
 	}
 
-	for _, bookGenre := range bookGenres {
-		bookIDs = append(bookIDs, bookGenre.ID)
-	}
-
-	if len(bookIDs) != 0 {
-		books, err := g.bookRepo.FindSelectedBooksId(ctx, bookIDs)
-		if err != nil {
-			return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to get genre id`, err)
-		}
-		for _, book := range books {
+	if len(bookGenres) != 0 {
+		for _, book := range bookGenres {
 			bookResponses = append(bookResponses, &responses.ListBooksResponse{
-				ID:        book.ID,
-				Image:     book.Image,
-				Title:     book.Title,
-				Status:    book.Status.ToString(),
-				CreatedAt: book.CreatedAt.Local(),
-				UpdatedAt: book.UpdatedAt.Local(),
-				DeletedAt: book.DeletedAt,
+				ID:        book.Book.ID,
+				Image:     book.Book.Image,
+				Title:     book.Book.Title,
+				Status:    book.Book.Status.ToString(),
+				CreatedAt: book.Book.CreatedAt.Local(),
+				UpdatedAt: book.Book.UpdatedAt.Local(),
+				DeletedAt: book.Book.DeletedAt,
 			})
 		}
 	}
