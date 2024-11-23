@@ -26,7 +26,7 @@ func (g *genreUsecase) GetGenreDetail(ctx context.Context, id uint64) (result *r
 		return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to get genre id`, err)
 	}
 
-	bookGenres, err := g.bookGenreRepo.FindBookGenreByBookID(ctx, genre.ID)
+	bookGenres, err := g.bookGenreRepo.FindBookGenreByGenreID(ctx, genre.ID)
 	if err != nil {
 		return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to get genre id`, err)
 	}
