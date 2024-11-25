@@ -34,7 +34,12 @@ func (b *bagRepository) FindBagByUser(ctx context.Context, userID uint64) (resul
 	}
 	for rows.Next() {
 		bag := new(models.Bag)
-		err = rows.Scan(&bag.ID, &bag.UserID, &bag.BookID)
+		err = rows.Scan(&bag.ID, &bag.UserID, &bag.BookID,
+			&bag.User.ID, &bag.User.Name, &bag.User.Address,
+			&bag.User.Email, &bag.User.PhoneNumber, &bag.User.Password, &bag.User.DoB,
+			&bag.User.ProfilePicture, &bag.User.CreatedAt, &bag.User.UpdatedAt, &bag.User.DeletedAt,
+			&bag.User.VerifiedAt, &bag.Book.ID, &bag.Book.Title, &bag.Book.Description, &bag.Book.Image,
+			&bag.Book.Status, &bag.Book.CreatedAt, &bag.Book.UpdatedAt, &bag.Book.DeletedAt)
 		if err != nil {
 			return nil, err
 		}

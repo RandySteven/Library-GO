@@ -5,6 +5,9 @@ type (
 		ID     uint64
 		UserID uint64
 		BookID uint64
+
+		User User
+		Book Book
 	}
 
 	BookBagCache struct {

@@ -8,9 +8,18 @@ const (
 	`
 
 	SelectBagByUserQuery GoQuery = `
-		SELECT id, user_id, book_id
-		FROM bags
-		WHERE user_id = ?
+		SELECT b.id, b.user_id, b.book_id, 
+		       u.id, u.name, u.address, u.email, u.phone_number, u.password, u.dob, u.profile_picture, 
+		       u.created_at, u.updated_at, u.deleted_at, u.verified_at,
+		       bo.id, bo.title, bo.description, bo.image, bo.status, bo.created_at, bo.updated_at, bo.deleted_at
+			FROM bags AS b
+				INNER JOIN users AS u
+			ON
+				b.user_id = u.id
+				INNER JOIN books AS bo
+			ON 
+				b.book_id = bo.id
+		WHERE b.user_id = ?
 	`
 
 	SelectExistBookAlreadyInBag GoQuery = `

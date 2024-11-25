@@ -137,26 +137,17 @@ func (b *bagUsecase) GetUserBag(ctx context.Context) (result *responses.GetAllBa
 	if err != nil {
 		return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to find bag`, err)
 	}
-	bookIds := []uint64{}
-	for _, bagBook := range bagBooks {
-		bookIds = append(bookIds, bagBook.BookID)
-	}
-	if len(bookIds) == 0 {
-		return nil, apperror.NewCustomError(apperror.ErrNotFound, `user doesn't have bag'`, fmt.Errorf(`user didn't have item'`))
-	}
-
-	books, err := b.bookRepo.FindSelectedBooksId(ctx, bookIds)
-	if err != nil {
-		return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to find bags`, err)
-	}
 	result = &responses.GetAllBagsResponse{}
-	for _, book := range books {
+
+	for _, bagBook := range bagBooks {
+		//bookIds = append(bookIds, bagBook.BookID)
 		result.Books = append(result.Books, &responses.BookBagResponse{
-			ID:    book.ID,
-			Title: book.Title,
-			Image: book.Image,
+			ID:    bagBook.Book.ID,
+			Title: bagBook.Book.Title,
+			Image: bagBook.Book.Image,
 		})
 	}
+
 	b.cache.SetUserBagCache(ctx, userId, result.Books)
 	return result, nil
 }

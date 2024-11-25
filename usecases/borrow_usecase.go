@@ -2,6 +2,7 @@ package usecases
 
 import (
 	"context"
+	"fmt"
 	"github.com/RandySteven/Library-GO/apperror"
 	"github.com/RandySteven/Library-GO/entities/models"
 	"github.com/RandySteven/Library-GO/entities/payloads/requests"
@@ -42,11 +43,8 @@ func (b *borrowUsecase) refreshTx(ctx context.Context) {
 
 func (b *borrowUsecase) BorrowTransaction(ctx context.Context) (result *responses.BorrowResponse, customErr *apperror.CustomError) {
 	userId := ctx.Value(enums.UserID).(uint64)
-	bookIds := []uint64{}
 	var (
 		err error
-		//wg          sync.WaitGroup
-		//customErrCh = make(chan *apperror.CustomError)
 	)
 
 	if err = b.borrowRepo.BeginTx(ctx); err != nil {
@@ -66,27 +64,16 @@ func (b *borrowUsecase) BorrowTransaction(ctx context.Context) (result *response
 	}()
 	b.setTx(ctx)
 
-	//3. Get all books from user bag
 	bagBooks, err := b.bagRepo.FindBagByUser(ctx, userId)
 	if err != nil {
 		return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to get bag`, err)
 	}
-	for _, book := range bagBooks {
-		bookIds = append(bookIds, book.BookID)
-	}
-
-	//4. Validate for each book if book is in available status
-	for _, bookId := range bookIds {
-		isExist, err := b.bookRepo.FindBookStatus(ctx, bookId, enums.Available)
-		if err != nil {
-			return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to get bag status`, err)
-		}
-		if isExist == false {
-			return nil, apperror.NewCustomError(apperror.ErrBadRequest, `failed to get status`, err)
+	for _, bag := range bagBooks {
+		if bag.Book.Status != enums.Available {
+			return nil, apperror.NewCustomError(apperror.ErrBadRequest, `book is not available`, fmt.Errorf(`book is not available`))
 		}
 	}
 
-	//5. Create borrow header
 	borrow := &models.Borrow{
 		UserID:          userId,
 		BorrowReference: utils.GenerateBorrowReference(24),
@@ -95,24 +82,22 @@ func (b *borrowUsecase) BorrowTransaction(ctx context.Context) (result *response
 	if err != nil {
 		return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to save borrow`, err)
 	}
-	//6. Create borrow detail and update book
-	for _, bookId := range bookIds {
+	for _, bagBook := range bagBooks {
 		borrowDetail := &models.BorrowDetail{
 			BorrowID:     borrow.ID,
-			BookID:       bookId,
+			BookID:       bagBook.Book.ID,
 			ReturnedDate: time.Now().Add(7 * 24 * time.Hour),
 		}
 		borrowDetail, err = b.borrowDetailRepo.Save(ctx, borrowDetail)
 		if err != nil {
 			return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to save detail`, err)
 		}
-		err = b.bookRepo.UpdateBookStatus(ctx, bookId, enums.ReadyToTake)
+		err = b.bookRepo.UpdateBookStatus(ctx, bagBook.Book.ID, enums.ReadyToTake)
 		if err != nil {
 			return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to save status`, err)
 		}
 	}
 
-	//8. delete book from bag based on user
 	err = b.bagRepo.DeleteUserBag(ctx, userId)
 	if err != nil {
 		return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to delete user bag`, err)
@@ -122,7 +107,7 @@ func (b *borrowUsecase) BorrowTransaction(ctx context.Context) (result *response
 		ID:           borrow.ID,
 		BorrowID:     borrow.BorrowReference,
 		UserID:       userId,
-		TotalItems:   uint64(len(bookIds)),
+		TotalItems:   uint64(len(bagBooks)),
 		Status:       "SUCCESS",
 		BorrowedDate: time.Now().Local(),
 		ReturnedDate: time.Now().Local().Add(7 * 24 * time.Hour),
