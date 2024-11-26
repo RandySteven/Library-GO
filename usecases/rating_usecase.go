@@ -62,7 +62,7 @@ func (r *ratingUsecase) RatingBooksFilter(ctx context.Context, request *requests
 		})
 	}
 
-	return
+	return results, nil
 }
 
 var _ usecases_interfaces.RatingUsecase = &ratingUsecase{}
