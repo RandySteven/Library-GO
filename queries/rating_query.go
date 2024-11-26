@@ -20,4 +20,17 @@ const (
 		WHERE book_id = ?
 		GROUP BY book_id
 	`
+
+	SelectRatingSortedLimitQuery GoQuery = `
+		SELECT book_id, AVG(score) as score, b.title, b.image
+		FROM
+			ratings AS r 
+		INNER JOIN
+			books AS b 
+		ON r.book_id = b.id
+		GROUP BY 
+		    book_id
+		ORDER BY score ? 
+		LIMIT ?;
+	`
 )
