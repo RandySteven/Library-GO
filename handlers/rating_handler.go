@@ -34,6 +34,25 @@ func (r2 *RatingHandler) SubmitRating(w http.ResponseWriter, r *http.Request) {
 	utils.ResponseHandler(w, http.StatusOK, `success register user`, &dataKey, result, nil)
 }
 
+func (r2 *RatingHandler) BookOrdersRating(w http.ResponseWriter, r *http.Request) {
+	var (
+		rID     = uuid.NewString()
+		ctx     = context.WithValue(r.Context(), enums.RequestID, rID)
+		request = &requests.RatingFilter{}
+		dataKey = `books`
+	)
+	if err := utils.BindRequest(r, request); err != nil {
+		utils.ResponseHandler(w, http.StatusBadRequest, `bad request`, nil, nil, err)
+		return
+	}
+	result, customErr := r2.usecases.RatingBooksFilter(ctx, request)
+	if customErr != nil {
+		utils.ResponseHandler(w, customErr.ErrCode(), `internal server error`, nil, nil, customErr)
+		return
+	}
+	utils.ResponseHandler(w, http.StatusOK, `success filter rating`, &dataKey, result, nil)
+}
+
 var _ handlers_interfaces.RatingHandler = &RatingHandler{}
 
 func newRatingHandler(usecases usecases_interfaces.RatingUsecase) *RatingHandler {
