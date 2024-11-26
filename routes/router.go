@@ -61,6 +61,7 @@ func NewEndpointRouters(h *handlers.Handlers) map[enums.RouterPrefix][]*Router {
 		Get("/{id}", h.BookHandler.GetBookByID),
 		Post("/search", h.BookHandler.SearchBooks),
 		Post("/rating", h.RatingHandler.SubmitRating),
+		Post("/rating/sort", h.RatingHandler.BookOrdersRating),
 	}
 
 	endpointRouters[enums.GenrePrefix] = []*Router{
