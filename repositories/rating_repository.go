@@ -63,7 +63,7 @@ func (r *ratingRepository) FindRatingForBook(ctx context.Context, bookId uint64)
 }
 
 func (r *ratingRepository) FindSortedLimitRating(ctx context.Context, sorted string, limit uint64) (result []*models.Rating, err error) {
-	rows, err := r.Trigger().QueryContext(ctx, queries.SelectRatingSortedLimitQuery.ToString(), sorted, limit)
+	rows, err := r.Trigger().QueryContext(ctx, queries.SelectRatingSortedLimitQuery.ToString(), limit)
 	if err != nil {
 		return nil, err
 	}

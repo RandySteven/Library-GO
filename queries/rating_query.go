@@ -30,7 +30,7 @@ const (
 		ON r.book_id = b.id
 		GROUP BY 
 		    book_id
-		ORDER BY score ? 
-		LIMIT ?;
+		ORDER BY score DESC 
+		LIMIT ?
 	`
 )
