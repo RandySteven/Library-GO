@@ -22,7 +22,7 @@ const (
 	`
 
 	SelectRatingSortedLimitQuery GoQuery = `
-		SELECT book_id, AVG(score) as score, b.title, b.image
+		SELECT book_id, AVG(score) as score, b.title, b.image, b.status, b.created_at, b.updated_at, b.deleted_at
 		FROM
 			ratings AS r 
 		INNER JOIN

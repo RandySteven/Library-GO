@@ -69,7 +69,9 @@ func (r *ratingRepository) FindSortedLimitRating(ctx context.Context, sorted str
 	}
 	for rows.Next() {
 		rating := &models.Rating{}
-		err = rows.Scan(&rating.BookID, &rating.Score, &rating.Book.Title, &rating.Book.Image)
+		err = rows.Scan(&rating.BookID, &rating.Score,
+			&rating.Book.Title, &rating.Book.Image, &rating.Book.Status,
+			&rating.Book.CreatedAt, &rating.Book.UpdatedAt, &rating.Book.DeletedAt)
 		result = append(result, rating)
 	}
 	return result, nil

@@ -45,20 +45,22 @@ func (r *ratingUsecase) SubmitBookRating(ctx context.Context, request *requests.
 	return result, nil
 }
 
-func (r *ratingUsecase) RatingBooksFilter(ctx context.Context, request *requests.RatingFilter) (results []*responses.SortedBookRatings, customErr *apperror.CustomError) {
+func (r *ratingUsecase) RatingBooksFilter(ctx context.Context, request *requests.RatingFilter) (results []*responses.ListBooksResponse, customErr *apperror.CustomError) {
 	ratingBooks, err := r.ratingRepo.FindSortedLimitRating(ctx, request.Order, request.Limit)
 	if err != nil {
 		return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to get rating books sorted`, err)
 	}
 
 	for _, ratingBook := range ratingBooks {
-		results = append(results, &responses.SortedBookRatings{
-			Rating: ratingBook.Score,
-			Book: struct {
-				ID    uint64 `json:"id"`
-				Title string `json:"title"`
-				Image string `json:"image"`
-			}{ID: ratingBook.BookID, Title: ratingBook.Book.Title, Image: ratingBook.Book.Image},
+		results = append(results, &responses.ListBooksResponse{
+			ID:        ratingBook.BookID,
+			Image:     ratingBook.Book.Image,
+			Title:     ratingBook.Book.Title,
+			Status:    ratingBook.Book.Status.ToString(),
+			Rating:    ratingBook.Score,
+			CreatedAt: ratingBook.Book.CreatedAt,
+			UpdatedAt: ratingBook.Book.UpdatedAt,
+			DeletedAt: ratingBook.Book.DeletedAt,
 		})
 	}
 

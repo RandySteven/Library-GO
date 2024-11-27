@@ -60,8 +60,11 @@ func NewEndpointRouters(h *handlers.Handlers) map[enums.RouterPrefix][]*Router {
 		Get("", h.BookHandler.GetAllBooks),
 		Get("/{id}", h.BookHandler.GetBookByID),
 		Post("/search", h.BookHandler.SearchBooks),
-		Post("/rating", h.RatingHandler.SubmitRating),
-		Post("/rating/sort", h.RatingHandler.BookOrdersRating),
+	}
+
+	endpointRouters[enums.RatingPrefix] = []*Router{
+		Post("", h.RatingHandler.SubmitRating),
+		Post("/sort", h.RatingHandler.BookOrdersRating),
 	}
 
 	endpointRouters[enums.GenrePrefix] = []*Router{
@@ -162,6 +165,12 @@ func InitRouters(routers map[enums.RouterPrefix][]*Router, r *mux.Router) {
 	for _, router := range routers[enums.CommentPrefix] {
 		router.RouterLog(enums.CommentPrefix.ToString())
 		commentRouter.HandleFunc(router.path, router.handler).Methods(router.method)
+	}
+
+	ratingRouter := r.PathPrefix(enums.RatingPrefix.ToString()).Subrouter()
+	for _, router := range routers[enums.RatingPrefix] {
+		router.RouterLog(enums.RatingPrefix.ToString())
+		ratingRouter.HandleFunc(router.path, router.handler).Methods(router.method)
 	}
 }
 

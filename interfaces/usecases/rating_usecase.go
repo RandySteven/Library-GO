@@ -9,5 +9,5 @@ import (
 
 type RatingUsecase interface {
 	SubmitBookRating(ctx context.Context, request *requests.RatingRequest) (result *responses.RatingResponse, customErr *apperror.CustomError)
-	RatingBooksFilter(ctx context.Context, request *requests.RatingFilter) (results []*responses.SortedBookRatings, customErr *apperror.CustomError)
+	RatingBooksFilter(ctx context.Context, request *requests.RatingFilter) (results []*responses.ListBooksResponse, customErr *apperror.CustomError)
 }

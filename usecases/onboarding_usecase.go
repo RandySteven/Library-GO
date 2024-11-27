@@ -152,15 +152,16 @@ func (o *onboardingUsecase) GetLoginUser(ctx context.Context) (result *responses
 		return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to get user login`, err)
 	}
 	result = &responses.LoginUserResponse{
-		ID:          user.ID,
-		Name:        user.Name,
-		Email:       user.Email,
-		Password:    user.Password,
-		PhoneNumber: user.PhoneNumber,
-		Address:     user.Address,
-		DoB:         user.DoB,
-		CreatedAt:   user.CreatedAt,
-		UpdatedAt:   user.UpdatedAt,
+		ID:             user.ID,
+		Name:           user.Name,
+		Email:          user.Email,
+		Password:       user.Password,
+		PhoneNumber:    user.PhoneNumber,
+		Address:        user.Address,
+		ProfilePicture: user.ProfilePicture,
+		DoB:            user.DoB,
+		CreatedAt:      user.CreatedAt,
+		UpdatedAt:      user.UpdatedAt,
 	}
 	return result, nil
 }
