@@ -9,4 +9,6 @@ const (
 
 	UserBagKey = `cache_user_bag.%s`
 	BookBagKey = `cache_book_at_bag.%s`
+
+	GenresKey = `cache_all_genres`
 )
