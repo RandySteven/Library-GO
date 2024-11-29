@@ -40,7 +40,7 @@ func NewEndpointRouters(h *handlers.Handlers) RouterPrefix {
 			}
 			dataKey := `endpoints`
 			utils.ResponseHandler(writer, http.StatusOK, `success get list endpoint`, &dataKey, result, nil)
-		}),
+		}, enums.RateLimiterMiddleware),
 	}
 
 	endpointRouters[enums.OnboardingPrefix] = []*Router{
@@ -59,8 +59,8 @@ func NewEndpointRouters(h *handlers.Handlers) RouterPrefix {
 	}
 
 	endpointRouters[enums.BookPrefix] = []*Router{
-		Post("", h.BookHandler.AddBook, enums.RateLimiterMiddleware, enums.AuthenticationMiddleware),
 		Get("", h.BookHandler.GetAllBooks),
+		Post("", h.BookHandler.AddBook, enums.RateLimiterMiddleware, enums.AuthenticationMiddleware),
 		Get("/{id}", h.BookHandler.GetBookByID, enums.RateLimiterMiddleware),
 		Post("/search", h.BookHandler.SearchBooks),
 	}
@@ -105,43 +105,55 @@ func NewEndpointRouters(h *handlers.Handlers) RouterPrefix {
 
 func InitRouters(routers RouterPrefix, r *mux.Router) {
 	whitelistedMiddleware := middlewares.NewWhitelistedMiddleware()
+	middlewareValidator := middlewares.NewMiddlewareValidator(whitelistedMiddleware)
+
+	r.Use(
+		middlewares.LoggingMiddleware,
+		middlewares.CorsMiddleware,
+		middlewares.TimeoutMiddleware,
+		middlewareValidator.RateLimiterMiddleware,
+	)
 
 	onboardingRouter := r.PathPrefix(enums.OnboardingPrefix.ToString()).Subrouter()
 	for _, router := range routers[enums.OnboardingPrefix] {
-		whitelistedMiddleware.RegisterMiddleware(enums.OnboardedPrefix, router.path, router.middlewares)
+		whitelistedMiddleware.RegisterMiddleware(enums.OnboardedPrefix, router.method, router.path, router.middlewares)
 		router.RouterLog(enums.OnboardingPrefix.ToString())
 		onboardingRouter.HandleFunc(router.path, router.handler).Methods(router.method)
 	}
 
 	onboardedRouter := r.PathPrefix(enums.OnboardedPrefix.ToString()).Subrouter()
-	onboardedRouter.Use(middlewares.AuthenticationMiddleware)
+	onboardedRouter.Use(middlewareValidator.AuthenticationMiddleware)
 	for _, router := range routers[enums.OnboardedPrefix] {
+		whitelistedMiddleware.RegisterMiddleware(enums.OnboardedPrefix, router.method, router.path, router.middlewares)
 		router.RouterLog(enums.OnboardedPrefix.ToString())
 		onboardedRouter.HandleFunc(router.path, router.handler).Methods(router.method)
 	}
 
 	devRouter := r.PathPrefix(enums.DevPrefix.ToString()).Subrouter()
 	for _, router := range routers[enums.DevPrefix] {
-		whitelistedMiddleware.RegisterMiddleware(enums.DevPrefix, router.path, router.middlewares)
+		whitelistedMiddleware.RegisterMiddleware(enums.DevPrefix, router.method, router.path, router.middlewares)
 		router.RouterLog(enums.DevPrefix.ToString())
 		devRouter.HandleFunc(router.path, router.handler).Methods(router.method)
 	}
 
 	bookRouter := r.PathPrefix(enums.BookPrefix.ToString()).Subrouter()
-	bookRouter.Use(middlewares.AuthenticationMiddleware)
+	bookRouter.Use(middlewareValidator.AuthenticationMiddleware)
 	for _, router := range routers[enums.BookPrefix] {
+		whitelistedMiddleware.RegisterMiddleware(enums.BookPrefix, router.method, router.path, router.middlewares)
 		router.RouterLog(enums.BookPrefix.ToString())
 		bookRouter.HandleFunc(router.path, router.handler).Methods(router.method)
 	}
 
 	genreRouter := r.PathPrefix(enums.GenrePrefix.ToString()).Subrouter()
+	genreRouter.Use(middlewareValidator.AuthenticationMiddleware)
 	for _, router := range routers[enums.GenrePrefix] {
+		whitelistedMiddleware.RegisterMiddleware(enums.GenrePrefix, router.method, router.path, router.middlewares)
 		router.RouterLog(enums.GenrePrefix.ToString())
 		genreRouter.HandleFunc(router.path, router.handler).Methods(router.method)
 	}
 
 	bagRouter := r.PathPrefix(enums.BagPrefix.ToString()).Subrouter()
-	bagRouter.Use(middlewares.AuthenticationMiddleware)
+	bagRouter.Use(middlewareValidator.AuthenticationMiddleware)
 	for _, router := range routers[enums.BagPrefix] {
 		router.RouterLog(enums.BagPrefix.ToString())
 		bagRouter.HandleFunc(router.path, router.handler).Methods(router.method)
@@ -154,21 +166,21 @@ func InitRouters(routers RouterPrefix, r *mux.Router) {
 	}
 
 	borrowRouter := r.PathPrefix(enums.BorrowPrefix.ToString()).Subrouter()
-	borrowRouter.Use(middlewares.AuthenticationMiddleware)
+	borrowRouter.Use(middlewareValidator.AuthenticationMiddleware)
 	for _, router := range routers[enums.BorrowPrefix] {
 		router.RouterLog(enums.BorrowPrefix.ToString())
 		borrowRouter.HandleFunc(router.path, router.handler).Methods(router.method)
 	}
 
 	userRouter := r.PathPrefix(enums.UserPrefix.ToString()).Subrouter()
-	userRouter.Use(middlewares.AuthenticationMiddleware)
+	userRouter.Use(middlewareValidator.AuthenticationMiddleware)
 	for _, router := range routers[enums.UserPrefix] {
 		router.RouterLog(enums.UserPrefix.ToString())
 		userRouter.HandleFunc(router.path, router.handler).Methods(router.method)
 	}
 
 	commentRouter := r.PathPrefix(enums.CommentPrefix.ToString()).Subrouter()
-	commentRouter.Use(middlewares.AuthenticationMiddleware)
+	commentRouter.Use(middlewareValidator.AuthenticationMiddleware)
 	for _, router := range routers[enums.CommentPrefix] {
 		router.RouterLog(enums.CommentPrefix.ToString())
 		commentRouter.HandleFunc(router.path, router.handler).Methods(router.method)

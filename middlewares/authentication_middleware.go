@@ -6,11 +6,18 @@ import (
 	jwt2 "github.com/RandySteven/Library-GO/pkg/jwt"
 	"github.com/RandySteven/Library-GO/utils"
 	"github.com/golang-jwt/jwt/v5"
+	"log"
 	"net/http"
 )
 
-func AuthenticationMiddleware(next http.Handler) http.Handler {
+func (mv *MiddlewareValidator) AuthenticationMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if !mv.whitelist.WhiteListed(r.Method, r.RequestURI, enums.AuthenticationMiddleware) {
+			log.Println("gk masuk auth : ", r.RequestURI)
+			next.ServeHTTP(w, r)
+			return
+		}
+		log.Println("masuk : ", r.RequestURI)
 		auth := r.Header.Get("Authorization")
 		if len(auth) == 0 || auth == "" {
 			utils.ResponseHandler(w, http.StatusUnauthorized, `Invalid get token from auth`, nil, nil, nil)

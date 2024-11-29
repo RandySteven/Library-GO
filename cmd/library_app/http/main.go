@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"github.com/RandySteven/Library-GO/apps"
-	"github.com/RandySteven/Library-GO/middlewares"
 	"github.com/RandySteven/Library-GO/pkg/configs"
 	"github.com/RandySteven/Library-GO/routes"
 	"github.com/gorilla/mux"
@@ -51,12 +50,6 @@ func main() {
 	handlers := app.PrepareTheHandler()
 	r := mux.NewRouter()
 	routers := routes.NewEndpointRouters(handlers)
-	r.Use(
-		middlewares.LoggingMiddleware,
-		middlewares.CorsMiddleware,
-		middlewares.TimeoutMiddleware,
-		middlewares.RateLimiterMiddleware,
-	)
 	routes.InitRouters(routers, r)
 	go config.Run(r)
 

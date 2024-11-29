@@ -5,8 +5,18 @@ import (
 	"github.com/RandySteven/Library-GO/enums"
 )
 
-type WhitelistedMiddleware struct {
-	whitelist map[enums.Middleware]map[string]bool
+type (
+	WhitelistedMiddleware struct {
+		whitelist map[enums.Middleware]map[string]bool
+	}
+
+	MiddlewareValidator struct {
+		whitelist *WhitelistedMiddleware
+	}
+)
+
+func NewMiddlewareValidator(whitelist *WhitelistedMiddleware) *MiddlewareValidator {
+	return &MiddlewareValidator{whitelist: whitelist}
 }
 
 func NewWhitelistedMiddleware() *WhitelistedMiddleware {
@@ -15,18 +25,21 @@ func NewWhitelistedMiddleware() *WhitelistedMiddleware {
 	}
 }
 
-func (w *WhitelistedMiddleware) RegisterMiddleware(prefix enums.RouterPrefix, path string, middlewares []enums.Middleware) {
+func (w *WhitelistedMiddleware) RegisterMiddleware(prefix enums.RouterPrefix, method string, path string, middlewares []enums.Middleware) {
 	if w == nil {
 		_ = NewWhitelistedMiddleware()
+	}
+	if middlewares == nil {
+		return
 	}
 	for _, middleware := range middlewares {
 		if w.whitelist[middleware] == nil {
 			w.whitelist[middleware] = make(map[string]bool)
 		}
-		w.whitelist[middleware][fmt.Sprintf("%s%s", prefix.ToString(), path)] = true
+		w.whitelist[middleware][fmt.Sprintf("%s|%s%s", method, prefix.ToString(), path)] = true
 	}
 }
 
-func (w *WhitelistedMiddleware) WhiteListed(uri string, middleware enums.Middleware) bool {
-	return w.whitelist[middleware][uri]
+func (w *WhitelistedMiddleware) WhiteListed(method string, uri string, middleware enums.Middleware) bool {
+	return w.whitelist[middleware][fmt.Sprintf("%s|%s", method, uri)]
 }
