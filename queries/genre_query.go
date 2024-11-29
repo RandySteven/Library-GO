@@ -8,6 +8,7 @@ const (
 
 	SelectGenresQuery GoQuery = `
 		SELECT id, genre, created_at, updated_at, deleted_at FROM genres
+		ORDER BY genre ASC
 	`
 
 	SelectGenreByID GoQuery = `

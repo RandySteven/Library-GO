@@ -50,7 +50,7 @@ func NewEndpointRouters(h *handlers.Handlers) RouterPrefix {
 	}
 
 	endpointRouters[enums.OnboardedPrefix] = []*Router{
-		Get("", h.OnboardingHandler.GetLoginUser),
+		Get("", h.OnboardingHandler.GetLoginUser, enums.AuthenticationMiddleware),
 	}
 
 	endpointRouters[enums.UserPrefix] = []*Router{
