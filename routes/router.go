@@ -19,10 +19,12 @@ type (
 		handler HandlerFunc
 		method  string
 	}
+
+	RouterPrefix map[enums.RouterPrefix][]*Router
 )
 
-func NewEndpointRouters(h *handlers.Handlers) map[enums.RouterPrefix][]*Router {
-	endpointRouters := make(map[enums.RouterPrefix][]*Router)
+func NewEndpointRouters(h *handlers.Handlers) RouterPrefix {
+	endpointRouters := make(RouterPrefix)
 
 	endpointRouters[enums.DevPrefix] = []*Router{
 		Get("/health-check", h.DevHandler.HealthCheck),
@@ -100,7 +102,7 @@ func NewEndpointRouters(h *handlers.Handlers) map[enums.RouterPrefix][]*Router {
 	return endpointRouters
 }
 
-func InitRouters(routers map[enums.RouterPrefix][]*Router, r *mux.Router) {
+func InitRouters(routers RouterPrefix, r *mux.Router) {
 	onboardingRouter := r.PathPrefix(enums.OnboardingPrefix.ToString()).Subrouter()
 	for _, router := range routers[enums.OnboardingPrefix] {
 		router.RouterLog(enums.OnboardingPrefix.ToString())
