@@ -18,6 +18,7 @@ type genreUsecase struct {
 	genreRepo     repositories_interfaces.GenreRepository
 	bookRepo      repositories_interfaces.BookRepository
 	bookGenreRepo repositories_interfaces.BookGenreRepository
+	ratingRepo    repositories_interfaces.RatingRepository
 	genreCache    caches_interfaces.GenreCache
 }
 
@@ -37,10 +38,17 @@ func (g *genreUsecase) GetGenreDetail(ctx context.Context, id uint64) (result *r
 
 	if len(bookGenres) != 0 {
 		for _, book := range bookGenres {
+			rating, _ := g.ratingRepo.FindRatingForBook(ctx, book.Book.ID)
+			if rating == nil {
+				rating = &models.Rating{
+					Score: 0,
+				}
+			}
 			bookResponses = append(bookResponses, &responses.ListBooksResponse{
 				ID:        book.Book.ID,
 				Image:     book.Book.Image,
 				Title:     book.Book.Title,
+				Rating:    rating.Score,
 				Status:    book.Book.Status.ToString(),
 				CreatedAt: book.Book.CreatedAt.Local(),
 				UpdatedAt: book.Book.UpdatedAt.Local(),
@@ -96,6 +104,14 @@ var _ usecases_interfaces.GenreUsecase = &genreUsecase{}
 
 func newGenreUsecase(genreRepo repositories_interfaces.GenreRepository,
 	bookRepo repositories_interfaces.BookRepository,
-	bookGenreRepo repositories_interfaces.BookGenreRepository, genreCache caches_interfaces.GenreCache) *genreUsecase {
-	return &genreUsecase{genreRepo: genreRepo, bookRepo: bookRepo, bookGenreRepo: bookGenreRepo, genreCache: genreCache}
+	bookGenreRepo repositories_interfaces.BookGenreRepository,
+	ratingRepo repositories_interfaces.RatingRepository,
+	genreCache caches_interfaces.GenreCache) *genreUsecase {
+	return &genreUsecase{
+		genreRepo:     genreRepo,
+		bookRepo:      bookRepo,
+		bookGenreRepo: bookGenreRepo,
+		ratingRepo:    ratingRepo,
+		genreCache:    genreCache,
+	}
 }
