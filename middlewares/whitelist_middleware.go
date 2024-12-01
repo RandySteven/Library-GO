@@ -32,14 +32,16 @@ func (w *WhitelistedMiddleware) RegisterMiddleware(prefix enums.RouterPrefix, me
 	if middlewares == nil {
 		return
 	}
+	whitelist := fmt.Sprintf("%s|%s%s", method, prefix.ToString(), path)
 	for _, middleware := range middlewares {
 		if w.whitelist[middleware] == nil {
 			w.whitelist[middleware] = make(map[string]bool)
 		}
-		w.whitelist[middleware][fmt.Sprintf("%s|%s%s", method, prefix.ToString(), path)] = true
+		w.whitelist[middleware][whitelist] = true
 	}
 }
 
 func (w *WhitelistedMiddleware) WhiteListed(method string, uri string, middleware enums.Middleware) bool {
-	return w.whitelist[middleware][fmt.Sprintf("%s|%s", method, uri)]
+	whiteList := fmt.Sprintf("%s|%s", method, uri)
+	return w.whitelist[middleware][whiteList]
 }

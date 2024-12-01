@@ -11,8 +11,8 @@ import (
 
 func (mv *MiddlewareValidator) RateLimiterMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		defer next.ServeHTTP(w, r)
 		if !mv.whitelist.WhiteListed(r.Method, r.RequestURI, enums.RateLimiterMiddleware) {
-			next.ServeHTTP(w, r)
 			return
 		}
 		clientIp := ip.GetClientIP(r)
@@ -22,6 +22,5 @@ func (mv *MiddlewareValidator) RateLimiterMiddleware(next http.Handler) http.Han
 			utils.ResponseHandler(w, http.StatusTooManyRequests, `too many request`, nil, nil, err)
 			return
 		}
-		next.ServeHTTP(w, r)
 	})
 }

@@ -91,7 +91,7 @@ func NewEndpointRouters(h *handlers.Handlers) RouterPrefix {
 		Get("", h.BorrowHandler.GetBorrowList, enums.AuthenticationMiddleware, enums.RateLimiterMiddleware),
 		Get("/{id}", h.BorrowHandler.GetBorrowDetail, enums.AuthenticationMiddleware),
 		Post("/confirm", h.BorrowHandler.BorrowConfirmation),
-		Post("/return", h.ReturnHandler.ReturnBook),
+		Post("/return", h.ReturnHandler.ReturnBook, enums.AuthenticationMiddleware),
 	}
 
 	endpointRouters[enums.CommentPrefix] = []*Router{
@@ -155,6 +155,7 @@ func InitRouters(routers RouterPrefix, r *mux.Router) {
 	bagRouter := r.PathPrefix(enums.BagPrefix.ToString()).Subrouter()
 	bagRouter.Use(middlewareValidator.AuthenticationMiddleware)
 	for _, router := range routers[enums.BagPrefix] {
+		whitelistedMiddleware.RegisterMiddleware(enums.BagPrefix, router.method, router.path, router.middlewares)
 		router.RouterLog(enums.BagPrefix.ToString())
 		bagRouter.HandleFunc(router.path, router.handler).Methods(router.method)
 	}
@@ -168,6 +169,7 @@ func InitRouters(routers RouterPrefix, r *mux.Router) {
 	borrowRouter := r.PathPrefix(enums.BorrowPrefix.ToString()).Subrouter()
 	borrowRouter.Use(middlewareValidator.AuthenticationMiddleware)
 	for _, router := range routers[enums.BorrowPrefix] {
+		whitelistedMiddleware.RegisterMiddleware(enums.BorrowPrefix, router.method, router.path, router.middlewares)
 		router.RouterLog(enums.BorrowPrefix.ToString())
 		borrowRouter.HandleFunc(router.path, router.handler).Methods(router.method)
 	}

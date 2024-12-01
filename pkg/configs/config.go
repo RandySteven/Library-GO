@@ -71,6 +71,6 @@ type Config struct {
 
 		Kafka struct {
 			Addrs []string `yaml:"addrs"`
-		}
+		} `yaml:"kafka"`
 	} `yaml:"app"`
 }
