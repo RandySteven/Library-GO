@@ -161,8 +161,8 @@ const (
 		    participant_number INT NOT NULL,
 		    occupied_participant_number INT NOT NULL,
 		    date DATE NOT NULL,
-		    start_duration TIME NOT NULL,
-		    end_duration TIME NOT NULL,
+		    start_time TIME NOT NULL,
+		    end_time TIME NOT NULL,
 			created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 		    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 		    deleted_at TIMESTAMP DEFAULT NULL

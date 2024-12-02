@@ -11,8 +11,8 @@ type Event struct {
 	ParticipantNumber         uint64
 	OccupiedParticipantNumber uint64
 	Date                      time.Time
-	StartDuration             time.Time
-	EndDuration               time.Time
+	StartTime                 time.Time
+	EndTime                   time.Time
 	CreatedAt                 time.Time
 	UpdatedAt                 time.Time
 	DeletedAt                 *time.Time
