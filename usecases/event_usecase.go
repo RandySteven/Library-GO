@@ -121,7 +121,25 @@ func (e *eventUsecase) GetAllEvents(ctx context.Context) (result []*responses.Li
 }
 
 func (e *eventUsecase) GetEvent(ctx context.Context, id uint64) (result *responses.EventDetailResponse, customErr *apperror.CustomError) {
-	return
+	event, err := e.eventRepo.FindByID(ctx, id)
+	if err != nil {
+		return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to get event`, err)
+	}
+	result = &responses.EventDetailResponse{
+		ID:          event.ID,
+		Title:       event.Title,
+		Thumbnail:   event.Thumbnail,
+		Description: event.Description,
+		Price:       event.Price,
+		Slot:        event.OccupiedParticipantNumber - event.ParticipantNumber,
+		Date:        event.Date,
+		StartTime:   event.StartTime,
+		EndTime:     event.EndTime,
+		CreatedAt:   event.CreatedAt,
+		UpdatedAt:   event.UpdatedAt,
+		DeletedAt:   event.DeletedAt,
+	}
+	return result, nil
 }
 
 var _ usecases_interfaces.EventUsecase = &eventUsecase{}

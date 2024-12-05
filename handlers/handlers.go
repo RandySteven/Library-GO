@@ -17,6 +17,7 @@ type Handlers struct {
 	RatingHandler         handlers_interfaces.RatingHandler
 	UserHandler           handlers_interfaces.UserHandler
 	CommentHandler        handlers_interfaces.CommentHandler
+	EventHandler          handlers_interfaces.EventHandler
 }
 
 func NewHandlers(usecases *usecases.Usecases) *Handlers {
