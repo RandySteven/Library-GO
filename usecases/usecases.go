@@ -20,6 +20,7 @@ type Usecases struct {
 	ReturnUsecase         usecases_interfaces.ReturnUsecase
 	RatingUsecase         usecases_interfaces.RatingUsecase
 	CommentUsecase        usecases_interfaces.CommentUsecase
+	EventUsecase          usecases_interfaces.EventUsecase
 }
 
 func NewUsecases(repositories *repositories.Repositories, caches *caches.Caches, awsClient *aws_client.AWSClient, algoClient *algolia_client.AlgoliaAPISearchClient) *Usecases {
@@ -35,5 +36,6 @@ func NewUsecases(repositories *repositories.Repositories, caches *caches.Caches,
 		RatingUsecase:         newRatingUsecase(repositories.RatingRepo),
 		UserUsecase:           newUserUsecase(repositories.UserRepo),
 		CommentUsecase:        newCommentUsecase(repositories.CommentRepo, repositories.UserRepo, repositories.BookRepo),
+		EventUsecase:          newEventUsecase(awsClient, repositories.EventRepo, repositories.EventUserRepo, repositories.UserRepo),
 	}
 }

@@ -33,5 +33,6 @@ func NewHandlers(usecases *usecases.Usecases) *Handlers {
 		RatingHandler:         newRatingHandler(usecases.RatingUsecase),
 		UserHandler:           newUserHandler(usecases.UserUsecase),
 		CommentHandler:        newCommentHandler(usecases.CommentUsecase),
+		EventHandler:          newEventHandler(usecases.EventUsecase),
 	}
 }

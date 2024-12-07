@@ -143,3 +143,17 @@ func (e *eventUsecase) GetEvent(ctx context.Context, id uint64) (result *respons
 }
 
 var _ usecases_interfaces.EventUsecase = &eventUsecase{}
+
+func newEventUsecase(
+	awsClient *aws_client.AWSClient,
+	eventRepo repositories_interfaces.EventRepository,
+	eventUserRepo repositories_interfaces.EventUserRepository,
+	userRepo repositories_interfaces.UserRepository,
+) *eventUsecase {
+	return &eventUsecase{
+		awsClient:     awsClient,
+		eventRepo:     eventRepo,
+		eventUserRepo: eventUserRepo,
+		userRepo:      userRepo,
+	}
+}

@@ -101,7 +101,7 @@ func NewEndpointRouters(h *handlers.Handlers) RouterPrefix {
 	}
 
 	endpointRouters[enums.EventPrefix] = []*Router{
-		Post("", h.EventHandler.CreateEvent, enums.AuthenticationMiddleware),
+		Post("", h.EventHandler.CreateEvent),
 		Get("", h.EventHandler.GetAllEvents),
 		Get("/{id}", h.EventHandler.GetEvent),
 	}
