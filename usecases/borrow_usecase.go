@@ -2,15 +2,18 @@ package usecases
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/RandySteven/Library-GO/apperror"
 	"github.com/RandySteven/Library-GO/entities/models"
 	"github.com/RandySteven/Library-GO/entities/payloads/requests"
 	"github.com/RandySteven/Library-GO/entities/payloads/responses"
 	"github.com/RandySteven/Library-GO/enums"
+	caches_interfaces "github.com/RandySteven/Library-GO/interfaces/caches"
 	repositories_interfaces "github.com/RandySteven/Library-GO/interfaces/repositories"
 	usecases_interfaces "github.com/RandySteven/Library-GO/interfaces/usecases"
 	"github.com/RandySteven/Library-GO/utils"
+	"github.com/redis/go-redis/v9"
 	"log"
 	"sync"
 	"time"
@@ -24,6 +27,7 @@ type borrowUsecase struct {
 	userRepo         repositories_interfaces.UserRepository
 	authorRepo       repositories_interfaces.AuthorRepository
 	genreRepo        repositories_interfaces.GenreRepository
+	cache            caches_interfaces.BorrowCache
 }
 
 func (b *borrowUsecase) setTx(ctx context.Context) {
@@ -63,6 +67,7 @@ func (b *borrowUsecase) BorrowTransaction(ctx context.Context) (result *response
 		}
 		b.setTx(nil)
 		b.refreshTx(ctx)
+		_ = b.cache.Del(ctx, fmt.Sprintf(enums.BorrowsKey, userId))
 	}()
 	b.setTx(ctx)
 
@@ -132,18 +137,27 @@ func (b *borrowUsecase) BorrowTransaction(ctx context.Context) (result *response
 }
 
 func (b *borrowUsecase) GetAllBorrows(ctx context.Context) (result []*responses.BorrowListResponse, customErr *apperror.CustomError) {
-	userId := ctx.Value(enums.UserID).(uint64)
-	borrows, err := b.borrowRepo.FindByUserId(ctx, userId)
-	if err != nil {
-		return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to get borrows`, err)
+	result, err := b.cache.GetMultiData(ctx)
+	if errors.Is(err, redis.Nil) {
+		log.Println("redis kosong")
+		userId := ctx.Value(enums.UserID).(uint64)
+		borrows, err := b.borrowRepo.FindByUserId(ctx, userId)
+		if err != nil {
+			return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to get borrows`, err)
+		}
+		for _, borrow := range borrows {
+			result = append(result, &responses.BorrowListResponse{
+				ID:              borrow.ID,
+				BorrowReference: borrow.BorrowReference,
+				BorrowedDate:    borrow.CreatedAt,
+			})
+		}
+		err = b.cache.SetMultiData(ctx, result)
+		if err != nil {
+			return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to insert redis data`, err)
+		}
 	}
-	for _, borrow := range borrows {
-		result = append(result, &responses.BorrowListResponse{
-			ID:              borrow.ID,
-			BorrowReference: borrow.BorrowReference,
-			BorrowedDate:    borrow.CreatedAt,
-		})
-	}
+
 	return result, nil
 }
 
@@ -159,7 +173,8 @@ func (b *borrowUsecase) GetBorrowDetail(ctx context.Context, id uint64) (result 
 		return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to get borrow`, err)
 	}
 
-	if ctx.Value(enums.UserID).(uint64) != borrow.UserID {
+	userId := ctx.Value(enums.UserID).(uint64)
+	if userId != borrow.UserID {
 		return nil, apperror.NewCustomError(apperror.ErrForbidden, `you can't access this detail`, nil)
 	}
 
@@ -276,7 +291,8 @@ func newBorrowUsecase(
 	borrowDetailRepo repositories_interfaces.BorrowDetailRepository,
 	userRepo repositories_interfaces.UserRepository,
 	authorRepo repositories_interfaces.AuthorRepository,
-	genreRepo repositories_interfaces.GenreRepository) *borrowUsecase {
+	genreRepo repositories_interfaces.GenreRepository,
+	cache caches_interfaces.BorrowCache) *borrowUsecase {
 	return &borrowUsecase{
 		bagRepo:          bagRepo,
 		bookRepo:         bookRepo,
@@ -285,5 +301,6 @@ func newBorrowUsecase(
 		userRepo:         userRepo,
 		authorRepo:       authorRepo,
 		genreRepo:        genreRepo,
+		cache:            cache,
 	}
 }

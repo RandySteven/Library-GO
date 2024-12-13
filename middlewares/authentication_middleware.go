@@ -11,7 +11,7 @@ import (
 
 func (mv *MiddlewareValidator) AuthenticationMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if !mv.whitelist.WhiteListed(r.Method, r.RequestURI, enums.AuthenticationMiddleware) {
+		if !mv.whitelist.WhiteListed(r.Method, utils.ReplaceLastURLID(r.RequestURI), enums.AuthenticationMiddleware) {
 			next.ServeHTTP(w, r)
 			return
 		}

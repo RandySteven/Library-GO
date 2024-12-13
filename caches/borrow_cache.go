@@ -24,16 +24,20 @@ func (b *borrowCache) Get(ctx context.Context, key string) (value *responses.Bor
 }
 
 func (b *borrowCache) SetMultiData(ctx context.Context, values []*responses.BorrowListResponse) (err error) {
-	//TODO implement me
-	panic("implement me")
+	userId := ctx.Value(enums.UserID).(uint64)
+	return caches_client.SetMultiple[responses.BorrowListResponse](ctx, b.redis, fmt.Sprintf(enums.BorrowsKey, userId), values)
 }
 
 func (b *borrowCache) GetMultiData(ctx context.Context) (values []*responses.BorrowListResponse, err error) {
-	//TODO implement me
-	panic("implement me")
+	userId := ctx.Value(enums.UserID).(uint64)
+	return caches_client.GetMultiple[responses.BorrowListResponse](ctx, b.redis, fmt.Sprintf(enums.BorrowsKey, userId))
 }
 
 func (b *borrowCache) Refresh(ctx context.Context, key string, update any) (value any, err error) {
+	err = caches_client.Del[any](ctx, b.redis, key)
+	if err != nil {
+		return nil, err
+	}
 	return
 }
 

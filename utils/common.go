@@ -11,10 +11,16 @@ import (
 	"log"
 	"math/rand"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
 )
+
+func ReplaceLastURLID(url string) string {
+	re := regexp.MustCompile(`/\d+$`)
+	return re.ReplaceAllString(url, "/{id}")
+}
 
 func ResizeImage(inputPath string, outputPath string, width uint, height uint) error {
 	log.Println(inputPath)
