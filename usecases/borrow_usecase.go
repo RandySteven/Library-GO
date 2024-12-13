@@ -44,7 +44,9 @@ func (b *borrowUsecase) refreshTx(ctx context.Context) {
 func (b *borrowUsecase) BorrowTransaction(ctx context.Context) (result *responses.BorrowResponse, customErr *apperror.CustomError) {
 	userId := ctx.Value(enums.UserID).(uint64)
 	var (
-		err error
+		err         error
+		wg          sync.WaitGroup
+		customErrCh = make(chan *apperror.CustomError)
 	)
 
 	if err = b.borrowRepo.BeginTx(ctx); err != nil {
@@ -82,24 +84,37 @@ func (b *borrowUsecase) BorrowTransaction(ctx context.Context) (result *response
 	if err != nil {
 		return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to save borrow`, err)
 	}
+
 	for _, bagBook := range bagBooks {
-		borrowDetail := &models.BorrowDetail{
-			BorrowID:     borrow.ID,
-			BookID:       bagBook.Book.ID,
-			ReturnedDate: time.Now().Add(7 * 24 * time.Hour),
-		}
-		borrowDetail, err = b.borrowDetailRepo.Save(ctx, borrowDetail)
-		if err != nil {
-			return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to save detail`, err)
-		}
-		err = b.bookRepo.UpdateBookStatus(ctx, bagBook.Book.ID, enums.ReadyToTake)
-		if err != nil {
-			return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to save status`, err)
-		}
+		wg.Add(1)
+		go func(ctx context.Context, bagBook *models.Bag) {
+			defer wg.Done()
+			borrowDetail := &models.BorrowDetail{
+				BorrowID:     borrow.ID,
+				BookID:       bagBook.Book.ID,
+				ReturnedDate: time.Now().Add(7 * 24 * time.Hour),
+			}
+			borrowDetail, err = b.borrowDetailRepo.Save(ctx, borrowDetail)
+			if err != nil {
+				customErrCh <- apperror.NewCustomError(apperror.ErrInternalServer, `failed to save detail`, err)
+				return
+			}
+			err = b.bookRepo.UpdateBookStatus(ctx, bagBook.Book.ID, enums.ReadyToTake)
+			if err != nil {
+				customErrCh <- apperror.NewCustomError(apperror.ErrInternalServer, `failed to save status`, err)
+				return
+			}
+		}(ctx, bagBook)
 	}
 
-	err = b.bagRepo.DeleteUserBag(ctx, userId)
-	if err != nil {
+	wg.Wait()
+	close(customErrCh)
+
+	for customErr = range customErrCh {
+		return nil, customErr
+	}
+
+	if err := b.bagRepo.DeleteUserBag(ctx, userId); err != nil {
 		return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to delete user bag`, err)
 	}
 
