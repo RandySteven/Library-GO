@@ -110,8 +110,6 @@ func (o *onboardingUsecase) RegisterUser(ctx context.Context, request *requests.
 			CreatedAt: time.Now(),
 		}, nil
 	}
-
-	return
 }
 
 func (o *onboardingUsecase) LoginUser(ctx context.Context, request *requests.UserLoginRequest) (result *responses.UserLoginResponse, customErr *apperror.CustomError) {

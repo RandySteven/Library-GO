@@ -3,8 +3,10 @@ package mysql_client
 import (
 	"context"
 	"github.com/RandySteven/Library-GO/entities/models"
+	"github.com/RandySteven/Library-GO/enums"
 	"github.com/RandySteven/Library-GO/queries"
 	"github.com/RandySteven/Library-GO/utils"
+	"math/rand"
 	"time"
 )
 
@@ -45,6 +47,53 @@ func (c *MySQLClient) SeedAuthorData(ctx context.Context) error {
 			return err
 		}
 	}
+	return nil
+}
+
+func (c *MySQLClient) SeedBookData(ctx context.Context) error {
+	books := []*models.Book{
+		{Title: "Book Title A", Description: "Book description A", Image: "", Status: enums.Available},
+		{Title: "Book Title B", Description: "Book description B", Image: "", Status: enums.Available},
+		{Title: "Book Title C", Description: "Book description C", Image: "", Status: enums.Available},
+		{Title: "Book Title D", Description: "Book description D", Image: "", Status: enums.Available},
+		{Title: "Book Title E", Description: "Book description E", Image: "", Status: enums.Available},
+		{Title: "Book Title F", Description: "Book description F", Image: "", Status: enums.Available},
+		{Title: "Book Title G", Description: "Book description G", Image: "", Status: enums.Available},
+		{Title: "Book Title H", Description: "Book description H", Image: "", Status: enums.Available},
+		{Title: "Book Title I", Description: "Book description I", Image: "", Status: enums.Available},
+		{Title: "Book Title J", Description: "Book description J", Image: "", Status: enums.Available},
+		{Title: "Book Title K", Description: "Book description K", Image: "", Status: enums.Available},
+		{Title: "Book Title L", Description: "Book description L", Image: "", Status: enums.Available},
+	}
+
+	for _, book := range books {
+		result, err := c.db.ExecContext(ctx, queries.InsertBookQuery.ToString(), &book.Title, &book.Description, &book.Image, &book.Status)
+		if err != nil {
+			return err
+		}
+		id, _ := result.LastInsertId()
+		for i := 0; i < 2; i++ {
+			rand.Seed(time.Now().UnixNano())
+
+			randomNumber := rand.Intn(5) + 1
+			_, err = c.db.ExecContext(ctx, queries.InsertAuthorBookQuery.ToString(), randomNumber, id)
+			if err != nil {
+				return err
+			}
+		}
+		for i := 0; i < 2; i++ {
+			rand.Seed(time.Now().UnixNano())
+
+			randomNumber := rand.Intn(53) + 1
+
+			_, err = c.db.ExecContext(ctx, queries.InsertBookGenreQuery.ToString(), id, randomNumber)
+			if err != nil {
+				return err
+			}
+		}
+
+	}
+
 	return nil
 }
 
