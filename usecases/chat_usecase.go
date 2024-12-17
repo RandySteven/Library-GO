@@ -11,7 +11,9 @@ import (
 	repositories_interfaces "github.com/RandySteven/Library-GO/interfaces/repositories"
 	usecases_interfaces "github.com/RandySteven/Library-GO/interfaces/usecases"
 	"github.com/RandySteven/Library-GO/utils"
+	"github.com/google/uuid"
 	"log"
+	"sync"
 	"time"
 )
 
@@ -98,6 +100,43 @@ func (c *chatUsecase) ListRooms(ctx context.Context) (result []*responses.ListRo
 func (c *chatUsecase) findUsersInRoom(ctx context.Context, roomId uint64) {}
 
 func (c *chatUsecase) GetRoomDetail(ctx context.Context, roomId uint64) (result *responses.RoomChatsResponse, customErr *apperror.CustomError) {
+	return
+}
+
+func (c *chatUsecase) SendChat(ctx context.Context, request *requests.SendChat) (result *responses.ChatResponse, customErr *apperror.CustomError) {
+	var (
+		wg          sync.WaitGroup
+		customErrCh = make(chan *apperror.CustomError)
+		_           = context.WithValue(ctx, enums.RequestID, uuid.NewString())
+		mysqlCtx    = context.WithValue(ctx, enums.RequestID, uuid.NewString())
+		chat        = &models.Chat{
+			RoomChatID: request.RoomID,
+			Chat:       request.Chat,
+			UserID:     ctx.Value(enums.UserID).(uint64),
+		}
+	)
+
+	wg.Add(2)
+
+	//async redis
+	go func() {
+		defer wg.Done()
+
+	}()
+
+	//async db
+	go func() {
+		defer wg.Done()
+		_, err := c.chatRepo.Save(mysqlCtx, chat)
+		if err != nil {
+			customErrCh <- apperror.NewCustomError(apperror.ErrInternalServer, `failed to save chat at db`, err)
+			return
+		}
+	}()
+
+	go func() {
+		wg.Wait()
+	}()
 	return
 }
 

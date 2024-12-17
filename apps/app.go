@@ -8,6 +8,7 @@ import (
 	aws_client "github.com/RandySteven/Library-GO/pkg/aws"
 	"github.com/RandySteven/Library-GO/pkg/caches"
 	"github.com/RandySteven/Library-GO/pkg/configs"
+	elastics_client "github.com/RandySteven/Library-GO/pkg/elastics"
 	emails_client "github.com/RandySteven/Library-GO/pkg/emails"
 	"github.com/RandySteven/Library-GO/pkg/mysql"
 	repositories2 "github.com/RandySteven/Library-GO/repositories"
@@ -21,6 +22,7 @@ type App struct {
 	MySQLDB       *mysql_client.MySQLClient
 	Redis         *caches_client.RedisClient
 	Mailer        *emails_client.Mailer
+	ElasticClient *elastics_client.ElasticClient
 }
 
 func NewApp(config *configs.Config) (*App, error) {
@@ -54,12 +56,18 @@ func NewApp(config *configs.Config) (*App, error) {
 		return nil, err
 	}
 
+	elastic, err := elastics_client.NewElasticClient(config)
+	if err != nil {
+		return nil, err
+	}
+
 	return &App{
 		MySQLDB:       mysqlDB,
 		Redis:         redis,
 		AWSClient:     aws,
 		AlgoliaSearch: algolia,
 		Mailer:        mailer,
+		ElasticClient: elastic,
 	}, nil
 }
 
@@ -72,7 +80,8 @@ func (app *App) PrepareTheHandler() *handlers2.Handlers {
 
 func (app *App) PrepareScheduler() *schedulers2.Schedulers {
 	repositories := repositories2.NewRepositories(app.MySQLDB.Client())
-	schedulers := schedulers2.NewSchedulers(repositories)
+	caches := caches.NewCaches(app.Redis.Client())
+	schedulers := schedulers2.NewSchedulers(repositories, caches)
 	return schedulers
 }
 

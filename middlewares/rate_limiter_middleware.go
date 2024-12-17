@@ -12,7 +12,7 @@ import (
 func (mv *MiddlewareValidator) RateLimiterMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer next.ServeHTTP(w, r)
-		if !mv.whitelist.WhiteListed(r.Method, r.RequestURI, enums.RateLimiterMiddleware) {
+		if !mv.whitelist.WhiteListed(r.Method, utils.ReplaceLastURLID(r.RequestURI), enums.RateLimiterMiddleware) {
 			return
 		}
 		clientIp := ip.GetClientIP(r)

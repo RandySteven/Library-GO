@@ -2,6 +2,7 @@ package usecases
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/RandySteven/Library-GO/apperror"
 	"github.com/RandySteven/Library-GO/entities/models"
@@ -15,6 +16,7 @@ import (
 	aws_client "github.com/RandySteven/Library-GO/pkg/aws"
 	"github.com/RandySteven/Library-GO/utils"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"github.com/redis/go-redis/v9"
 	"io/ioutil"
 	"log"
 	"mime/multipart"
@@ -268,15 +270,15 @@ func (b *bookUsecase) createBookGenreRelations(ctx context.Context, genreIDs []*
 
 func (b *bookUsecase) GetAllBooks(ctx context.Context) (result []*responses.ListBooksResponse, customErr *apperror.CustomError) {
 	result = []*responses.ListBooksResponse{}
-	//result, err := b.cache.GetMultiData(ctx)
-	//if err != nil {
-	//	if !errors.Is(err, redis.Nil) {
-	//		return nil, apperror.NewCustomError(apperror.ErrInternalServer, `redis issue : `, err)
-	//	}
-	//}
-	//if result != nil {
-	//	return result, nil
-	//}
+	result, err := b.cache.GetMultiData(ctx)
+	if err != nil {
+		if !errors.Is(err, redis.Nil) {
+			return nil, apperror.NewCustomError(apperror.ErrInternalServer, `redis issue : `, err)
+		}
+	}
+	if result != nil {
+		return result, nil
+	}
 	books, err := b.bookRepo.FindAll(ctx, 0, 0)
 	if err != nil {
 		return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to get books`, err)

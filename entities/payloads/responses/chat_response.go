@@ -16,7 +16,8 @@ type (
 	}
 
 	ChatResponse struct {
-		SenderName  string    `json:"user_name"`
+		SenderID    uint64    `json:"sender_id"`
+		SenderName  string    `json:"sender_name"`
 		ChatMessage string    `json:"chat_message"`
 		CreatedAt   time.Time `json:"created_at"`
 		UpdatedAt   time.Time `json:"updated_at"`

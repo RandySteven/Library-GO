@@ -72,5 +72,12 @@ type Config struct {
 		Kafka struct {
 			Addrs []string `yaml:"addrs"`
 		} `yaml:"kafka"`
+
+		ElasticSearch struct {
+			Host      string `yaml:"host"`
+			Port      string `yaml:"port"`
+			AccessKey string `yaml:"accessKey"`
+			SecretKey string `yaml:"secretKey"`
+		} `yaml:"elasticSearch"`
 	} `yaml:"app"`
 }

@@ -32,6 +32,12 @@ func deleteCreateDir(dirName string) error {
 	return nil
 }
 
+func (s *scheduler) refereshBookList(ctx context.Context) error {
+	return s.runScheduler(ctx, os.Getenv("SCHEDULER_REFRESH_BOOK_CACHE"), func(ctx context.Context) error {
+		return s.dependencies.schedulers.BookScheduler.RefreshBooksCache(ctx)
+	})
+}
+
 func (s *scheduler) deleteStoryFiles(ctx context.Context) error {
 	return s.runScheduler(ctx, os.Getenv("SCHEDULER_DELETE_FILE"), func(ctx context.Context) error {
 		return deleteCreateDir("./temp-stories")
@@ -51,6 +57,9 @@ func (s *scheduler) RunAllJobs(ctx context.Context) error {
 		return err
 	}
 	if err := s.testSchedulerLog(ctx); err != nil {
+		return err
+	}
+	if err := s.refereshBookList(ctx); err != nil {
 		return err
 	}
 	return nil
