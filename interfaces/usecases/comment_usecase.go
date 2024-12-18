@@ -10,6 +10,6 @@ import (
 type CommentUsecase interface {
 	AddComment(ctx context.Context, request *requests.AddCommentRequest) (result *responses.CommentResponse, customErr *apperror.CustomError)
 	ReplyComment(ctx context.Context, request *requests.ReplyCommentRequest) (result *responses.ReplyCommentResponse, customErr *apperror.CustomError)
-	GetCommentFromBook(ctx context.Context, bookID uint64) (result []*responses.ListBookCommentsResponse, customErr *apperror.CustomError)
+	GetCommentFromBook(ctx context.Context, request *requests.GetCommentRequest) (result []*responses.ListBookCommentsResponse, customErr *apperror.CustomError)
 	DeleteComment(ctx context.Context, id uint64) (customErr *apperror.CustomError)
 }

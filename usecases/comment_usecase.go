@@ -43,8 +43,8 @@ func (c *commentUsecase) ReplyComment(ctx context.Context, request *requests.Rep
 	panic("implement me")
 }
 
-func (c *commentUsecase) GetCommentFromBook(ctx context.Context, bookID uint64) (result []*responses.ListBookCommentsResponse, customErr *apperror.CustomError) {
-	comments, err := c.commentRepo.FindCommentsByBookID(ctx, bookID)
+func (c *commentUsecase) GetCommentFromBook(ctx context.Context, request *requests.GetCommentRequest) (result []*responses.ListBookCommentsResponse, customErr *apperror.CustomError) {
+	comments, err := c.commentRepo.FindCommentsByBookID(ctx, request.BookID)
 	if err != nil {
 		return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to get comment`, err)
 	}
