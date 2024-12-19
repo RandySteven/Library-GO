@@ -101,6 +101,20 @@ jobs:
           go install github.com/vektra/mockery/v2/...@v2.43.1
           export PATH=$PATH:$(go env GOPATH)/bin
 
+      - name: Cache Mockery Binary
+        uses: actions/cache@v2
+        with:
+          path: ~/.cache/mockery
+          key: ${{ runner.os }}-mockery-v2.43.1
+
+      - name: Install Mockery if not cache
+        run: |
+          if [ ! -f ~/.cache/mockery/mockery ]; then
+            go install github.com/vektra/mockery/v2/...@v2.43.1
+            mkdir -p ~/.cache/mockery
+            cp $(go env GOPATH)/bin/mockery ~/.cache/mockery/
+          fi
+
   test:
     name: Test the code
     runs-on: ubuntu-latest
@@ -109,6 +123,16 @@ jobs:
         go-version: [ '1.22' ]
 
     steps:
+      - name: Restore Mockery Binary
+        uses: actions/cache@v2
+        with:
+          path: ~/.cache/mockery
+          key: ${{ runner.os }}-mockery-v2.43.1
+
+      - name: Add Mockery to PATH
+        run: |
+          export PATH=$PATH:~/.cache/mockery
+
       - name: Execute unit test
         run: |
           mockery --all --keeptree

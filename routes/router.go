@@ -109,6 +109,16 @@ func NewEndpointRouters(h *handlers.Handlers) RouterPrefix {
 	return endpointRouters
 }
 
+func InitWS(r *mux.Router) {
+	r.Use(
+		middlewares.CorsMiddleware,
+		middlewares.LoggingMiddleware,
+		middlewares.TimeoutMiddleware,
+	)
+
+	//r.PathPrefix("/ws").Subrouter()
+}
+
 func InitRouters(routers RouterPrefix, r *mux.Router) {
 	whitelistedMiddleware := middlewares.NewWhitelistedMiddleware()
 	middlewareValidator := middlewares.NewMiddlewareValidator(whitelistedMiddleware)
