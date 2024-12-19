@@ -75,8 +75,8 @@ jobs:
 
       - name: Execute unit test
         run: |
-          bash ./scripts/organize_mocks.sh
           mockery --all --output ./mocks
+          bash ./scripts/organize_mocks.sh
           go test -coverprofile=coverage.out ./... 
           go tool cover -html=coverage.out
 
