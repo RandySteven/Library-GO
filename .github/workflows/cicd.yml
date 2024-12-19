@@ -23,13 +23,13 @@ jobs:
         with:
           go-version: ${{ matrix.go-version }}
 
-      - name: Ensure dependencies
-        run: |
-          go mod tidy
-
       - name: Generate mocks
         run: |
           mockery --all --keeptree
+
+      - name: Ensure dependencies
+        run: |
+          go mod tidy
 
       - name: Cache Go Modules
         uses: actions/cache@v2
