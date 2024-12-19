@@ -38,7 +38,7 @@ jobs:
           go install github.com/vektra/mockery/v2/...@v2.43.1
           mkdir -p ~/.cache/mockery
           cp $(go env GOPATH)/bin/mockery ~/.cache/mockery/mockery
-          echo "::add-path::$(go env GOPATH)/bin"
+          echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
 
       - name: Cache Mockery Binary
         uses: actions/cache@v2
@@ -71,7 +71,7 @@ jobs:
 
       - name: Add Mockery to PATH
         run: |
-          echo "::add-path::~/.cache/mockery"
+          echo "~/.cache/mockery" >> $GITHUB_PATH
 
       - name: Execute unit test
         run: |
