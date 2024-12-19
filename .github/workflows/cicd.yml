@@ -118,6 +118,7 @@ jobs:
   test:
     name: Test the code
     runs-on: ubuntu-latest
+    needs: prepare_env
     strategy:
       matrix:
         go-version: [ '1.22' ]
@@ -147,6 +148,7 @@ jobs:
   build:
     name: Build the app
     runs-on: ubuntu-latest
+    needs: prepare_env
     strategy:
       matrix:
         go-version: [ '1.22' ]
