@@ -57,6 +57,11 @@ type Config struct {
 			DB            int    `yaml:"db"`
 		} `yaml:"redis"`
 
+		Dice struct {
+			Host string `yaml:"host"`
+			Port string `yaml:"port"`
+		} `yaml:"dice"`
+
 		Algolia struct {
 			AppID  string `yaml:"appID"`
 			ApiKey string `yaml:"apiKey"`

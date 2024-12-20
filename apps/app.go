@@ -14,6 +14,7 @@ import (
 	repositories2 "github.com/RandySteven/Library-GO/repositories"
 	schedulers2 "github.com/RandySteven/Library-GO/schedulers"
 	usecases2 "github.com/RandySteven/Library-GO/usecases"
+	"log"
 )
 
 type App struct {
@@ -23,21 +24,25 @@ type App struct {
 	Redis         *caches_client.RedisClient
 	Mailer        *emails_client.Mailer
 	ElasticClient *elastics_client.ElasticClient
+	DiceDB        *caches_client.DiceDBClient
 }
 
 func NewApp(config *configs.Config) (*App, error) {
 	mysqlDB, err := mysql_client.NewMySQLClient(config)
 	if err != nil {
+		log.Println("conn mysql", err)
 		return nil, err
 	}
 
 	err = mysqlDB.Ping()
 	if err != nil {
+		log.Println("ping mysql ", err)
 		return nil, err
 	}
 
 	redis, err := caches_client.NewRedisCache(config)
 	if err != nil {
+		log.Println("conn redis ", err)
 		return nil, err
 	}
 
@@ -61,6 +66,11 @@ func NewApp(config *configs.Config) (*App, error) {
 		return nil, err
 	}
 
+	//diceDb, err := caches_client.NewDiceDBClient(config)
+	//if err != nil {
+	//	return nil, err
+	//}
+
 	return &App{
 		MySQLDB:       mysqlDB,
 		Redis:         redis,
@@ -68,6 +78,7 @@ func NewApp(config *configs.Config) (*App, error) {
 		AlgoliaSearch: algolia,
 		Mailer:        mailer,
 		ElasticClient: elastic,
+		//DiceDB:        diceDb,
 	}, nil
 }
 
