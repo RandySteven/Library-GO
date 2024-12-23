@@ -39,8 +39,30 @@ func (c *commentUsecase) AddComment(ctx context.Context, request *requests.AddCo
 }
 
 func (c *commentUsecase) ReplyComment(ctx context.Context, request *requests.ReplyCommentRequest) (result *responses.ReplyCommentResponse, customErr *apperror.CustomError) {
-	//TODO implement me
-	panic("implement me")
+	comment := &models.Comment{
+		UserID:   ctx.Value(enums.UserID).(uint64),
+		BookID:   request.BookID,
+		Comment:  request.Comment,
+		ParentID: &request.ParentID,
+	}
+	if request.ReplyID != nil {
+		comment.ReplyID = request.ReplyID
+	}
+
+	comment, err := c.commentRepo.Save(ctx, comment)
+	if err != nil {
+		return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to reply comment`, err)
+	}
+
+	result = &responses.ReplyCommentResponse{
+		ID:        comment.ID,
+		UserID:    comment.UserID,
+		BookID:    comment.BookID,
+		CommentID: *comment.ParentID,
+		Comment:   comment.Comment,
+	}
+
+	return result, nil
 }
 
 func (c *commentUsecase) GetCommentFromBook(ctx context.Context, request *requests.GetCommentRequest) (result []*responses.ListBookCommentsResponse, customErr *apperror.CustomError) {
