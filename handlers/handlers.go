@@ -18,6 +18,8 @@ type Handlers struct {
 	UserHandler           handlers_interfaces.UserHandler
 	CommentHandler        handlers_interfaces.CommentHandler
 	EventHandler          handlers_interfaces.EventHandler
+	RoomChatHandler       handlers_interfaces.RoomChatHandler
+	SendChatHandler       handlers_interfaces.SendChatHandler
 }
 
 func NewHandlers(usecases *usecases.Usecases) *Handlers {

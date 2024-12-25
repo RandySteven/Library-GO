@@ -19,6 +19,9 @@ type Repositories struct {
 	CommentRepo      repositories_interfaces.CommentRepository
 	EventRepo        repositories_interfaces.EventRepository
 	EventUserRepo    repositories_interfaces.EventUserRepository
+	ChatRepo         repositories_interfaces.ChatRepository
+	RoomChatRepo     repositories_interfaces.RoomChatRepository
+	RoomChatUserRepo repositories_interfaces.RoomChatUserRepository
 }
 
 func NewRepositories(db *sql.DB) *Repositories {
@@ -36,5 +39,8 @@ func NewRepositories(db *sql.DB) *Repositories {
 		CommentRepo:      newCommentRepository(db),
 		EventRepo:        newEventRepository(db),
 		EventUserRepo:    newEventUserRepository(db),
+		ChatRepo:         newChatRepository(db),
+		RoomChatRepo:     newRoomChatRepository(db),
+		RoomChatUserRepo: newRoomChatUserRepository(db),
 	}
 }

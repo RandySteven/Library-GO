@@ -53,3 +53,15 @@ var (
 	_ handlers_interfaces.RoomChatHandler = &RoomChatHandler{}
 	_ handlers_interfaces.SendChatHandler = &SendChatHandler{}
 )
+
+func newRoomChatHandler(usecase usecases_interfaces.ChatUsecase) *RoomChatHandler {
+	return &RoomChatHandler{
+		usecase: usecase,
+	}
+}
+
+func newSendChatHandler(usecase usecases_interfaces.ChatUsecase) *SendChatHandler {
+	return &SendChatHandler{
+		usecase: usecase,
+	}
+}
