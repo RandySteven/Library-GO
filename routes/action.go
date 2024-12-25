@@ -21,10 +21,10 @@ func Get(path string, handler HandlerFunc, middlewares ...enums.Middleware) *Rou
 	return registerEndpointRouter(path, http.MethodGet, handler, middlewares...)
 }
 
-func Put(path string, handler HandlerFunc) *Router {
-	return registerEndpointRouter(path, http.MethodPut, handler)
+func Put(path string, handler HandlerFunc, middlewares ...enums.Middleware) *Router {
+	return registerEndpointRouter(path, http.MethodPut, handler, middlewares...)
 }
 
-func Delete(path string, handler HandlerFunc) *Router {
-	return registerEndpointRouter(path, http.MethodDelete, handler)
+func Delete(path string, handler HandlerFunc, middlewares ...enums.Middleware) *Router {
+	return registerEndpointRouter(path, http.MethodDelete, handler, middlewares...)
 }

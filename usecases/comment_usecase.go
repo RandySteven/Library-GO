@@ -93,8 +93,11 @@ func (c *commentUsecase) GetCommentFromBook(ctx context.Context, request *reques
 }
 
 func (c *commentUsecase) DeleteComment(ctx context.Context, id uint64) (customErr *apperror.CustomError) {
-	//TODO implement me
-	panic("implement me")
+	err := c.commentRepo.DeleteByID(ctx, id)
+	if err != nil {
+		return apperror.NewCustomError(apperror.ErrInternalServer, `failed to delete comment`, err)
+	}
+	return nil
 }
 
 var _ usecases_interfaces.CommentUsecase = &commentUsecase{}

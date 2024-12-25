@@ -8,7 +8,9 @@ import (
 	usecases_interfaces "github.com/RandySteven/Library-GO/interfaces/usecases"
 	"github.com/RandySteven/Library-GO/utils"
 	"github.com/google/uuid"
+	"github.com/gorilla/mux"
 	"net/http"
+	"strconv"
 )
 
 type CommentHandler struct {
@@ -54,6 +56,22 @@ func (c *CommentHandler) GetBookComment(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	utils.ResponseHandler(w, http.StatusOK, `success add comment`, &dataKey, result, nil)
+}
+
+func (c *CommentHandler) DeleteComment(w http.ResponseWriter, r *http.Request) {
+	var (
+		rID       = uuid.NewString()
+		vars      = mux.Vars(r)
+		id        = vars[`id`]
+		idUint, _ = strconv.Atoi(id)
+		ctx       = context.WithValue(r.Context(), enums.RequestID, rID)
+	)
+	customErr := c.usecase.DeleteComment(ctx, uint64(idUint))
+	if customErr != nil {
+		utils.ResponseHandler(w, customErr.ErrCode(), `failed to delete comment`, nil, nil, customErr)
+		return
+	}
+	utils.ResponseHandler(w, http.StatusOK, `success add to delete comment`, nil, nil, nil)
 }
 
 var _ handlers_interfaces.CommentHandler = &CommentHandler{}

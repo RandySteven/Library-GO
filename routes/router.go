@@ -98,6 +98,7 @@ func NewEndpointRouters(h *handlers.Handlers) RouterPrefix {
 		Post("", h.CommentHandler.Comment, enums.AuthenticationMiddleware),
 		Post("/reply", h.CommentHandler.Reply, enums.AuthenticationMiddleware),
 		Post("/get", h.CommentHandler.GetBookComment, enums.RateLimiterMiddleware),
+		Delete("/{id}", h.CommentHandler.DeleteComment, enums.AuthenticationMiddleware),
 	}
 
 	endpointRouters[enums.EventPrefix] = []*Router{

@@ -14,6 +14,10 @@ type commentRepository struct {
 	tx *sql.Tx
 }
 
+func (c *commentRepository) DeleteByID(ctx context.Context, id uint64) error {
+	return utils.Delete[models.Comment](ctx, c.Trigger(), `comments`, id)
+}
+
 func (c *commentRepository) Save(ctx context.Context, entity *models.Comment) (result *models.Comment, err error) {
 	id, err := utils.Save[models.Comment](ctx, c.Trigger(), queries.InsertCommentQuery, &entity.UserID, &entity.BookID, &entity.ParentID, &entity.Comment)
 	if err != nil {

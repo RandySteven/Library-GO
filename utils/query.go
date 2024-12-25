@@ -86,12 +86,10 @@ func FindAll[T any](ctx context.Context, db repositories_interfaces.Trigger, que
 	return result, nil
 }
 
-func Delete[T any](ctx context.Context, db repositories_interfaces.Trigger, query queries.GoQuery, id uint64) (err error) {
-	err = QueryValidation(query, deleteQuery)
-	if err != nil {
-		return err
-	}
-	_, err = db.ExecContext(ctx, query.ToString(), id)
+func Delete[T any](ctx context.Context, db repositories_interfaces.Trigger, table string, id uint64) (err error) {
+	query := `DELETE FROM %s WHERE id = ?`
+	query = fmt.Sprintf(query, table, id)
+	_, err = db.ExecContext(ctx, query, id)
 	if err != nil {
 		return err
 	}
