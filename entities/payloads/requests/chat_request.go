@@ -2,7 +2,6 @@ package requests
 
 type (
 	CreateChatRoom struct {
-		UserID        uint64   `json:"id"`
 		InviteUserIDs []uint64 `json:"invite_user_ids"`
 		RoomName      string   `json:"room_name"`
 	}

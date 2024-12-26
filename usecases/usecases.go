@@ -38,6 +38,6 @@ func NewUsecases(repositories *repositories.Repositories, caches *caches.Caches,
 		UserUsecase:           newUserUsecase(repositories.UserRepo),
 		CommentUsecase:        newCommentUsecase(repositories.CommentRepo, repositories.UserRepo, repositories.BookRepo),
 		EventUsecase:          newEventUsecase(awsClient, repositories.EventRepo, repositories.EventUserRepo, repositories.UserRepo),
-		ChatUsecase:           newChatUsecase(repositories.ChatRepo, repositories.RoomChatRepo, repositories.RoomChatUserRepo),
+		ChatUsecase:           newChatUsecase(repositories.ChatRepo, repositories.RoomChatRepo, repositories.RoomChatUserRepo, repositories.UserRepo),
 	}
 }

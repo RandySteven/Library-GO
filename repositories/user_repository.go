@@ -3,10 +3,14 @@ package repositories
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"github.com/RandySteven/Library-GO/entities/models"
 	repositories_interfaces "github.com/RandySteven/Library-GO/interfaces/repositories"
 	"github.com/RandySteven/Library-GO/queries"
 	"github.com/RandySteven/Library-GO/utils"
+	"log"
+	"strconv"
+	"strings"
 )
 
 type userRepository struct {
@@ -75,6 +79,33 @@ func (u *userRepository) SetTx(tx *sql.Tx) {
 
 func (u *userRepository) GetTx(ctx context.Context) *sql.Tx {
 	return u.tx
+}
+
+func (u *userRepository) FindSelectedUsersByID(ctx context.Context, ids []uint64) (result []*models.User, err error) {
+	queryIn := ` WHERE id IN (%s)`
+	wildCards := []string{}
+	for _, id := range ids {
+		wildCards = append(wildCards, strconv.Itoa(int(id)))
+	}
+	wildCardStr := strings.Join(wildCards, ",")
+	queryIn = fmt.Sprintf(queryIn, wildCardStr)
+	selectStr := queries.SelectUsersQuery.ToString() + queryIn
+	log.Println(selectStr)
+	rows, err := u.Trigger().QueryContext(ctx, selectStr)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		user := new(models.User)
+		err = rows.Scan(&user.ID, &user.Name, &user.Address, &user.Email, &user.PhoneNumber, &user.Password, &user.DoB,
+			&user.ProfilePicture, &user.CreatedAt, &user.UpdatedAt, &user.DeletedAt)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, user)
+	}
+	return result, nil
 }
 
 var _ repositories_interfaces.UserRepository = &userRepository{}

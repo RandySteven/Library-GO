@@ -21,12 +21,14 @@ type chatUsecase struct {
 	chatRepo         repositories_interfaces.ChatRepository
 	roomChatRepo     repositories_interfaces.RoomChatRepository
 	roomChatUserRepo repositories_interfaces.RoomChatUserRepository
+	userRepo         repositories_interfaces.UserRepository
 }
 
 func (c *chatUsecase) refreshTx(tx *sql.Tx) {
 	c.chatRepo.SetTx(tx)
 	c.roomChatRepo.SetTx(tx)
 	c.roomChatUserRepo.SetTx(tx)
+	c.userRepo.SetTx(tx)
 }
 
 func (c *chatUsecase) CreateRoomChat(ctx context.Context, request *requests.CreateChatRoom) (result *responses.CreateRoomChatResponse, customErr *apperror.CustomError) {
@@ -48,17 +50,33 @@ func (c *chatUsecase) CreateRoomChat(ctx context.Context, request *requests.Crea
 	}()
 	c.refreshTx(c.roomChatRepo.GetTx(ctx))
 
+	userId := ctx.Value(enums.UserID).(uint64)
+	request.InviteUserIDs = append(request.InviteUserIDs, userId)
+
+	users, err := c.userRepo.FindSelectedUsersByID(ctx, request.InviteUserIDs)
+	if err != nil {
+		return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to get list of users`, err)
+	}
+
+	roomName := request.RoomName
+	if roomName != "" {
+		for _, user := range users {
+			roomName += user.Name + "|"
+		}
+	}
+
 	roomChat, err := c.roomChatRepo.Save(ctx, &models.RoomChat{
-		RoomName: request.RoomName,
+		RoomName: roomName,
 	})
+
 	if err != nil {
 		return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to create room chat`, err)
 	}
 
-	for _, userId := range request.InviteUserIDs {
+	for _, user := range users {
 		_, err := c.roomChatUserRepo.Save(ctx, &models.RoomChatUser{
 			RoomChatID: roomChat.ID,
-			UserID:     userId,
+			UserID:     user.ID,
 		})
 		if err != nil {
 			return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to create room chat user`, err)
@@ -145,10 +163,12 @@ var _ usecases_interfaces.ChatUsecase = &chatUsecase{}
 func newChatUsecase(
 	chatRepo repositories_interfaces.ChatRepository,
 	roomChatRepo repositories_interfaces.RoomChatRepository,
-	roomChatUserRepo repositories_interfaces.RoomChatUserRepository) *chatUsecase {
+	roomChatUserRepo repositories_interfaces.RoomChatUserRepository,
+	userRepo repositories_interfaces.UserRepository) *chatUsecase {
 	return &chatUsecase{
 		chatRepo:         chatRepo,
 		roomChatRepo:     roomChatRepo,
 		roomChatUserRepo: roomChatUserRepo,
+		userRepo:         userRepo,
 	}
 }
