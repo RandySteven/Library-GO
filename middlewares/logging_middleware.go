@@ -91,3 +91,23 @@ func LoggingMiddleware(next http.Handler) http.Handler {
 		log.Println(string(logEntryJSON))
 	})
 }
+
+//func writeLog() {
+//	day, month, year := time.Now().Date()
+//	dateFile := fmt.Sprintf("%d%d%d.log", year, month, day)
+//	var logFileCh = make(chan *os.File)
+//	_, err := os.Open(dateFile)
+//	if err != nil {
+//		if errors.As(err, fs.ErrNotExist) {
+//			defer func() {
+//				logFile, err := os.Create(dateFile)
+//				if err != nil {
+//					return
+//				}
+//				logFileCh <- logFile
+//			}()
+//		}
+//	}
+//
+//	logFile = <-logFileCh
+//}
