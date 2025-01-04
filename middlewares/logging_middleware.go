@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/RandySteven/Library-GO/enums"
+	"github.com/RandySteven/Library-GO/utils"
 	"github.com/google/uuid"
 	"io/ioutil"
 	"log"
@@ -88,26 +89,15 @@ func LoggingMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
+		file, err := utils.WriteLogFile()
+		if err != nil {
+			log.Printf("failed to write log file: %v \n", err)
+			return
+		}
+
+		log.SetOutput(file)
+		log.SetFlags(log.LstdFlags | log.Lmicroseconds)
+
 		log.Println(string(logEntryJSON))
 	})
 }
-
-//func writeLog() {
-//	day, month, year := time.Now().Date()
-//	dateFile := fmt.Sprintf("%d%d%d.log", year, month, day)
-//	var logFileCh = make(chan *os.File)
-//	_, err := os.Open(dateFile)
-//	if err != nil {
-//		if errors.As(err, fs.ErrNotExist) {
-//			defer func() {
-//				logFile, err := os.Create(dateFile)
-//				if err != nil {
-//					return
-//				}
-//				logFileCh <- logFile
-//			}()
-//		}
-//	}
-//
-//	logFile = <-logFileCh
-//}

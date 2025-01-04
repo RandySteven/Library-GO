@@ -11,5 +11,6 @@ type Job interface {
 	refereshBookList(ctx context.Context) error
 	deleteStoryFiles(ctx context.Context) error
 	deleteImageFiles(ctx context.Context) error
+	uploadLogFile(ctx context.Context) error
 	StopAllJobs(ctx context.Context) error
 }

@@ -92,7 +92,7 @@ func (app *App) PrepareTheHandler() *handlers2.Handlers {
 func (app *App) PrepareScheduler() *schedulers2.Schedulers {
 	repositories := repositories2.NewRepositories(app.MySQLDB.Client())
 	caches := caches.NewCaches(app.Redis.Client())
-	schedulers := schedulers2.NewSchedulers(repositories, caches)
+	schedulers := schedulers2.NewSchedulers(repositories, caches, app.AWSClient)
 	return schedulers
 }
 

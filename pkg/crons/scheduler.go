@@ -62,6 +62,9 @@ func (s *scheduler) RunAllJobs(ctx context.Context) error {
 	if err := s.refereshBookList(ctx); err != nil {
 		return err
 	}
+	if err := s.uploadLogFile(ctx); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -101,6 +104,10 @@ func (s *scheduler) testSchedulerLog(ctx context.Context) error {
 		log.Println("scheduler log well")
 		return nil
 	})
+}
+
+func (s *scheduler) uploadLogFile(ctx context.Context) error {
+	return s.runScheduler(ctx, os.Getenv("SCHEDULER_UPLOAD_LOG_FILE"), s.dependencies.schedulers.LoggerScheduler.UploadLoggerScheduler)
 }
 
 var _ Job = &scheduler{}
