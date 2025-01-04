@@ -6,6 +6,7 @@ import (
 	aws_client "github.com/RandySteven/Library-GO/pkg/aws"
 	"github.com/RandySteven/Library-GO/utils"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"os"
 )
 
 type loggerScheduler struct {
@@ -27,6 +28,12 @@ func (l *loggerScheduler) UploadLoggerScheduler(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+
+	err = os.Remove(fileName)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
