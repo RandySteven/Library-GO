@@ -12,3 +12,4 @@ mysql-data
 coverage.out
 mocks
 rewrite.yml
+*.log
