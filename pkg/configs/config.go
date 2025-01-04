@@ -86,9 +86,10 @@ type Config struct {
 		} `yaml:"elasticSearch"`
 
 		Oauth2 struct {
-			RedirectURL  string `yaml:"redirectURL"`
-			ClientID     string `yaml:"clientID"`
-			ClientSecret string `yaml:"clientSecret"`
+			RedirectURL  string   `yaml:"redirectURL"`
+			ClientID     string   `yaml:"clientID"`
+			Scopes       []string `yaml:"scopes"`
+			ClientSecret string   `yaml:"clientSecret"`
 		} `yaml:"oauth2"`
 	} `yaml:"app"`
 }
