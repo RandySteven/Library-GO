@@ -13,4 +13,5 @@ type BookUsecase interface {
 	GetAllBooks(ctx context.Context) (result []*responses.ListBooksResponse, customErr *apperror.CustomError)
 	GetBookByID(ctx context.Context, id uint64) (result *responses.BookDetailResponse, customErr *apperror.CustomError)
 	SearchBook(ctx context.Context, request *requests.SearchBookRequest) (result []*responses.ListBooksResponse, customErr *apperror.CustomError)
+	BookBorrowTracker(ctx context.Context, id uint64) (result []*responses.BookBorrowHistoryResponse, customErr *apperror.CustomError)
 }

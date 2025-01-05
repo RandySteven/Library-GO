@@ -18,6 +18,10 @@ type BookHandler struct {
 	usecase usecases_interfaces.BookUsecase
 }
 
+func (b *BookHandler) BookBorrowHistoryTracker(w http.Request, r *http.Request) {
+
+}
+
 func (b *BookHandler) AddBook(w http.ResponseWriter, r *http.Request) {
 	var (
 		rID     = uuid.NewString()

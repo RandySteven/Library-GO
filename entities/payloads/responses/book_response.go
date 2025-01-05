@@ -39,4 +39,13 @@ type (
 		Genres      []*GenreBookResponse  `json:"genres"`
 		CreatedAt   time.Time             `json:"created_at"`
 	}
+
+	BookBorrowHistoryResponse struct {
+		ID   uint64 `json:"id"`
+		User struct {
+			ID   uint64 `json:"id"`
+			Name string `json:"name"`
+		} `json:"user"`
+		BorrowDate time.Time `json:"borrow_date"`
+	}
 )

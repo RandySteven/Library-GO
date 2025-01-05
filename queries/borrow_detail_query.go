@@ -19,6 +19,12 @@ const (
 		WHERE returned_date IS CURRENT_DATE() AND verified_return_date IS NULL
 	`
 
+	SelectBorrowDetailWithBookIDQuery GoQuery = `
+		SELECT id, borrow_id, book_id, borrowed_date, returned_date, verified_return_date, created_at, updated_at, deleted_at
+		FROM borrow_details
+		WHERE book_id = ?
+	`
+
 	SelectBorrowDetailByBorrowAndBookQuery GoQuery = `
 		SELECT id, borrow_id, book_id, borrowed_date, verified_return_date, verified_return_date, created_at, updated_at, deleted_at
 		FROM borrow_details

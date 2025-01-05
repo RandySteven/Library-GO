@@ -21,20 +21,23 @@ import (
 	"log"
 	"mime/multipart"
 	"os"
+	"strconv"
 	"sync"
 )
 
 type bookUsecase struct {
-	awsClient      *aws_client.AWSClient
-	algoClient     *algolia_client.AlgoliaAPISearchClient
-	userRepo       repositories_interfaces.UserRepository
-	bookRepo       repositories_interfaces.BookRepository
-	genreRepo      repositories_interfaces.GenreRepository
-	authorRepo     repositories_interfaces.AuthorRepository
-	authorBookRepo repositories_interfaces.AuthorBookRepository
-	bookGenreRepo  repositories_interfaces.BookGenreRepository
-	ratingRepo     repositories_interfaces.RatingRepository
-	cache          caches_interfaces.BookCache
+	awsClient        *aws_client.AWSClient
+	algoClient       *algolia_client.AlgoliaAPISearchClient
+	userRepo         repositories_interfaces.UserRepository
+	bookRepo         repositories_interfaces.BookRepository
+	genreRepo        repositories_interfaces.GenreRepository
+	authorRepo       repositories_interfaces.AuthorRepository
+	authorBookRepo   repositories_interfaces.AuthorBookRepository
+	bookGenreRepo    repositories_interfaces.BookGenreRepository
+	borrowRepo       repositories_interfaces.BorrowRepository
+	borrowDeatilRepo repositories_interfaces.BorrowDetailRepository
+	ratingRepo       repositories_interfaces.RatingRepository
+	cache            caches_interfaces.BookCache
 }
 
 func (b *bookUsecase) setTx(ctx context.Context) {
@@ -56,14 +59,13 @@ func (b *bookUsecase) AddNewBook(ctx context.Context, request *requests.CreateBo
 	var (
 		wg       sync.WaitGroup
 		wg2      sync.WaitGroup
-		errCh    = make(chan *apperror.CustomError, 1) // Buffered channels to prevent blocking
+		errCh    = make(chan *apperror.CustomError, 1)
 		errCh2   = make(chan *apperror.CustomError, 1)
-		bookCh   = make(chan *models.Book, 1)     // Buffered channel
-		authorCh = make(chan []*models.Author, 1) // Buffered channel
-		genreCh  = make(chan []*models.Genre, 1)  // Buffered channel
+		bookCh   = make(chan *models.Book, 1)
+		authorCh = make(chan []*models.Author, 1)
+		genreCh  = make(chan []*models.Genre, 1)
 	)
 
-	// 1. Begin transaction
 	err := b.bookRepo.BeginTx(ctx)
 	if err != nil {
 		return nil, apperror.NewCustomError(apperror.ErrInternalServer, "failed to init transaction", err)
@@ -82,13 +84,11 @@ func (b *bookUsecase) AddNewBook(ctx context.Context, request *requests.CreateBo
 	}()
 	b.setTx(ctx)
 
-	// 2. Search authors, genres, and insert book concurrently
 	wg.Add(3)
 	go b.findAuthors(ctx, request.Authors, authorCh, errCh, &wg)
 	go b.findGenres(ctx, request.Genres, genreCh, errCh, &wg)
 	go b.createBook(ctx, request, bookCh, errCh, &wg, fileHeader)
 
-	// Wait for all goroutines to finish
 	go func() {
 		wg.Wait()
 		close(errCh)
@@ -97,12 +97,10 @@ func (b *bookUsecase) AddNewBook(ctx context.Context, request *requests.CreateBo
 		close(bookCh)
 	}()
 
-	// 3. Check for errors during the process
 	if customErr = <-errCh; customErr != nil {
 		return nil, customErr
 	}
 
-	// 4. Insert relationships (Authors and Genres)
 	book := <-bookCh
 	authorIDs := <-authorCh
 	genreIDs := <-genreCh
@@ -111,11 +109,9 @@ func (b *bookUsecase) AddNewBook(ctx context.Context, request *requests.CreateBo
 	go b.createAuthorBookRelations(ctx, authorIDs, book.ID, errCh2, &wg2)
 	go b.createBookGenreRelations(ctx, genreIDs, book.ID, errCh2, &wg2)
 
-	// Wait for second set of goroutines
 	wg2.Wait()
 	close(errCh2)
 
-	// Check for errors from the second phase
 	if customErr = <-errCh2; customErr != nil {
 		return nil, customErr
 	}
@@ -141,7 +137,6 @@ func (b *bookUsecase) AddNewBook(ctx context.Context, request *requests.CreateBo
 	return result, nil
 }
 
-// findAuthors fetches authors by their IDs concurrently
 func (b *bookUsecase) findAuthors(ctx context.Context, authorIDs []uint64, authorCh chan []*models.Author, errCh chan *apperror.CustomError, wg *sync.WaitGroup) {
 	defer wg.Done()
 	var foundAuthorIDs []*models.Author
@@ -398,28 +393,32 @@ func (b *bookUsecase) GetBookByID(ctx context.Context, id uint64) (result *respo
 }
 
 func (b *bookUsecase) SearchBook(ctx context.Context, request *requests.SearchBookRequest) (result []*responses.ListBooksResponse, customErr *apperror.CustomError) {
-	//searchResults, err := b.algoClient.Search(enums.BooksIndex, request.Keyword)
-	//if err != nil {
-	//	return nil, apperror.NewCustomError(apperror.ErrInternalServer, "failed to search books", err)
-	//}
-	//
-	//result = []*responses.ListBooksResponse{}
-	//
-	//for _, res := range searchResults.Results {
-	//	hits := res.SearchResponse.Hits
-	//	for _, hit := range hits {
-	//		mapHit := *hit.HighlightResult
-	//		convertId, _ := strconv.Atoi(mapHit["objectID"].HighlightResultOption.Value)
-	//		bookObj := &responses.ListBooksResponse{
-	//			ID:    uint64(convertId),
-	//			Title: mapHit["title"].HighlightResultOption.Value,
-	//			Image: mapHit["image"].HighlightResultOption.Value,
-	//		}
-	//		result = append(result, bookObj)
-	//	}
-	//}
+	searchResults, err := b.algoClient.Search(enums.BooksIndex, request.Keyword)
+	if err != nil {
+		return nil, apperror.NewCustomError(apperror.ErrInternalServer, "failed to search books", err)
+	}
+
+	result = []*responses.ListBooksResponse{}
+
+	for _, res := range searchResults.Results {
+		hits := res.SearchResponse.Hits
+		for _, hit := range hits {
+			mapHit := *hit.HighlightResult
+			convertId, _ := strconv.Atoi(mapHit["objectID"].HighlightResultOption.Value)
+			bookObj := &responses.ListBooksResponse{
+				ID:    uint64(convertId),
+				Title: mapHit["title"].HighlightResultOption.Value,
+				Image: mapHit["image"].HighlightResultOption.Value,
+			}
+			result = append(result, bookObj)
+		}
+	}
 
 	return result, nil
+}
+
+func (b *bookUsecase) BookBorrowTracker(ctx context.Context, id uint64) (result []*responses.BookBorrowHistoryResponse, customErr *apperror.CustomError) {
+	return
 }
 
 var _ usecases_interfaces.BookUsecase = &bookUsecase{}
@@ -431,20 +430,24 @@ func newBookUsecase(
 	authorRepo repositories_interfaces.AuthorRepository,
 	authorBookRepo repositories_interfaces.AuthorBookRepository,
 	bookGenreRepo repositories_interfaces.BookGenreRepository,
+	borrowRepo repositories_interfaces.BorrowRepository,
+	borrowDeatilRepo repositories_interfaces.BorrowDetailRepository,
 	ratingRepo repositories_interfaces.RatingRepository,
 	awsClient *aws_client.AWSClient,
 	algoClient *algolia_client.AlgoliaAPISearchClient,
 	cache caches_interfaces.BookCache) *bookUsecase {
 	return &bookUsecase{
-		userRepo:       userRepo,
-		bookRepo:       bookRepo,
-		genreRepo:      genreRepo,
-		authorRepo:     authorRepo,
-		authorBookRepo: authorBookRepo,
-		bookGenreRepo:  bookGenreRepo,
-		ratingRepo:     ratingRepo,
-		awsClient:      awsClient,
-		algoClient:     algoClient,
-		cache:          cache,
+		userRepo:         userRepo,
+		bookRepo:         bookRepo,
+		genreRepo:        genreRepo,
+		authorRepo:       authorRepo,
+		authorBookRepo:   authorBookRepo,
+		bookGenreRepo:    bookGenreRepo,
+		borrowRepo:       borrowRepo,
+		borrowDeatilRepo: borrowDeatilRepo,
+		ratingRepo:       ratingRepo,
+		awsClient:        awsClient,
+		algoClient:       algoClient,
+		cache:            cache,
 	}
 }
