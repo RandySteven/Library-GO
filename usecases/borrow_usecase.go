@@ -27,7 +27,8 @@ type borrowUsecase struct {
 	userRepo         repositories_interfaces.UserRepository
 	authorRepo       repositories_interfaces.AuthorRepository
 	genreRepo        repositories_interfaces.GenreRepository
-	cache            caches_interfaces.BorrowCache
+	borrowCache      caches_interfaces.BorrowCache
+	bookCache        caches_interfaces.BookCache
 }
 
 func (b *borrowUsecase) setTx(ctx context.Context) {
@@ -67,7 +68,7 @@ func (b *borrowUsecase) BorrowTransaction(ctx context.Context) (result *response
 		}
 		b.setTx(nil)
 		b.refreshTx(ctx)
-		_ = b.cache.Del(ctx, fmt.Sprintf(enums.BorrowsKey, userId))
+		_ = b.borrowCache.Del(ctx, fmt.Sprintf(enums.BorrowsKey, userId))
 	}()
 	b.setTx(ctx)
 
@@ -137,7 +138,7 @@ func (b *borrowUsecase) BorrowTransaction(ctx context.Context) (result *response
 }
 
 func (b *borrowUsecase) GetAllBorrows(ctx context.Context) (result []*responses.BorrowListResponse, customErr *apperror.CustomError) {
-	result, err := b.cache.GetMultiData(ctx)
+	result, err := b.borrowCache.GetMultiData(ctx)
 	if errors.Is(err, redis.Nil) {
 		log.Println("redis kosong")
 		userId := ctx.Value(enums.UserID).(uint64)
@@ -152,7 +153,7 @@ func (b *borrowUsecase) GetAllBorrows(ctx context.Context) (result []*responses.
 				BorrowedDate:    borrow.CreatedAt,
 			})
 		}
-		err = b.cache.SetMultiData(ctx, result)
+		err = b.borrowCache.SetMultiData(ctx, result)
 		if err != nil {
 			return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to insert redis data`, err)
 		}
@@ -279,6 +280,8 @@ func (b *borrowUsecase) BorrowConfirmation(ctx context.Context, request *request
 		}
 	}
 
+	b.bookCache.Del(ctx, enums.BooksKey)
+
 	return nil
 }
 
@@ -292,7 +295,8 @@ func newBorrowUsecase(
 	userRepo repositories_interfaces.UserRepository,
 	authorRepo repositories_interfaces.AuthorRepository,
 	genreRepo repositories_interfaces.GenreRepository,
-	cache caches_interfaces.BorrowCache) *borrowUsecase {
+	borrowCache caches_interfaces.BorrowCache,
+	bookCache caches_interfaces.BookCache) *borrowUsecase {
 	return &borrowUsecase{
 		bagRepo:          bagRepo,
 		bookRepo:         bookRepo,
@@ -301,6 +305,7 @@ func newBorrowUsecase(
 		userRepo:         userRepo,
 		authorRepo:       authorRepo,
 		genreRepo:        genreRepo,
-		cache:            cache,
+		borrowCache:      borrowCache,
+		bookCache:        bookCache,
 	}
 }
