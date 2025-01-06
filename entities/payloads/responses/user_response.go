@@ -24,6 +24,7 @@ type (
 
 	LoginUserResponse struct {
 		ID             uint64    `json:"id"`
+		RoleID         uint64    `json:"role_id"`
 		Name           string    `json:"name"`
 		Address        string    `json:"address"`
 		Email          string    `json:"email"`

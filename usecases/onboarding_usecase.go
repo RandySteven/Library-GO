@@ -158,13 +158,14 @@ func (o *onboardingUsecase) GetLoginUser(ctx context.Context) (result *responses
 		return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to get user login`, err)
 	}
 
-	//roleUser, err := o.roleUserRepo.FindRoleUserByUserID(ctx, user.ID)
-	//if err != nil {
-	//	return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to get role user`, err)
-	//}
+	roleUser, err := o.roleUserRepo.FindRoleUserByUserID(ctx, user.ID)
+	if err != nil {
+		return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to get role user`, err)
+	}
 
 	result = &responses.LoginUserResponse{
 		ID:             user.ID,
+		RoleID:         roleUser.RoleID,
 		Name:           user.Name,
 		Email:          user.Email,
 		Password:       user.Password,
