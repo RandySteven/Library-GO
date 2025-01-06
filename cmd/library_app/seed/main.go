@@ -62,4 +62,11 @@ func main() {
 		return
 	}
 
+	//uncomment these lines for seed role user
+	err = cl.SeedRoleUserData(ctx)
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
+
 }

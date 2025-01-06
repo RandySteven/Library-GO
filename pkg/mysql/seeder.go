@@ -117,6 +117,28 @@ func (c *MySQLClient) SeedRoleData(ctx context.Context) error {
 	return nil
 }
 
+func (c *MySQLClient) SeedRoleUserData(ctx context.Context) error {
+	roleUsers := []*models.RoleUser{
+		{UserID: 1, RoleID: uint64(enums.Admin)},
+		{UserID: 2, RoleID: uint64(enums.Librarian)},
+		{UserID: 3, RoleID: uint64(enums.Member)},
+		{UserID: 4, RoleID: uint64(enums.Member)},
+		{UserID: 5, RoleID: uint64(enums.Member)},
+		{UserID: 6, RoleID: uint64(enums.Member)},
+	}
+
+	query := `INSERT INTO role_users (user_id, role_id) VALUES (?, ?)`
+
+	for _, roleUser := range roleUsers {
+		_, err := c.db.ExecContext(ctx, query, roleUser.UserID, roleUser.RoleID)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func (c *MySQLClient) SeedGenreData(ctx context.Context) error {
 	genres := []*models.Genre{
 		{Genre: `Adventure`},
