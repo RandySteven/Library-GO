@@ -203,8 +203,8 @@ const (
 		    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 		    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 		    deleted_at TIMESTAMP DEFAULT NULL,
-		    FOREIGN KEY room_chat_id REFERENCES room_chats(id) ON DELETE CASCADE,
-		    FOREIGN KEY user_id REFERENCES users(id) ON DELETE CASCADE
+		    FOREIGN KEY (room_chat_id) REFERENCES room_chats(id) ON DELETE CASCADE,
+		    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 		)
 	`
 
@@ -217,8 +217,31 @@ const (
 		    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 		    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 		    deleted_at TIMESTAMP DEFAULT NULL,
-		    FOREIGN KEY room_chat_id REFERENCES room_chats(id) ON DELETE CASCADE,
-		    FOREIGN KEY user_id REFERENCES users(id) ON DELETE CASCADE
+		    FOREIGN KEY (room_chat_id) REFERENCES room_chats(id) ON DELETE CASCADE,
+		    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+		)
+	`
+
+	RoleMigration MigrationQuery = `
+		CREATE TABLE IF NOT EXISTS roles (
+			id BIGINT PRIMARY KEY NOT NULL AUTO_INCREMENT,
+			role VARCHAR(16) NOT NULL,
+		    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		    deleted_at TIMESTAMP DEFAULT NULL
+		)
+	`
+
+	RoleUserMigration MigrationQuery = `
+		CREATE TABLE IF NOT EXISTS role_users (
+		    id BIGINT PRIMARY KEY NOT NULL AUTO_INCREMENT,
+		    user_id BIGINT NOT NULL,
+		    role_id BIGINT NOT NULL,
+		    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		    deleted_at TIMESTAMP DEFAULT NULL,
+		    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+            FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE CASCADE
 		)
 	`
 )

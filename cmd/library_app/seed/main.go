@@ -26,24 +26,40 @@ func main() {
 		log.Fatal(err)
 		return
 	}
+
+	//uncomment these lines for seed user
 	//err = cl.SeedUserData(ctx)
 	//if err != nil {
 	//	log.Fatal(err)
 	//	return
 	//}
+
+	//uncomment these lines for seed genre
 	//err = cl.SeedGenreData(ctx)
 	//if err != nil {
 	//	log.Fatal(err)
 	//	return
 	//}
+
+	//uncomment these lines for seed author
 	//err = cl.SeedAuthorData(ctx)
 	//if err != nil {
 	//	log.Fatal(err)
 	//	return
 	//}
-	err = cl.SeedBookData(ctx)
+
+	//uncomment these lines for seed book
+	//err = cl.SeedBookData(ctx)
+	//if err != nil {
+	//	log.Fatal(err)
+	//	return
+	//}
+
+	//uncomment these lines for seed role
+	err = cl.SeedRoleData(ctx)
 	if err != nil {
 		log.Fatal(err)
 		return
 	}
+
 }

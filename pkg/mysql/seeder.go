@@ -97,6 +97,26 @@ func (c *MySQLClient) SeedBookData(ctx context.Context) error {
 	return nil
 }
 
+func (c *MySQLClient) SeedRoleData(ctx context.Context) error {
+	roles := []*models.Role{
+		{ID: uint64(enums.Admin), Role: `Admin`},
+		{ID: uint64(enums.Member), Role: `Member`},
+		{ID: uint64(enums.Premium), Role: `Premium`},
+		{ID: uint64(enums.Librarian), Role: `Librarian`},
+	}
+
+	query := `INSERT INTO roles (id, role) VALUES (?, ?)`
+
+	for _, role := range roles {
+		_, err := c.db.ExecContext(ctx, query, role.ID, role.Role)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func (c *MySQLClient) SeedGenreData(ctx context.Context) error {
 	genres := []*models.Genre{
 		{Genre: `Adventure`},

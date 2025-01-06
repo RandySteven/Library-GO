@@ -280,7 +280,7 @@ func (b *borrowUsecase) BorrowConfirmation(ctx context.Context, request *request
 		}
 	}
 
-	b.bookCache.Del(ctx, enums.BooksKey)
+	_ = b.bookCache.Del(ctx, enums.BooksKey)
 
 	return nil
 }
