@@ -22,6 +22,7 @@ type Repositories struct {
 	ChatRepo         repositories_interfaces.ChatRepository
 	RoomChatRepo     repositories_interfaces.RoomChatRepository
 	RoomChatUserRepo repositories_interfaces.RoomChatUserRepository
+	RoleUserRepo     repositories_interfaces.RoleUserRepository
 }
 
 func NewRepositories(db *sql.DB) *Repositories {
@@ -42,5 +43,6 @@ func NewRepositories(db *sql.DB) *Repositories {
 		ChatRepo:         newChatRepository(db),
 		RoomChatRepo:     newRoomChatRepository(db),
 		RoomChatUserRepo: newRoomChatUserRepository(db),
+		RoleUserRepo:     newRoleUserRepository(db),
 	}
 }

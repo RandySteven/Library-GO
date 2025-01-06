@@ -22,7 +22,8 @@ import (
 )
 
 type onboardingUsecase struct {
-	userRepo repositories_interfaces.UserRepository
+	userRepo     repositories_interfaces.UserRepository
+	roleUserRepo repositories_interfaces.RoleUserRepository
 }
 
 func (o *onboardingUsecase) refreshTx(ctx context.Context) {
@@ -124,8 +125,15 @@ func (o *onboardingUsecase) LoginUser(ctx context.Context, request *requests.Use
 	if !isPassExists {
 		return nil, apperror.NewCustomError(apperror.ErrNotFound, `invalid credentials`, err)
 	}
+
+	roleUser, err := o.roleUserRepo.FindRoleUserByUserID(ctx, user.ID)
+	if err != nil {
+		return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to get role user`, err)
+	}
+
 	claims := &jwt2.JWTClaim{
 		UserID: user.ID,
+		RoleID: roleUser.RoleID,
 		RegisteredClaims: jwt.RegisteredClaims{
 			Issuer:    "Applications",
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
@@ -149,6 +157,12 @@ func (o *onboardingUsecase) GetLoginUser(ctx context.Context) (result *responses
 	if err != nil {
 		return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to get user login`, err)
 	}
+
+	//roleUser, err := o.roleUserRepo.FindRoleUserByUserID(ctx, user.ID)
+	//if err != nil {
+	//	return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to get role user`, err)
+	//}
+
 	result = &responses.LoginUserResponse{
 		ID:             user.ID,
 		Name:           user.Name,
@@ -170,8 +184,11 @@ func (o *onboardingUsecase) VerifyToken(ctx context.Context, token string) (cust
 
 var _ usecases_interfaces.OnboardingUsecase = &onboardingUsecase{}
 
-func newOnboardingUsecase(userRepo repositories_interfaces.UserRepository) *onboardingUsecase {
+func newOnboardingUsecase(
+	userRepo repositories_interfaces.UserRepository,
+	roleUserRepo repositories_interfaces.RoleUserRepository) *onboardingUsecase {
 	return &onboardingUsecase{
-		userRepo: userRepo,
+		userRepo:     userRepo,
+		roleUserRepo: roleUserRepo,
 	}
 }
