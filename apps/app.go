@@ -11,6 +11,7 @@ import (
 	elastics_client "github.com/RandySteven/Library-GO/pkg/elastics"
 	emails_client "github.com/RandySteven/Library-GO/pkg/emails"
 	"github.com/RandySteven/Library-GO/pkg/mysql"
+	rabbitmqs_client "github.com/RandySteven/Library-GO/pkg/rabbitmqs"
 	repositories2 "github.com/RandySteven/Library-GO/repositories"
 	schedulers2 "github.com/RandySteven/Library-GO/schedulers"
 	usecases2 "github.com/RandySteven/Library-GO/usecases"
@@ -18,13 +19,14 @@ import (
 )
 
 type App struct {
-	AlgoliaSearch *algolia_client.AlgoliaAPISearchClient
-	AWSClient     *aws_client.AWSClient
-	MySQLDB       *mysql_client.MySQLClient
-	Redis         *caches_client.RedisClient
-	Mailer        *emails_client.Mailer
-	ElasticClient *elastics_client.ElasticClient
-	DiceDB        *caches_client.DiceDBClient
+	AlgoliaSearch  *algolia_client.AlgoliaAPISearchClient
+	AWSClient      *aws_client.AWSClient
+	MySQLDB        *mysql_client.MySQLClient
+	Redis          *caches_client.RedisClient
+	Mailer         *emails_client.Mailer
+	ElasticClient  *elastics_client.ElasticClient
+	DiceDB         *caches_client.DiceDBClient
+	RabbitMQClient *rabbitmqs_client.RabbitMqClient
 }
 
 func NewApp(config *configs.Config) (*App, error) {
@@ -71,6 +73,12 @@ func NewApp(config *configs.Config) (*App, error) {
 	//	return nil, err
 	//}
 
+	rabbitMQ, err := rabbitmqs_client.NewRabbitMQClient(config)
+	if err != nil {
+		log.Fatal("rabbit mq ", err)
+		return nil, err
+	}
+
 	return &App{
 		MySQLDB:       mysqlDB,
 		Redis:         redis,
@@ -79,6 +87,7 @@ func NewApp(config *configs.Config) (*App, error) {
 		Mailer:        mailer,
 		ElasticClient: elastic,
 		//DiceDB:        diceDb,
+		RabbitMQClient: rabbitMQ,
 	}, nil
 }
 

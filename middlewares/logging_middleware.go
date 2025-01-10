@@ -7,16 +7,27 @@ import (
 	"github.com/RandySteven/Library-GO/enums"
 	"github.com/RandySteven/Library-GO/utils"
 	"github.com/google/uuid"
+	"github.com/sirupsen/logrus"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"time"
 )
 
-type ResponseWriterWrapper struct {
-	http.ResponseWriter
-	Body       *bytes.Buffer
-	StatusCode int
+type (
+	ResponseWriterWrapper struct {
+		http.ResponseWriter
+		Body       *bytes.Buffer
+		StatusCode int
+	}
+)
+
+func setUpLogger() *logrus.Logger {
+	logger := logrus.New()
+	logger.SetFormatter(&logrus.TextFormatter{
+		ForceColors:   true,
+		FullTimestamp: true,
+	})
+	return logger
 }
 
 func (rw *ResponseWriterWrapper) WriteHeader(statusCode int) {
@@ -35,6 +46,7 @@ func LoggingMiddleware(next http.Handler) http.Handler {
 			body []byte = nil
 			err  error  = nil
 			ctx         = context.WithValue(r.Context(), enums.RequestID, uuid.NewString())
+			log         = setUpLogger()
 		)
 		requestTime := time.Now()
 
@@ -96,8 +108,7 @@ func LoggingMiddleware(next http.Handler) http.Handler {
 		}
 
 		log.SetOutput(file)
-		log.SetFlags(log.LstdFlags | log.Lmicroseconds)
 
-		log.Println(string(logEntryJSON))
+		log.Infoln(string(logEntryJSON))
 	})
 }

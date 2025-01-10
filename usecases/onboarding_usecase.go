@@ -29,6 +29,7 @@ type onboardingUsecase struct {
 func (o *onboardingUsecase) refreshTx(ctx context.Context) {
 	tx := o.userRepo.GetTx(ctx)
 	o.userRepo.SetTx(tx)
+	o.roleUserRepo.SetTx(tx)
 }
 
 func (o *onboardingUsecase) RegisterUser(ctx context.Context, request *requests.UserRegisterRequest) (result *responses.UserRegisterResponse, customErr *apperror.CustomError) {

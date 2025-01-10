@@ -91,5 +91,10 @@ type Config struct {
 			Scopes       []string `yaml:"scopes"`
 			ClientSecret string   `yaml:"clientSecret"`
 		} `yaml:"oauth2"`
+
+		RabbitMQ struct {
+			Host string `yaml:"host"`
+			Port string `yaml:"port"`
+		} `yaml:"rabbitMQ"`
 	} `yaml:"app"`
 }
