@@ -16,7 +16,7 @@ type (
 	UserListResponse struct {
 		ID    uint64 `json:"id"`
 		Name  string `json:"name"`
-		Email string `json:"email"`
+		Email string `json:"consumers"`
 	}
 
 	UserDetailResponse struct {
@@ -27,7 +27,7 @@ type (
 		RoleID         uint64    `json:"role_id"`
 		Name           string    `json:"name"`
 		Address        string    `json:"address"`
-		Email          string    `json:"email"`
+		Email          string    `json:"consumers"`
 		PhoneNumber    string    `json:"phone_number"`
 		ProfilePicture string    `json:"profile_picture"`
 		Password       string    `json:"password"`

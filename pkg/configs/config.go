@@ -93,8 +93,9 @@ type Config struct {
 		} `yaml:"oauth2"`
 
 		RabbitMQ struct {
-			Host string `yaml:"host"`
-			Port string `yaml:"port"`
+			Host  string `yaml:"host"`
+			Port  string `yaml:"port"`
+			Queue string `yaml:"queue"`
 		} `yaml:"rabbitMQ"`
 	} `yaml:"app"`
 }

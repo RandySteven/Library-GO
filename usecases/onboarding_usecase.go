@@ -13,6 +13,7 @@ import (
 	repositories_interfaces "github.com/RandySteven/Library-GO/interfaces/repositories"
 	usecases_interfaces "github.com/RandySteven/Library-GO/interfaces/usecases"
 	jwt2 "github.com/RandySteven/Library-GO/pkg/jwt"
+	rabbitmqs_client "github.com/RandySteven/Library-GO/pkg/rabbitmqs"
 	"github.com/RandySteven/Library-GO/utils"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
@@ -24,6 +25,7 @@ import (
 type onboardingUsecase struct {
 	userRepo     repositories_interfaces.UserRepository
 	roleUserRepo repositories_interfaces.RoleUserRepository
+	pubSub       rabbitmqs_client.PubSub
 }
 
 func (o *onboardingUsecase) refreshTx(ctx context.Context) {
@@ -118,7 +120,7 @@ func (o *onboardingUsecase) LoginUser(ctx context.Context, request *requests.Use
 	user, err := o.userRepo.FindByEmail(ctx, request.Email)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, apperror.NewCustomError(apperror.ErrNotFound, `failed to login email not found`, err)
+			return nil, apperror.NewCustomError(apperror.ErrNotFound, `failed to login consumers not found`, err)
 		}
 		return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to connect db`, err)
 	}
@@ -188,9 +190,11 @@ var _ usecases_interfaces.OnboardingUsecase = &onboardingUsecase{}
 
 func newOnboardingUsecase(
 	userRepo repositories_interfaces.UserRepository,
-	roleUserRepo repositories_interfaces.RoleUserRepository) *onboardingUsecase {
+	roleUserRepo repositories_interfaces.RoleUserRepository,
+	pubSub rabbitmqs_client.PubSub) *onboardingUsecase {
 	return &onboardingUsecase{
 		userRepo:     userRepo,
 		roleUserRepo: roleUserRepo,
+		pubSub:       pubSub,
 	}
 }

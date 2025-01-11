@@ -41,6 +41,9 @@ drop:
 alter:
 	${gorun} ${cmd_folder}alter -config ${yaml_file}
 
+consumer:
+	${gorun} ${cmd_folder}consumers -config ${yaml_file}
+
 build:
 	@go build -o /bin/http
 

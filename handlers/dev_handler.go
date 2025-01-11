@@ -19,6 +19,19 @@ func (d *DevHandler) HealthCheck(w http.ResponseWriter, r *http.Request) {
 	utils.ResponseHandler(w, http.StatusOK, `success health check`, nil, nil, nil)
 }
 
+func (d *DevHandler) CheckMessageBroker(w http.ResponseWriter, r *http.Request) {
+	var (
+		rID     = uuid.NewString()
+		ctx     = context.WithValue(r.Context(), enums.RequestID, rID)
+		dataKey = `result`
+	)
+	result, err := d.usecase.MessageBrokerCheckerHealth(ctx)
+	if err != nil {
+		utils.ResponseHandler(w, http.StatusInternalServerError, `the message broker still issue`, nil, nil, err)
+	}
+	utils.ResponseHandler(w, http.StatusOK, `success health check`, &dataKey, result, nil)
+}
+
 func (d *DevHandler) CreateBucket(w http.ResponseWriter, r *http.Request) {
 	var (
 		rID     = uuid.NewString()

@@ -41,6 +41,7 @@ func NewEndpointRouters(h *handlers.Handlers) RouterPrefix {
 			dataKey := `endpoints`
 			utils.ResponseHandler(writer, http.StatusOK, `success get list endpoint`, &dataKey, result, nil)
 		}, enums.RateLimiterMiddleware),
+		Get("/message-broker", h.DevHandler.CheckMessageBroker),
 	}
 
 	endpointRouters[enums.OnboardingPrefix] = []*Router{

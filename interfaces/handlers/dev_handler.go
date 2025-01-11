@@ -6,4 +6,5 @@ type DevHandler interface {
 	HealthCheck(w http.ResponseWriter, r *http.Request)
 	CreateBucket(w http.ResponseWriter, r *http.Request)
 	GetListBuckets(w http.ResponseWriter, r *http.Request)
+	CheckMessageBroker(w http.ResponseWriter, r *http.Request)
 }

@@ -94,7 +94,7 @@ func NewApp(config *configs.Config) (*App, error) {
 func (app *App) PrepareTheHandler() *handlers2.Handlers {
 	repositories := repositories2.NewRepositories(app.MySQLDB.Client())
 	caches := caches.NewCaches(app.Redis.Client())
-	usecases := usecases2.NewUsecases(repositories, caches, app.AWSClient, app.AlgoliaSearch)
+	usecases := usecases2.NewUsecases(repositories, caches, app.AWSClient, app.AlgoliaSearch, app.RabbitMQClient)
 	return handlers2.NewHandlers(usecases)
 }
 

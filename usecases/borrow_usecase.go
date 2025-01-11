@@ -6,13 +6,16 @@ import (
 	"fmt"
 	"github.com/RandySteven/Library-GO/apperror"
 	"github.com/RandySteven/Library-GO/entities/models"
+	"github.com/RandySteven/Library-GO/entities/payloads/messages"
 	"github.com/RandySteven/Library-GO/entities/payloads/requests"
 	"github.com/RandySteven/Library-GO/entities/payloads/responses"
 	"github.com/RandySteven/Library-GO/enums"
 	caches_interfaces "github.com/RandySteven/Library-GO/interfaces/caches"
 	repositories_interfaces "github.com/RandySteven/Library-GO/interfaces/repositories"
 	usecases_interfaces "github.com/RandySteven/Library-GO/interfaces/usecases"
+	rabbitmqs_client "github.com/RandySteven/Library-GO/pkg/rabbitmqs"
 	"github.com/RandySteven/Library-GO/utils"
+	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
 	"log"
 	"sync"
@@ -29,6 +32,7 @@ type borrowUsecase struct {
 	genreRepo        repositories_interfaces.GenreRepository
 	borrowCache      caches_interfaces.BorrowCache
 	bookCache        caches_interfaces.BookCache
+	pubsub           rabbitmqs_client.PubSub
 }
 
 func (b *borrowUsecase) setTx(ctx context.Context) {
@@ -53,6 +57,11 @@ func (b *borrowUsecase) BorrowTransaction(ctx context.Context) (result *response
 		wg          sync.WaitGroup
 		customErrCh = make(chan *apperror.CustomError)
 	)
+
+	user, err := b.userRepo.FindByID(ctx, userId)
+	if err != nil {
+		return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to search user`, err)
+	}
 
 	if err = b.borrowRepo.BeginTx(ctx); err != nil {
 		return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to init trx`, err)
@@ -122,6 +131,17 @@ func (b *borrowUsecase) BorrowTransaction(ctx context.Context) (result *response
 
 	if err := b.bagRepo.DeleteUserBag(ctx, userId); err != nil {
 		return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to delete user bag`, err)
+	}
+
+	if err = b.pubsub.Send("borrow_transactions", "borrow-transaction-success", &messages.EmailMessage{
+		ID: uuid.NewString(),
+		To: user.Email,
+		Content: &messages.BorrowMessage{
+			ID:              utils.HashID(borrow.ID),
+			BorrowReference: borrow.BorrowReference,
+		},
+	}); err != nil {
+		log.Fatal("error send to topic", err)
 	}
 
 	result = &responses.BorrowResponse{
@@ -296,7 +316,8 @@ func newBorrowUsecase(
 	authorRepo repositories_interfaces.AuthorRepository,
 	genreRepo repositories_interfaces.GenreRepository,
 	borrowCache caches_interfaces.BorrowCache,
-	bookCache caches_interfaces.BookCache) *borrowUsecase {
+	bookCache caches_interfaces.BookCache,
+	pubsub rabbitmqs_client.PubSub) *borrowUsecase {
 	return &borrowUsecase{
 		bagRepo:          bagRepo,
 		bookRepo:         bookRepo,
@@ -307,5 +328,6 @@ func newBorrowUsecase(
 		genreRepo:        genreRepo,
 		borrowCache:      borrowCache,
 		bookCache:        bookCache,
+		pubsub:           pubsub,
 	}
 }

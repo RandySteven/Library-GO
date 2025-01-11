@@ -5,6 +5,7 @@ import (
 	usecases_interfaces "github.com/RandySteven/Library-GO/interfaces/usecases"
 	algolia_client "github.com/RandySteven/Library-GO/pkg/algolia"
 	aws_client "github.com/RandySteven/Library-GO/pkg/aws"
+	rabbitmqs_client "github.com/RandySteven/Library-GO/pkg/rabbitmqs"
 	"github.com/RandySteven/Library-GO/repositories"
 )
 
@@ -24,13 +25,13 @@ type Usecases struct {
 	ChatUsecase           usecases_interfaces.ChatUsecase
 }
 
-func NewUsecases(repositories *repositories.Repositories, caches *caches.Caches, awsClient *aws_client.AWSClient, algoClient *algolia_client.AlgoliaAPISearchClient) *Usecases {
+func NewUsecases(repositories *repositories.Repositories, caches *caches.Caches, awsClient *aws_client.AWSClient, algoClient *algolia_client.AlgoliaAPISearchClient, pubsub rabbitmqs_client.PubSub) *Usecases {
 	return &Usecases{
 		BagUsecase:            newBagUsecase(repositories.BagRepo, repositories.BookRepo, repositories.UserRepo, caches.BagCache),
-		DevUsecase:            newDevUsecase(awsClient),
-		OnboardingUsecase:     newOnboardingUsecase(repositories.UserRepo, repositories.RoleUserRepo),
+		DevUsecase:            newDevUsecase(awsClient, pubsub),
+		OnboardingUsecase:     newOnboardingUsecase(repositories.UserRepo, repositories.RoleUserRepo, pubsub),
 		BookUsecase:           newBookUsecase(repositories.UserRepo, repositories.BookRepo, repositories.GenreRepo, repositories.AuthorRepo, repositories.AuthorBookRepo, repositories.BookGenreRepo, repositories.BorrowRepo, repositories.BorrowDetailRepo, repositories.RatingRepo, awsClient, algoClient, caches.BookCache),
-		BorrowUsecase:         newBorrowUsecase(repositories.BagRepo, repositories.BookRepo, repositories.BorrowRepo, repositories.BorrowDetailRepo, repositories.UserRepo, repositories.AuthorRepo, repositories.GenreRepo, caches.BorrowCache, caches.BookCache),
+		BorrowUsecase:         newBorrowUsecase(repositories.BagRepo, repositories.BookRepo, repositories.BorrowRepo, repositories.BorrowDetailRepo, repositories.UserRepo, repositories.AuthorRepo, repositories.GenreRepo, caches.BorrowCache, caches.BookCache, pubsub),
 		GenreUsecase:          newGenreUsecase(repositories.GenreRepo, repositories.BookRepo, repositories.BookGenreRepo, repositories.RatingRepo, caches.GenreCache),
 		StoryGeneratorUsecase: newStoryGeneratorUsecase(awsClient),
 		ReturnUsecase:         newReturnUsecase(repositories.BorrowRepo, repositories.BorrowDetailRepo, repositories.BookRepo, repositories.UserRepo),

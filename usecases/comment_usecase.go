@@ -83,7 +83,7 @@ func (c *commentUsecase) GetCommentFromBook(ctx context.Context, request *reques
 			User: struct {
 				ID    uint64 `json:"id"`
 				Name  string `json:"name"`
-				Email string `json:"email"`
+				Email string `json:"consumers"`
 			}{ID: user.ID, Name: user.Name, Email: user.Email},
 			CreatedAt: comment.CreatedAt,
 			UpdatedAt: comment.UpdatedAt,
