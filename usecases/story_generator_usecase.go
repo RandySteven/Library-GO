@@ -18,7 +18,7 @@ const (
 
 type (
 	storyGeneratorUsecase struct {
-		awsClient          *aws_client.AWSClient
+		awsClient          aws_client.AWS
 		storyGeneratorRepo repositories_interfaces.StoryGeneratorRepository
 	}
 
@@ -67,7 +67,7 @@ func (s *storyGeneratorUsecase) GenerateStory(ctx context.Context, request *requ
 
 var _ usecases_interfaces.StoryGeneratorUsecase = &storyGeneratorUsecase{}
 
-func newStoryGeneratorUsecase(awsClient *aws_client.AWSClient) *storyGeneratorUsecase {
+func newStoryGeneratorUsecase(awsClient aws_client.AWS) *storyGeneratorUsecase {
 	return &storyGeneratorUsecase{
 		awsClient: awsClient,
 	}

@@ -19,7 +19,7 @@ import (
 )
 
 type eventUsecase struct {
-	awsClient     *aws_client.AWSClient
+	awsClient     aws_client.AWS
 	eventRepo     repositories_interfaces.EventRepository
 	eventUserRepo repositories_interfaces.EventUserRepository
 	userRepo      repositories_interfaces.UserRepository
@@ -145,7 +145,7 @@ func (e *eventUsecase) GetEvent(ctx context.Context, id uint64) (result *respons
 var _ usecases_interfaces.EventUsecase = &eventUsecase{}
 
 func newEventUsecase(
-	awsClient *aws_client.AWSClient,
+	awsClient aws_client.AWS,
 	eventRepo repositories_interfaces.EventRepository,
 	eventUserRepo repositories_interfaces.EventUserRepository,
 	userRepo repositories_interfaces.UserRepository,

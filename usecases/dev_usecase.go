@@ -13,7 +13,7 @@ import (
 )
 
 type devUsecase struct {
-	awsCl  *aws_client.AWSClient
+	awsCl  aws_client.AWS
 	pubsub rabbitmqs_client.PubSub
 }
 
@@ -45,7 +45,7 @@ func (d *devUsecase) MessageBrokerCheckerHealth(ctx context.Context) (string, er
 
 var _ usecases_interfaces.DevUsecase = &devUsecase{}
 
-func newDevUsecase(awsCl *aws_client.AWSClient, pubsub rabbitmqs_client.PubSub) *devUsecase {
+func newDevUsecase(awsCl aws_client.AWS, pubsub rabbitmqs_client.PubSub) *devUsecase {
 	return &devUsecase{
 		awsCl:  awsCl,
 		pubsub: pubsub,

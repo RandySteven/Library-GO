@@ -10,15 +10,28 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"net/http"
 	"time"
 )
 
-type AWSClient struct {
-	session *session.Session
-	s3      *s3.S3
-	brc     *bedrockruntime.Client
-}
+type (
+	AWS interface {
+		SessionClient() *session.Session
+		BedrockClient() *bedrockruntime.Client
+		S3() *s3.S3
+		GeneratePromptResult(ctx context.Context, request any) (outputText string, err error)
+		ListBucket() (result *s3.ListBucketsOutput, err error)
+		UploadFile(uploader *s3manager.Uploader, filePath string, bucketName string, fileName string) (resultLocation *string, err error)
+		CreateBucket(name string) error
+	}
+
+	AWSClient struct {
+		session *session.Session
+		s3      *s3.S3
+		brc     *bedrockruntime.Client
+	}
+)
 
 func NewAWSClient(configYml *configs.Config) (*AWSClient, error) {
 	awsCfg := configYml.Config.AWS
