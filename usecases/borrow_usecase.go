@@ -60,7 +60,12 @@ func (b *borrowUsecase) BorrowTransaction(ctx context.Context) (result *response
 
 	user, err := b.userRepo.FindByID(ctx, userId)
 	if err != nil {
-		return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to search user`, err)
+		return nil, apperror.NewCustomError(apperror.ErrNotFound, `failed to search user`, err)
+	}
+
+	bags, _ := b.bagRepo.FindBagByUser(ctx, user.ID)
+	if bags == nil {
+		return nil, apperror.NewCustomError(apperror.ErrBadRequest, `the bag already empty`, err)
 	}
 
 	if err = b.borrowRepo.BeginTx(ctx); err != nil {

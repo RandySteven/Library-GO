@@ -27,6 +27,7 @@ func initTableMigration() []queries.MigrationQuery {
 		//queries.ChatMigration,
 		queries.RoleMigration,
 		queries.RoleUserMigration,
+		queries.UserGenreMigration,
 	}
 }
 

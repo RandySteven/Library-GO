@@ -7,11 +7,13 @@ import (
 	"github.com/RandySteven/Library-GO/entities/models"
 	"github.com/RandySteven/Library-GO/entities/payloads/requests"
 	"github.com/RandySteven/Library-GO/entities/payloads/responses"
+	"github.com/RandySteven/Library-GO/enums"
 	caches_interfaces "github.com/RandySteven/Library-GO/interfaces/caches"
 	repositories_interfaces "github.com/RandySteven/Library-GO/interfaces/repositories"
 	usecases_interfaces "github.com/RandySteven/Library-GO/interfaces/usecases"
 	"github.com/RandySteven/Library-GO/utils"
 	"github.com/redis/go-redis/v9"
+	"sync"
 )
 
 type genreUsecase struct {
@@ -20,6 +22,7 @@ type genreUsecase struct {
 	bookGenreRepo repositories_interfaces.BookGenreRepository
 	ratingRepo    repositories_interfaces.RatingRepository
 	genreCache    caches_interfaces.GenreCache
+	userGenreRepo repositories_interfaces.UserGenreRepository
 }
 
 func (g *genreUsecase) GetGenreDetail(ctx context.Context, id uint64) (result *responses.GenreResponseDetail, customErr *apperror.CustomError) {
@@ -98,6 +101,61 @@ func (g *genreUsecase) GetAllGenres(ctx context.Context) (result []*responses.Li
 	}
 
 	return result, nil
+}
+
+func (g *genreUsecase) ChooseFavoriteGenres(ctx context.Context, request *requests.ChooseFavoriteGenresRequest) (result []*responses.ListGenresResponse, customErr *apperror.CustomError) {
+	var (
+		wg          = sync.WaitGroup{}
+		customErrCh = make(chan *apperror.CustomError)
+		resultCh    = make(chan []*responses.ListGenresResponse)
+	)
+
+	userId := ctx.Value(enums.UserID).(uint64)
+
+	genres, err := g.genreRepo.FindSelectedGenresByID(ctx, request.GenreIDs)
+	if err != nil {
+		return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to get genre id`, err)
+	}
+
+	wg.Add(2)
+
+	go func() {
+		defer wg.Done()
+		for _, genreId := range request.GenreIDs {
+			_, err = g.userGenreRepo.Save(ctx, &models.UserGenre{
+				UserID:  userId,
+				GenreID: genreId,
+			})
+			if err != nil {
+				customErrCh <- apperror.NewCustomError(apperror.ErrInternalServer, `failed to add genre favorite`, err)
+				return
+			}
+		}
+	}()
+
+	go func() {
+		defer wg.Done()
+		for _, genre := range genres {
+			result = append(result, &responses.ListGenresResponse{
+				ID:    genre.ID,
+				Genre: genre.Genre,
+			})
+		}
+		resultCh <- result
+	}()
+
+	go func() {
+		wg.Wait()
+		close(resultCh)
+		close(customErrCh)
+	}()
+
+	select {
+	case <-customErrCh:
+		return nil, <-customErrCh
+	default:
+		return <-resultCh, nil
+	}
 }
 
 var _ usecases_interfaces.GenreUsecase = &genreUsecase{}

@@ -244,4 +244,14 @@ const (
             FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE CASCADE
 		)
 	`
+
+	UserGenreMigration MigrationQuery = `
+		CREATE TABLE IF NOT EXISTS user_genres (
+			id BIGINT PRIMARY KEY NOT NULL AUTO_INCREMENT,
+			user_id BIGINT NOT NULL,
+			genre_id BIGINT NOT NULL,
+			FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+		    FOREIGN KEY (genre_id) REFERNECES genres(id) ON DELETE CASCADE
+		)
+	`
 )
