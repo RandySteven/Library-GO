@@ -27,18 +27,31 @@ func NewRabbitMQClient(configs *configs.Config) (*RabbitMqClient, error) {
 	if err != nil {
 		return nil, err
 	}
+	err = channel.ExchangeDeclare(
+		"dev_checker",
+		"fanout",
+		true,
+		false,
+		false,
+		false,
+		nil)
+	if err != nil {
+		log.Println("failed to exchange declare : ", err)
+		return nil, err
+	}
 
-	_, err = channel.QueueDeclare(
+	q, err := channel.QueueDeclare(
 		rabbitMQConf.Queue,
 		true, false, false, false, nil)
 	if err != nil {
+		log.Println("failed to declare queue : ", err)
 		return nil, err
 	}
 
 	return &RabbitMqClient{
 		conn:    conn,
 		channel: channel,
-		queue:   rabbitMQConf.Queue,
+		queue:   q.Name,
 	}, nil
 }
 
@@ -48,7 +61,7 @@ func (r *RabbitMqClient) Send(exchange, routingKey string, message interface{}) 
 		return err
 	}
 
-	return r.channel.Publish(
+	err = r.channel.Publish(
 		exchange,
 		routingKey,
 		false,
@@ -58,9 +71,26 @@ func (r *RabbitMqClient) Send(exchange, routingKey string, message interface{}) 
 			Body:        body,
 		},
 	)
+	if err != nil {
+		return fmt.Errorf("failed to publish message: %w", err)
+	}
+	log.Println("Message published to exchange:", exchange)
+	return nil
 }
 
-func (r *RabbitMqClient) Receive() error {
+func (r *RabbitMqClient) Receive(exchange, routingKey string) error {
+	err := r.channel.QueueBind(
+		r.queue,
+		routingKey,
+		exchange,
+		false,
+		nil,
+	)
+	if err != nil {
+		log.Println("failed query bind : ", err)
+		return err
+	}
+
 	msgs, err := r.channel.Consume(
 		r.queue, "", true, false, false, false, nil)
 	if err != nil {

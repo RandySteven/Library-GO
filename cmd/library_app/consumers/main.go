@@ -42,7 +42,7 @@ func main() {
 		return
 	}
 
-	if err = app.RabbitMQClient.Receive(); err != nil {
+	if err = app.RabbitMQClient.Receive("dev_checker", "dev-send-message"); err != nil {
 		log.Fatal("consumer error ", err)
 		return
 	}

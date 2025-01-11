@@ -28,6 +28,7 @@ func (d *DevHandler) CheckMessageBroker(w http.ResponseWriter, r *http.Request) 
 	result, err := d.usecase.MessageBrokerCheckerHealth(ctx)
 	if err != nil {
 		utils.ResponseHandler(w, http.StatusInternalServerError, `the message broker still issue`, nil, nil, err)
+		return
 	}
 	utils.ResponseHandler(w, http.StatusOK, `success health check`, &dataKey, result, nil)
 }
