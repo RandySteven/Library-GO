@@ -9,9 +9,10 @@ import (
 )
 
 type RabbitMqClient struct {
-	conn    *amqp.Connection
-	channel *amqp.Channel
-	queue   string
+	conn     *amqp.Connection
+	channel  *amqp.Channel
+	exchange string
+	queue    string
 }
 
 func NewRabbitMQClient(configs *configs.Config) (*RabbitMqClient, error) {
@@ -25,18 +26,6 @@ func NewRabbitMQClient(configs *configs.Config) (*RabbitMqClient, error) {
 
 	channel, err := conn.Channel()
 	if err != nil {
-		return nil, err
-	}
-	err = channel.ExchangeDeclare(
-		"dev_checker",
-		"fanout",
-		true,
-		false,
-		false,
-		false,
-		nil)
-	if err != nil {
-		log.Println("failed to exchange declare : ", err)
 		return nil, err
 	}
 
@@ -56,6 +45,19 @@ func NewRabbitMQClient(configs *configs.Config) (*RabbitMqClient, error) {
 }
 
 func (r *RabbitMqClient) Send(exchange, routingKey string, message interface{}) error {
+	err := r.channel.ExchangeDeclare(
+		exchange,
+		"fanout",
+		true,
+		false,
+		false,
+		false,
+		nil)
+	if err != nil {
+		log.Println("failed to exchange declare : ", err)
+		return err
+	}
+
 	body, err := json.Marshal(message)
 	if err != nil {
 		return err
