@@ -1,3 +1,6 @@
 package enums
 
-const ()
+const (
+	BorrowEmailTopic      = "borrow-email-receipt"
+	UserVerificationTopic = "user-verification-topic"
+)

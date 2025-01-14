@@ -44,6 +44,8 @@ alter:
 consumer:
 	${gorun} ${cmd_folder}consumers -config ${yaml_file}
 
+server: scheduler run consumer
+
 build:
 	@go build -o /bin/http
 
