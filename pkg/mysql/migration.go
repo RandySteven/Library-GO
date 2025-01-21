@@ -28,6 +28,8 @@ func initTableMigration() []queries.MigrationQuery {
 		queries.RoleMigration,
 		queries.RoleUserMigration,
 		queries.UserGenreMigration,
+		queries.RoomMigration,
+		queries.RoomPhotoMigration,
 	}
 }
 

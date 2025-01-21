@@ -15,12 +15,9 @@ import (
 	algolia_client "github.com/RandySteven/Library-GO/pkg/algolia"
 	aws_client "github.com/RandySteven/Library-GO/pkg/aws"
 	"github.com/RandySteven/Library-GO/utils"
-	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/redis/go-redis/v9"
-	"io/ioutil"
 	"log"
 	"mime/multipart"
-	"os"
 	"strconv"
 	"sync"
 )
@@ -58,13 +55,14 @@ func (b *bookUsecase) refreshTx(ctx context.Context) {
 func (b *bookUsecase) AddNewBook(ctx context.Context, request *requests.CreateBookRequest, fileHeader *multipart.FileHeader) (result *responses.CreateBookResponse, customErr *apperror.CustomError) {
 	var (
 		wg       sync.WaitGroup
-		wg2      sync.WaitGroup
 		errCh    = make(chan *apperror.CustomError, 1)
-		errCh2   = make(chan *apperror.CustomError, 1)
 		bookCh   = make(chan *models.Book, 1)
 		authorCh = make(chan []*models.Author, 1)
 		genreCh  = make(chan []*models.Genre, 1)
 	)
+
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
 
 	err := b.bookRepo.BeginTx(ctx)
 	if err != nil {
@@ -97,44 +95,52 @@ func (b *bookUsecase) AddNewBook(ctx context.Context, request *requests.CreateBo
 		close(bookCh)
 	}()
 
-	if customErr = <-errCh; customErr != nil {
+	select {
+	case customErr = <-errCh:
+		cancel()
 		return nil, customErr
+	case <-ctx.Done():
+		return nil, apperror.NewCustomError(apperror.ErrInternalServer, "context cancelled", ctx.Err())
+	default:
+		book := <-bookCh
+		authorIDs := <-authorCh
+		genreIDs := <-genreCh
+
+		wg.Add(2)
+		go b.createAuthorBookRelations(ctx, authorIDs, book.ID, errCh, &wg)
+		go b.createBookGenreRelations(ctx, genreIDs, book.ID, errCh, &wg)
+
+		go func() {
+			wg.Wait()
+			close(errCh)
+		}()
+
+		select {
+		case customErr = <-errCh:
+			return nil, customErr
+		default:
+			hashedID := utils.HashID(book.ID)
+			_, err = b.algoClient.SaveObject(enums.BooksIndex, map[string]any{
+				"objectID":    book.ID,
+				"title":       book.Title,
+				"description": book.Description,
+				"image":       book.Image,
+				"genres":      genreIDs,
+				"authors":     authorIDs,
+				"createdAt":   book.CreatedAt.Local(),
+				"updatedAt":   book.UpdatedAt.Local(),
+			})
+			if err != nil {
+				return nil, apperror.NewCustomError(apperror.ErrInternalServer, "failed to save book", err)
+			}
+
+			b.cache.Del(ctx, enums.BooksKey)
+			result = &responses.CreateBookResponse{
+				ID: hashedID,
+			}
+			return result, nil
+		}
 	}
-
-	book := <-bookCh
-	authorIDs := <-authorCh
-	genreIDs := <-genreCh
-
-	wg2.Add(2)
-	go b.createAuthorBookRelations(ctx, authorIDs, book.ID, errCh2, &wg2)
-	go b.createBookGenreRelations(ctx, genreIDs, book.ID, errCh2, &wg2)
-
-	wg2.Wait()
-	close(errCh2)
-
-	if customErr = <-errCh2; customErr != nil {
-		return nil, customErr
-	}
-	hashedID := utils.HashID(book.ID)
-	_, err = b.algoClient.SaveObject(enums.BooksIndex, map[string]any{
-		"objectID":    book.ID,
-		"title":       book.Title,
-		"description": book.Description,
-		"image":       book.Image,
-		"genres":      genreIDs,
-		"authors":     authorIDs,
-		"createdAt":   book.CreatedAt.Local(),
-		"updatedAt":   book.UpdatedAt.Local(),
-	})
-	if err != nil {
-		return nil, apperror.NewCustomError(apperror.ErrInternalServer, "failed to save book", err)
-	}
-
-	b.cache.Del(ctx, enums.BooksKey)
-	result = &responses.CreateBookResponse{
-		ID: hashedID,
-	}
-	return result, nil
 }
 
 func (b *bookUsecase) findAuthors(ctx context.Context, authorIDs []uint64, authorCh chan []*models.Author, errCh chan *apperror.CustomError, wg *sync.WaitGroup) {
@@ -168,55 +174,14 @@ func (b *bookUsecase) findGenres(ctx context.Context, genreIDs []uint64, genreCh
 
 // createBook inserts a new book and sends the result through a channel
 func (b *bookUsecase) createBook(ctx context.Context, request *requests.CreateBookRequest, bookCh chan *models.Book, errCh chan *apperror.CustomError, wg *sync.WaitGroup, fileHeader *multipart.FileHeader) {
-	defer wg.Done()
 
-	tempFile, err := ioutil.TempFile("./temp-images", "upload-*.png")
+	imagePath, err := b.awsClient.UploadImageFile(request.Image, "books/", fileHeader, 600, 900)
 	if err != nil {
-		errCh <- apperror.NewCustomError(apperror.ErrInternalServer, "temp-images required", err)
-		return
-	}
-	defer tempFile.Close()
-
-	fileBytes, err := ioutil.ReadAll(request.Image)
-	if err != nil {
-		fmt.Println(err)
-	}
-	tempFile.Write(fileBytes)
-
-	if fileHeader == nil {
-		errCh <- apperror.NewCustomError(apperror.ErrBadRequest, "image is required", nil)
-		return
-	}
-
-	imageFile, err := fileHeader.Open()
-	if err != nil {
-		errCh <- apperror.NewCustomError(apperror.ErrInternalServer, "failed to open image file", err)
-		return
-	}
-	defer imageFile.Close()
-
-	err = utils.ResizeImage(tempFile.Name(), tempFile.Name(), 600, 900)
-	if err != nil {
-		errCh <- apperror.NewCustomError(apperror.ErrInternalServer, `failed to resize image`, err)
-		return
-	}
-
-	renamedImage := utils.RenameFileWithDateAndUUID(tempFile.Name()[len(`./temp-images/`):])
-
-	buckets, err := b.awsClient.ListBucket()
-	if err != nil {
-		errCh <- apperror.NewCustomError(apperror.ErrInternalServer, fmt.Sprintf("failed to list buckets: %s", err), err)
-		return
-	}
-
-	imagePath, err := b.awsClient.UploadFile(s3manager.NewUploader(b.awsClient.SessionClient()), tempFile.Name(), *buckets.Buckets[0].Name, "books/"+renamedImage)
-	if err != nil {
+		log.Println("aku curiga error sini", err)
 		errCh <- apperror.NewCustomError(apperror.ErrInternalServer, "failed to upload book image", err)
 		return
 	}
-	_ = os.Remove(tempFile.Name())
 
-	// Save the book information to the repository
 	book, err := b.bookRepo.Save(ctx, &models.Book{
 		Title:       request.Title,
 		Description: request.Description,
@@ -418,7 +383,27 @@ func (b *bookUsecase) SearchBook(ctx context.Context, request *requests.SearchBo
 }
 
 func (b *bookUsecase) BookBorrowTracker(ctx context.Context, id uint64) (result []*responses.BookBorrowHistoryResponse, customErr *apperror.CustomError) {
-	return
+	borrowDetails, err := b.borrowDeatilRepo.FindByBorrowID(ctx, id)
+	if err != nil {
+		return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to get borrow details`, err)
+	}
+
+	for _, borrowDetail := range borrowDetails {
+		borrow, err := b.borrowRepo.FindByID(ctx, borrowDetail.BorrowID)
+		if err != nil {
+			return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to get borrow`, err)
+		}
+		result = append(result, &responses.BookBorrowHistoryResponse{
+			ID: borrowDetail.BorrowID,
+			User: struct {
+				ID   uint64 `json:"id"`
+				Name string `json:"name"`
+			}{ID: borrow.User.ID, Name: borrow.User.Name},
+			BorrowDate: borrowDetail.BorrowedDate.Local(),
+		})
+	}
+
+	return result, nil
 }
 
 var _ usecases_interfaces.BookUsecase = &bookUsecase{}

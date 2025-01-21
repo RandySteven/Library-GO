@@ -42,6 +42,7 @@ func Save[T any](ctx context.Context, db repositories_interfaces.Trigger, query 
 	// Execute the insert statement
 	result, err := stmt.ExecContext(ctx, requests...)
 	if err != nil {
+		log.Println("exec context tidak aman : ", err)
 		return nil, err
 	}
 

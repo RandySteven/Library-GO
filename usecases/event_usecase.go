@@ -2,7 +2,6 @@ package usecases
 
 import (
 	"context"
-	"fmt"
 	"github.com/RandySteven/Library-GO/apperror"
 	"github.com/RandySteven/Library-GO/entities/models"
 	"github.com/RandySteven/Library-GO/entities/payloads/requests"
@@ -11,9 +10,7 @@ import (
 	usecases_interfaces "github.com/RandySteven/Library-GO/interfaces/usecases"
 	aws_client "github.com/RandySteven/Library-GO/pkg/aws"
 	"github.com/RandySteven/Library-GO/utils"
-	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"io"
-	"io/ioutil"
 	"mime/multipart"
 	"time"
 )
@@ -26,42 +23,42 @@ type eventUsecase struct {
 }
 
 func (e *eventUsecase) imageUploader(thumbnail io.Reader, fileHeader *multipart.FileHeader) (*string, *apperror.CustomError) {
-	tempFile, err := ioutil.TempFile("./temp-images", "upload-*.png")
-	if err != nil {
-		return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to read file`, err)
-	}
-	defer tempFile.Close()
+	//tempFile, err := ioutil.TempFile("./temp-images", "upload-*.png")
+	//if err != nil {
+	//	return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to read file`, err)
+	//}
+	//defer tempFile.Close()
+	//
+	//fileBytes, err := ioutil.ReadAll(thumbnail)
+	//if err != nil {
+	//	return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to read file`, err)
+	//}
+	//
+	//tempFile.Write(fileBytes)
+	//
+	//if fileHeader == nil {
+	//	return nil, apperror.NewCustomError(apperror.ErrInternalServer, `invalid file header`, err)
+	//}
+	//
+	//imageFile, err := fileHeader.Open()
+	//if err != nil {
+	//	return nil, apperror.NewCustomError(apperror.ErrInternalServer, "failed to open image file", err)
+	//}
+	//
+	//defer imageFile.Close()
+	//
+	//err = utils.ResizeImage(tempFile.Name(), tempFile.Name(), 1544, 794)
+	//if err != nil {
+	//	return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to resize image`, err)
+	//}
+	//
+	//renamedImage := utils.RenameFileWithDateAndUUID(tempFile.Name()[len(`./temp-images/`):])
+	//buckets, err := e.awsClient.ListBucket()
+	//if err != nil {
+	//	return nil, apperror.NewCustomError(apperror.ErrInternalServer, fmt.Sprintf("failed to list buckets: %s", err), err)
+	//}
 
-	fileBytes, err := ioutil.ReadAll(thumbnail)
-	if err != nil {
-		return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to read file`, err)
-	}
-
-	tempFile.Write(fileBytes)
-
-	if fileHeader == nil {
-		return nil, apperror.NewCustomError(apperror.ErrInternalServer, `invalid file header`, err)
-	}
-
-	imageFile, err := fileHeader.Open()
-	if err != nil {
-		return nil, apperror.NewCustomError(apperror.ErrInternalServer, "failed to open image file", err)
-	}
-
-	defer imageFile.Close()
-
-	err = utils.ResizeImage(tempFile.Name(), tempFile.Name(), 1544, 794)
-	if err != nil {
-		return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to resize image`, err)
-	}
-
-	renamedImage := utils.RenameFileWithDateAndUUID(tempFile.Name()[len(`./temp-images/`):])
-	buckets, err := e.awsClient.ListBucket()
-	if err != nil {
-		return nil, apperror.NewCustomError(apperror.ErrInternalServer, fmt.Sprintf("failed to list buckets: %s", err), err)
-	}
-
-	imagePath, err := e.awsClient.UploadFile(s3manager.NewUploader(e.awsClient.SessionClient()), tempFile.Name(), *buckets.Buckets[0].Name, "events/"+renamedImage)
+	imagePath, err := e.awsClient.UploadImageFile(thumbnail, "events/", fileHeader, 1544, 794)
 	if err != nil {
 		return nil, apperror.NewCustomError(apperror.ErrInternalServer, "failed to upload book image", err)
 	}

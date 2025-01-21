@@ -254,4 +254,27 @@ const (
 		    FOREIGN KEY (genre_id) REFERNECES genres(id) ON DELETE CASCADE
 		)
 	`
+
+	RoomMigration MigrationQuery = `
+		CREATE TABLE IF NOT EXISTS rooms (
+		    id BIGINT PRIMARY KEY NOT NULL AUTO_INCREMENT,
+		    name VARCHAR(36) NOT NULL UNIQUE,
+		    thumbnail VARCHAR(244) NOT NULL,
+		    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		    deleted_at TIMESTAMP DEFAULT NULL
+		)
+	`
+
+	RoomPhotoMigration MigrationQuery = `
+		CREATE TABLE IF NOT EXISTS room_photos (
+			id BIGINT PRIMARY KEY NOT NULL AUTO_INCREMENT,
+			photo VARCHAR(244) NOT NULL,	    
+		    room_id BIGINT NOT NULL,
+		    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		    deleted_at TIMESTAMP DEFAULT NULL,
+		    FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE
+		)
+	`
 )

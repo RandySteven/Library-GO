@@ -8,7 +8,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/bedrockruntime"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"log"
 	"time"
 )
@@ -66,18 +65,15 @@ func (a *AWSClient) GeneratePromptResult(ctx context.Context, request any) (outp
 		bucketsCh <- buckets
 	}()
 
-	uploader := s3manager.NewUploader(a.session)
-
 	select {
-	case buckets := <-bucketsCh:
-		resultLocation, err := a.UploadFile(uploader, "./temp-stories/"+fileName, *buckets.Buckets[0].Name, "stories/"+fileName)
-		if err != nil {
-			return "", err
-		}
-		return *resultLocation, nil
-
 	case err = <-errCh:
 		// Handle error in bucket listing
 		return "", err
+	default:
+		resultLocation, err := a.UploadFileToS3(fileName, "stories/")
+		if err != nil {
+			return "", err
+		}
+		return resultLocation, nil
 	}
 }

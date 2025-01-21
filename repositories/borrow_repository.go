@@ -3,10 +3,13 @@ package repositories
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"github.com/RandySteven/Library-GO/entities/models"
 	repositories_interfaces "github.com/RandySteven/Library-GO/interfaces/repositories"
 	"github.com/RandySteven/Library-GO/queries"
 	"github.com/RandySteven/Library-GO/utils"
+	"strconv"
+	"strings"
 )
 
 type borrowRepository struct {
@@ -102,6 +105,33 @@ func (b *borrowRepository) FindByUserId(ctx context.Context, userId uint64) (res
 			return nil, err
 		}
 		result = append(result, borrow)
+	}
+
+	return result, nil
+}
+
+func (b *borrowRepository) FindByMultipleBorrowID(ctx context.Context, borrowIDs []uint64) (result []*models.Borrow, err error) {
+	queryIn := ` WHERE id IN (%s)`
+	wildCards := []string{}
+	for _, id := range borrowIDs {
+		wildCards = append(wildCards, strconv.Itoa(int(id)))
+	}
+	wildCardStr := strings.Join(wildCards, ",")
+	queryIn = fmt.Sprintf(queryIn, wildCardStr)
+	selectStr := queries.SelectBorrowsQueryWithUser.ToString() + queryIn
+
+	rows, err := b.Trigger().QueryContext(ctx, selectStr)
+	if err != nil {
+		return nil, err
+	}
+
+	for rows.Next() {
+		res := &models.Borrow{}
+		err = rows.Scan(&res.ID, &res.UserID, &res.User.Name, &res.User.Email)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, res)
 	}
 
 	return result, nil

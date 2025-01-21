@@ -10,7 +10,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"io"
+	"mime/multipart"
 	"net/http"
 	"time"
 )
@@ -22,8 +23,9 @@ type (
 		S3() *s3.S3
 		GeneratePromptResult(ctx context.Context, request any) (outputText string, err error)
 		ListBucket() (result *s3.ListBucketsOutput, err error)
-		UploadFile(uploader *s3manager.Uploader, filePath string, bucketName string, fileName string) (resultLocation *string, err error)
+		UploadImageFile(fileRequest io.Reader, filePath string, fileHeader *multipart.FileHeader, width, height uint) (resultLocation *string, err error)
 		CreateBucket(name string) error
+		UploadFileToS3(fileName, path string) (string, error)
 	}
 
 	AWSClient struct {

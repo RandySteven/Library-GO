@@ -29,9 +29,13 @@ func NewRedisCache(config *configs.Config) (*RedisClient, error) {
 	redisCfg := config.Config.Redis
 	addr := fmt.Sprintf("%s:%s", redisCfg.Host, redisCfg.Port)
 	log.Println("connecting to redis : ", addr)
-	opt, _ := redis.ParseURL(fmt.Sprintf(`rediss://default:%s@%s:%s`, redisCfg.Password, redisCfg.Host, redisCfg.Port))
+	//opt, _ := redis.ParseURL(fmt.Sprintf(`rediss://default:%s@%s:%s`, redisCfg.Password, redisCfg.Host, redisCfg.Port))
 
-	client = redis.NewClient(opt)
+	client = redis.NewClient(&redis.Options{
+		Addr:     addr,
+		Password: redisCfg.Password,
+		DB:       0,
+	})
 	limiter = redis_rate.NewLimiter(client)
 	return &RedisClient{
 		client:  client,

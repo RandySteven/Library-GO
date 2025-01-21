@@ -129,7 +129,7 @@ func InitRouters(routers RouterPrefix, r *mux.Router) {
 		middlewares.LoggingMiddleware,
 		middlewares.CorsMiddleware,
 		middlewares.TimeoutMiddleware,
-		middlewareValidator.RateLimiterMiddleware,
+		//middlewareValidator.RateLimiterMiddleware,
 	)
 
 	onboardingRouter := r.PathPrefix(enums.OnboardingPrefix.ToString()).Subrouter()

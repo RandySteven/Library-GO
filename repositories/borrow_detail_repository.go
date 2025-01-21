@@ -127,6 +127,24 @@ func (b *borrowDetailRepository) UpdateReturnDateByBorrowIDAndBookID(ctx context
 	return result, nil
 }
 
+func (b *borrowDetailRepository) FindByBookID(ctx context.Context, bookID uint64) (results []*models.BorrowDetail, err error) {
+	rows, err := b.Trigger().QueryContext(ctx, queries.SelectBorrowDetailWithBookIDQuery.ToString(), bookID)
+	if err != nil {
+		return nil, err
+	}
+
+	for rows.Next() {
+		result := &models.BorrowDetail{}
+		err = rows.Scan(&result.ID, &result.BorrowID, &result.BookID, &result.BorrowedDate, &result.ReturnedDate, &result.VerifiedReturnDate, &result.CreatedAt, &result.UpdatedAt, &result.DeletedAt)
+		if err != nil {
+			return nil, err
+		}
+		results = append(results, result)
+	}
+
+	return results, nil
+}
+
 var _ repositories_interfaces.BorrowDetailRepository = &borrowDetailRepository{}
 
 func newBorrowDetailRepository(db *sql.DB) *borrowDetailRepository {

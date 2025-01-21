@@ -17,4 +17,13 @@ const (
 		FROM borrows
 		WHERE user_id = ?
 	`
+
+	SelectBorrowsQueryWithUser GoQuery = `
+		SELECT b.id, b.user_id, u.name, u.email
+		FROM
+		    borrows b
+		INNER JOIN
+			users u
+		ON b.user_id = u.id
+	`
 )
