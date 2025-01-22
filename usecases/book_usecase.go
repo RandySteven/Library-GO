@@ -14,7 +14,7 @@ import (
 	usecases_interfaces "github.com/RandySteven/Library-GO/interfaces/usecases"
 	algolia_client "github.com/RandySteven/Library-GO/pkg/algolia"
 	aws_client "github.com/RandySteven/Library-GO/pkg/aws"
-	"github.com/RandySteven/Library-GO/utils"
+	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
 	"log"
 	"mime/multipart"
@@ -54,11 +54,9 @@ func (b *bookUsecase) refreshTx(ctx context.Context) {
 
 func (b *bookUsecase) AddNewBook(ctx context.Context, request *requests.CreateBookRequest, fileHeader *multipart.FileHeader) (result *responses.CreateBookResponse, customErr *apperror.CustomError) {
 	var (
-		wg       sync.WaitGroup
-		errCh    = make(chan *apperror.CustomError, 1)
-		bookCh   = make(chan *models.Book, 1)
-		authorCh = make(chan []uint64, 1)
-		genreCh  = make(chan []uint64, 1)
+		wg            sync.WaitGroup
+		errCh         = make(chan *apperror.CustomError, 1)
+		goroutineDone = make(chan struct{})
 	)
 
 	ctx, cancel := context.WithCancel(ctx)
@@ -74,101 +72,21 @@ func (b *bookUsecase) AddNewBook(ctx context.Context, request *requests.CreateBo
 			panic(r)
 		} else if customErr != nil {
 			_ = b.bookRepo.RollbackTx(ctx)
+		} else if len(errCh) > 1 {
+			_ = b.bookRepo.RollbackTx(ctx)
 		} else if err = b.bookRepo.CommitTx(ctx); err != nil {
 			log.Println("failed to commit transaction:", err)
+			return
 		}
 		b.setTx(nil)
 		b.refreshTx(ctx)
 	}()
+
 	b.setTx(ctx)
-
-	wg.Add(3)
-	go b.findAuthors(ctx, request.Authors, authorCh, &wg)
-	go b.findGenres(ctx, request.Genres, genreCh, &wg)
-	go b.createBook(ctx, request, bookCh, errCh, &wg, fileHeader)
-
-	go func() {
-		wg.Wait()
-		close(errCh)
-		close(authorCh)
-		close(genreCh)
-		close(bookCh)
-	}()
-
-	select {
-	case customErr = <-errCh:
-		cancel()
-		return nil, customErr
-	case <-ctx.Done():
-		return nil, apperror.NewCustomError(apperror.ErrInternalServer, "context cancelled", ctx.Err())
-	default:
-		book := <-bookCh
-		authorIDs := <-authorCh
-		genreIDs := <-genreCh
-
-		wg.Add(2)
-		go b.createAuthorBookRelations(ctx, authorIDs, book.ID, errCh, &wg)
-		go b.createBookGenreRelations(ctx, genreIDs, book.ID, errCh, &wg)
-
-		go func() {
-			wg.Wait()
-			close(errCh)
-		}()
-
-		select {
-		case customErr = <-errCh:
-			return nil, customErr
-		default:
-			hashedID := utils.HashID(book.ID)
-			_, err = b.algoClient.SaveObject(enums.BooksIndex, map[string]any{
-				"objectID":    book.ID,
-				"title":       book.Title,
-				"description": book.Description,
-				"image":       book.Image,
-				"genres":      genreIDs,
-				"authors":     authorIDs,
-				"createdAt":   book.CreatedAt.Local(),
-				"updatedAt":   book.UpdatedAt.Local(),
-			})
-			if err != nil {
-				return nil, apperror.NewCustomError(apperror.ErrInternalServer, "failed to save book", err)
-			}
-
-			b.cache.Del(ctx, enums.BooksKey)
-			result = &responses.CreateBookResponse{
-				ID: hashedID,
-			}
-			return result, nil
-		}
-	}
-}
-
-func (b *bookUsecase) findAuthors(ctx context.Context, authorIDs []uint64, authorCh chan []uint64, wg *sync.WaitGroup) {
-	defer wg.Done()
-	var foundAuthorIDs []uint64
-	for _, authorID := range authorIDs {
-		foundAuthorIDs = append(foundAuthorIDs, authorID)
-	}
-	authorCh <- foundAuthorIDs
-}
-
-func (b *bookUsecase) findGenres(ctx context.Context, genreIDs []uint64, genreCh chan []uint64, wg *sync.WaitGroup) {
-	defer wg.Done()
-	var foundGenreIDs []uint64
-	for _, genreID := range genreIDs {
-		foundGenreIDs = append(foundGenreIDs, genreID)
-	}
-	genreCh <- foundGenreIDs
-}
-
-// createBook inserts a new book and sends the result through a channel
-func (b *bookUsecase) createBook(ctx context.Context, request *requests.CreateBookRequest, bookCh chan *models.Book, errCh chan *apperror.CustomError, wg *sync.WaitGroup, fileHeader *multipart.FileHeader) {
 
 	imagePath, err := b.awsClient.UploadImageFile(request.Image, "books/", fileHeader, 600, 900)
 	if err != nil {
-		log.Println("aku curiga error sini", err)
-		errCh <- apperror.NewCustomError(apperror.ErrInternalServer, "failed to upload book image", err)
-		return
+		return nil, apperror.NewCustomError(apperror.ErrInternalServer, "failed to upload book image", err)
 	}
 
 	book, err := b.bookRepo.Save(ctx, &models.Book{
@@ -178,41 +96,63 @@ func (b *bookUsecase) createBook(ctx context.Context, request *requests.CreateBo
 		Image:       *imagePath,
 	})
 	if err != nil {
-		errCh <- apperror.NewCustomError(apperror.ErrInternalServer, fmt.Sprintf("failed to create book: %s", err), err)
-		return
+		return nil, apperror.NewCustomError(apperror.ErrInternalServer, fmt.Sprintf("failed to create book: %s", err), err)
 	}
 
-	bookCh <- book
-}
+	wg.Add(2)
 
-// createAuthorBookRelations creates relations between authors and the book
-func (b *bookUsecase) createAuthorBookRelations(ctx context.Context, authorIDs []uint64, bookID uint64, errCh chan *apperror.CustomError, wg *sync.WaitGroup) {
-	defer wg.Done()
-	log.Println("author book relation insert")
-	for _, authorID := range authorIDs {
-		_, err := b.authorBookRepo.Save(ctx, &models.AuthorBook{
-			AuthorID: authorID,
-			BookID:   bookID,
-		})
-		if err != nil {
-			errCh <- apperror.NewCustomError(apperror.ErrInternalServer, fmt.Sprintf(`failed to create author book relation due %s`, err.Error()), err)
-			return
+	go func() {
+		defer wg.Done()
+		for _, authorID := range request.Authors {
+			_, err = b.authorBookRepo.Save(ctx, &models.AuthorBook{
+				AuthorID: authorID,
+				BookID:   book.ID,
+			})
+			if err != nil {
+				select {
+				case errCh <- apperror.NewCustomError(apperror.ErrInternalServer, fmt.Sprintf(`failed to create author book relation due %s`, err.Error()), err):
+					cancel()
+				}
+				return
+			}
 		}
-	}
-}
+	}()
 
-func (b *bookUsecase) createBookGenreRelations(ctx context.Context, genreIDs []uint64, bookID uint64, errCh chan *apperror.CustomError, wg *sync.WaitGroup) {
-	defer wg.Done()
-	for _, genreID := range genreIDs {
-		_, err := b.bookGenreRepo.Save(ctx, &models.BookGenre{
-			GenreID: genreID,
-			BookID:  bookID,
-		})
-		if err != nil {
-			errCh <- apperror.NewCustomError(apperror.ErrInternalServer, "failed to create book-genre relation", err)
-			return
+	go func() {
+		defer wg.Done()
+		for _, genreID := range request.Genres {
+			_, err = b.bookGenreRepo.Save(ctx, &models.BookGenre{
+				GenreID: genreID,
+				BookID:  book.ID,
+			})
+			if err != nil {
+				select {
+				case errCh <- apperror.NewCustomError(apperror.ErrInternalServer, fmt.Sprintf(`failed to create book genre relation due %s`, err.Error()), err):
+					cancel()
+				}
+				return
+			}
 		}
+	}()
+
+	go func() {
+		wg.Wait()
+		close(goroutineDone)
+	}()
+
+	select {
+	case <-goroutineDone:
+		if len(errCh) > 0 {
+			return nil, <-errCh
+		}
+	case <-ctx.Done():
+		return nil, apperror.NewCustomError(apperror.ErrInternalServer, "context cancelled", ctx.Err())
 	}
+	_ = b.cache.Del(ctx, enums.BooksKey)
+	result = &responses.CreateBookResponse{
+		ID: uuid.NewString(),
+	}
+	return result, nil
 }
 
 func (b *bookUsecase) GetAllBooks(ctx context.Context) (result []*responses.ListBooksResponse, customErr *apperror.CustomError) {

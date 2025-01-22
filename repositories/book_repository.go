@@ -33,11 +33,11 @@ func (b *bookRepository) BeginTx(ctx context.Context) error {
 }
 
 func (b *bookRepository) CommitTx(ctx context.Context) error {
-	return b.tx.Commit()
+	return utils.CommitTx(ctx, b.tx)
 }
 
 func (b *bookRepository) RollbackTx(ctx context.Context) error {
-	return b.tx.Rollback()
+	return utils.RollbackTx(ctx, b.tx)
 }
 
 func (b *bookRepository) SetTx(tx *sql.Tx) {
