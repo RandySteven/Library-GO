@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/RandySteven/Library-GO/entities/models"
+	"github.com/RandySteven/Library-GO/enums"
 	repositories_interfaces "github.com/RandySteven/Library-GO/interfaces/repositories"
 	"github.com/RandySteven/Library-GO/queries"
 	"github.com/RandySteven/Library-GO/utils"
@@ -23,11 +24,11 @@ func (u *userRepository) Trigger() repositories_interfaces.Trigger {
 }
 
 func (u *userRepository) FindByEmail(ctx context.Context, email string) (*models.User, error) {
-	return u.findUser(ctx, `email`, email)
+	return u.findUser(ctx, enums.OnboardByEmail, email)
 }
 
 func (u *userRepository) FindByPhoneNumber(ctx context.Context, phoneNumber string) (*models.User, error) {
-	return u.findUser(ctx, `phone`, phoneNumber)
+	return u.findUser(ctx, enums.OnboardByPhone, phoneNumber)
 }
 
 func (u *userRepository) Save(ctx context.Context, entity *models.User) (result *models.User, err error) {
@@ -66,11 +67,11 @@ func (u *userRepository) BeginTx(ctx context.Context) error {
 }
 
 func (u *userRepository) CommitTx(ctx context.Context) error {
-	return u.tx.Commit()
+	return utils.CommitTx(ctx, u.tx)
 }
 
 func (u *userRepository) RollbackTx(ctx context.Context) error {
-	return u.tx.Rollback()
+	return utils.RollbackTx(ctx, u.tx)
 }
 
 func (u *userRepository) SetTx(tx *sql.Tx) {
@@ -116,11 +117,12 @@ func newUserRepository(db *sql.DB) *userRepository {
 	}
 }
 
-func (u *userRepository) findUser(ctx context.Context, by string, identifier string) (*models.User, error) {
+func (u *userRepository) findUser(ctx context.Context, by enums.OnboardMethod, identifier string) (*models.User, error) {
 	var query string
-	if by == "phone" {
+	switch by {
+	case enums.OnboardByPhone:
 		query = queries.SelectUserByPhoneNumberQuery.ToString()
-	} else {
+	case enums.OnboardByEmail:
 		query = queries.SelectUserByEmailQuery.ToString()
 	}
 	result := &models.User{}

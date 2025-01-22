@@ -1,11 +1,11 @@
 package aws_client
 
 import (
-	"github.com/RandySteven/Library-GO/apperror"
 	"github.com/RandySteven/Library-GO/utils"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"github.com/google/uuid"
 	"io"
 	"io/ioutil"
 	"log"
@@ -35,7 +35,6 @@ func (c *AWSClient) ListBucket() (result *s3.ListBucketsOutput, err error) {
 func (c *AWSClient) UploadImageFile(fileRequest io.Reader, filePath string, fileHeader *multipart.FileHeader, width, height uint) (resultLocation *string, err error) {
 	tempFile, err := ioutil.TempFile("./temp-images", "upload-*.png")
 	if err != nil {
-		log.Println("err temp file", err)
 		return nil, err
 	}
 
@@ -43,41 +42,31 @@ func (c *AWSClient) UploadImageFile(fileRequest io.Reader, filePath string, file
 
 	fileBytes, err := ioutil.ReadAll(fileRequest)
 	if err != nil {
-		log.Println("err file bytes", err)
 		return nil, err
 	}
 	tempFile.Write(fileBytes)
 
 	imageFile, err := fileHeader.Open()
 	if err != nil {
-		log.Println("err image header open ", err)
 		return nil, err
 	}
 	defer imageFile.Close()
 
 	err = utils.ResizeImage(tempFile.Name(), tempFile.Name(), width, height)
 	if err != nil {
-		log.Println("err resize : ", err)
-		return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to resize image`, err)
-	}
-
-	renamedImage := utils.RenameFileWithDateAndUUID(tempFile.Name()[len(`./temp-images/`):])
-
-	buckets, err := c.ListBucket()
-	if err != nil {
-		log.Println("err bucket ", err)
 		return nil, err
 	}
 
+	renamedImage := uuid.NewString()
+
 	file, err := os.Open(tempFile.Name())
 	if err != nil {
-		log.Println("err file ", err)
 		return nil, err
 	}
 	defer file.Close()
 
 	result, err := s3manager.NewUploader(c.SessionClient()).Upload(&s3manager.UploadInput{
-		Bucket: aws.String(*buckets.Buckets[0].Name),
+		Bucket: aws.String("library-api-image"),
 		Key:    aws.String(filePath + renamedImage),
 		Body:   file,
 	})

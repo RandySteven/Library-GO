@@ -47,11 +47,11 @@ func (r *roleUserRepository) BeginTx(ctx context.Context) error {
 }
 
 func (r *roleUserRepository) CommitTx(ctx context.Context) error {
-	return r.tx.Commit()
+	return utils.CommitTx(ctx, r.tx)
 }
 
 func (r *roleUserRepository) RollbackTx(ctx context.Context) error {
-	return r.tx.Rollback()
+	return utils.RollbackTx(ctx, r.tx)
 }
 
 func (r *roleUserRepository) SetTx(tx *sql.Tx) {

@@ -57,8 +57,8 @@ func (b *bookUsecase) AddNewBook(ctx context.Context, request *requests.CreateBo
 		wg       sync.WaitGroup
 		errCh    = make(chan *apperror.CustomError, 1)
 		bookCh   = make(chan *models.Book, 1)
-		authorCh = make(chan []*models.Author, 1)
-		genreCh  = make(chan []*models.Genre, 1)
+		authorCh = make(chan []uint64, 1)
+		genreCh  = make(chan []uint64, 1)
 	)
 
 	ctx, cancel := context.WithCancel(ctx)
@@ -83,8 +83,8 @@ func (b *bookUsecase) AddNewBook(ctx context.Context, request *requests.CreateBo
 	b.setTx(ctx)
 
 	wg.Add(3)
-	go b.findAuthors(ctx, request.Authors, authorCh, errCh, &wg)
-	go b.findGenres(ctx, request.Genres, genreCh, errCh, &wg)
+	go b.findAuthors(ctx, request.Authors, authorCh, &wg)
+	go b.findGenres(ctx, request.Genres, genreCh, &wg)
 	go b.createBook(ctx, request, bookCh, errCh, &wg, fileHeader)
 
 	go func() {
@@ -143,31 +143,20 @@ func (b *bookUsecase) AddNewBook(ctx context.Context, request *requests.CreateBo
 	}
 }
 
-func (b *bookUsecase) findAuthors(ctx context.Context, authorIDs []uint64, authorCh chan []*models.Author, errCh chan *apperror.CustomError, wg *sync.WaitGroup) {
+func (b *bookUsecase) findAuthors(ctx context.Context, authorIDs []uint64, authorCh chan []uint64, wg *sync.WaitGroup) {
 	defer wg.Done()
-	var foundAuthorIDs []*models.Author
+	var foundAuthorIDs []uint64
 	for _, authorID := range authorIDs {
-		author, err := b.authorRepo.FindByID(ctx, authorID)
-		if err != nil {
-			errCh <- apperror.NewCustomError(apperror.ErrInternalServer, fmt.Sprintf(`failed to find authors due %s`, err.Error()), err)
-			return
-		}
-		foundAuthorIDs = append(foundAuthorIDs, author)
+		foundAuthorIDs = append(foundAuthorIDs, authorID)
 	}
 	authorCh <- foundAuthorIDs
 }
 
-// findGenres fetches genres by their IDs concurrently
-func (b *bookUsecase) findGenres(ctx context.Context, genreIDs []uint64, genreCh chan []*models.Genre, errCh chan *apperror.CustomError, wg *sync.WaitGroup) {
+func (b *bookUsecase) findGenres(ctx context.Context, genreIDs []uint64, genreCh chan []uint64, wg *sync.WaitGroup) {
 	defer wg.Done()
-	var foundGenreIDs []*models.Genre
+	var foundGenreIDs []uint64
 	for _, genreID := range genreIDs {
-		genre, err := b.genreRepo.FindByID(ctx, genreID)
-		if err != nil {
-			errCh <- apperror.NewCustomError(apperror.ErrInternalServer, fmt.Sprintf(`failed to find genres due %s`, err.Error()), err)
-			return
-		}
-		foundGenreIDs = append(foundGenreIDs, genre)
+		foundGenreIDs = append(foundGenreIDs, genreID)
 	}
 	genreCh <- foundGenreIDs
 }
@@ -193,17 +182,16 @@ func (b *bookUsecase) createBook(ctx context.Context, request *requests.CreateBo
 		return
 	}
 
-	// Send the created book back through the channel
 	bookCh <- book
 }
 
 // createAuthorBookRelations creates relations between authors and the book
-func (b *bookUsecase) createAuthorBookRelations(ctx context.Context, authorIDs []*models.Author, bookID uint64, errCh chan *apperror.CustomError, wg *sync.WaitGroup) {
+func (b *bookUsecase) createAuthorBookRelations(ctx context.Context, authorIDs []uint64, bookID uint64, errCh chan *apperror.CustomError, wg *sync.WaitGroup) {
 	defer wg.Done()
 	log.Println("author book relation insert")
 	for _, authorID := range authorIDs {
 		_, err := b.authorBookRepo.Save(ctx, &models.AuthorBook{
-			AuthorID: authorID.ID,
+			AuthorID: authorID,
 			BookID:   bookID,
 		})
 		if err != nil {
@@ -213,12 +201,11 @@ func (b *bookUsecase) createAuthorBookRelations(ctx context.Context, authorIDs [
 	}
 }
 
-// createBookGenreRelations creates relations between genres and the book
-func (b *bookUsecase) createBookGenreRelations(ctx context.Context, genreIDs []*models.Genre, bookID uint64, errCh chan *apperror.CustomError, wg *sync.WaitGroup) {
+func (b *bookUsecase) createBookGenreRelations(ctx context.Context, genreIDs []uint64, bookID uint64, errCh chan *apperror.CustomError, wg *sync.WaitGroup) {
 	defer wg.Done()
 	for _, genreID := range genreIDs {
 		_, err := b.bookGenreRepo.Save(ctx, &models.BookGenre{
-			GenreID: genreID.ID,
+			GenreID: genreID,
 			BookID:  bookID,
 		})
 		if err != nil {

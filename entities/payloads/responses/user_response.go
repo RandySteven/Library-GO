@@ -20,6 +20,12 @@ type (
 	}
 
 	UserDetailResponse struct {
+		ID             uint64    `json:"id"`
+		Name           string    `json:"name"`
+		Address        string    `json:"address"`
+		PhoneNumber    string    `json:"phone_number"`
+		ProfilePicture string    `json:"profile_picture"`
+		DoB            time.Time `json:"date_of_birth"`
 	}
 
 	LoginUserResponse struct {

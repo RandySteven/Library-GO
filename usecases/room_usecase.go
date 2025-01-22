@@ -71,10 +71,17 @@ func (r *roomUsecase) GetRoomByID(ctx context.Context, id uint64) (result *respo
 	}
 
 	result = &responses.RoomDetailResponse{
-		ID: room.ID,
+		ID:        room.ID,
+		RoomName:  room.Name,
+		Thumbnail: room.Thumbnail,
 	}
 
 	return result, nil
+}
+
+func (r *roomUsecase) UploadRoomPhoto(ctx context.Context, request *requests.UploadRoomPhoto) (customErr *apperror.CustomError) {
+
+	return
 }
 
 var _ usecases_interfaces.RoomUsecase = &roomUsecase{}

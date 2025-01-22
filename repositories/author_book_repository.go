@@ -38,13 +38,11 @@ func (a *authorBookRepository) BeginTx(ctx context.Context) error {
 }
 
 func (a *authorBookRepository) CommitTx(ctx context.Context) error {
-	//TODO implement me
-	panic("implement me")
+	return utils.CommitTx(ctx, a.tx)
 }
 
 func (a *authorBookRepository) RollbackTx(ctx context.Context) error {
-	//TODO implement me
-	panic("implement me")
+	return utils.RollbackTx(ctx, a.tx)
 }
 
 func (a *authorBookRepository) SetTx(tx *sql.Tx) {

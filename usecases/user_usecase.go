@@ -18,7 +18,21 @@ func (u *userUsecase) GetAllUsers(ctx context.Context) (result []*responses.User
 }
 
 func (u *userUsecase) GetUserDetail(ctx context.Context, id uint64) (result *responses.UserDetailResponse, customErr *apperror.CustomError) {
-	return
+	user, err := u.userRepo.FindByID(ctx, id)
+	if err != nil {
+		return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to get user`, err)
+	}
+
+	result = &responses.UserDetailResponse{
+		ID:             user.ID,
+		Name:           user.Name,
+		Address:        user.Address,
+		PhoneNumber:    user.PhoneNumber,
+		ProfilePicture: user.ProfilePicture,
+		DoB:            user.DoB,
+	}
+
+	return result, nil
 }
 
 var _ usecases_interfaces.UserUsecase = &userUsecase{}

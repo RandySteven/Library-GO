@@ -165,6 +165,24 @@ func InitTrigger(db *sql.DB, tx *sql.Tx) (trigger repositories_interfaces.Trigge
 	return trigger
 }
 
+func CommitTx(ctx context.Context, tx *sql.Tx) error {
+	select {
+	case <-ctx.Done():
+		return fmt.Errorf(`error canceled`)
+	default:
+		return tx.Commit()
+	}
+}
+
+func RollbackTx(ctx context.Context, tx *sql.Tx) error {
+	select {
+	case <-ctx.Done():
+		return fmt.Errorf(`error canceled`)
+	default:
+		return tx.Rollback()
+	}
+}
+
 //func ExecTx(ctx context.Context, fn func(ctx context.Context, tx *sql.Tx) error) error {
 //err := fn (ctx, tx)
 //return err

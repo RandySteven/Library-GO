@@ -20,6 +20,13 @@ type (
 	}
 
 	RoomDetailResponse struct {
-		ID uint64 `json:"id"`
+		ID          uint64     `json:"id"`
+		RoomName    string     `json:"room_name"`
+		Thumbnail   string     `json:"thumbnail"`
+		IsAvailable bool       `json:"is_available"`
+		Photos      []string   `json:"photos"`
+		CreatedAt   time.Time  `json:"created_at"`
+		UpdatedAt   time.Time  `json:"updated_at"`
+		DeletedAt   *time.Time `json:"deleted_at"`
 	}
 )
