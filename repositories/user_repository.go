@@ -9,7 +9,6 @@ import (
 	repositories_interfaces "github.com/RandySteven/Library-GO/interfaces/repositories"
 	"github.com/RandySteven/Library-GO/queries"
 	"github.com/RandySteven/Library-GO/utils"
-	"log"
 	"strconv"
 	"strings"
 )
@@ -91,7 +90,6 @@ func (u *userRepository) FindSelectedUsersByID(ctx context.Context, ids []uint64
 	wildCardStr := strings.Join(wildCards, ",")
 	queryIn = fmt.Sprintf(queryIn, wildCardStr)
 	selectStr := queries.SelectUsersQuery.ToString() + queryIn
-	log.Println(selectStr)
 	rows, err := u.Trigger().QueryContext(ctx, selectStr)
 	if err != nil {
 		return nil, err

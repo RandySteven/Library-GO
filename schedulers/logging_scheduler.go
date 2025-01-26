@@ -2,6 +2,7 @@ package schedulers
 
 import (
 	"context"
+	"github.com/RandySteven/Library-GO/enums"
 	schedulers_interfaces "github.com/RandySteven/Library-GO/interfaces/schedulers"
 	aws_client "github.com/RandySteven/Library-GO/pkg/aws"
 	"github.com/RandySteven/Library-GO/utils"
@@ -20,7 +21,7 @@ func (l *loggerScheduler) UploadLoggerScheduler(ctx context.Context) error {
 	}
 
 	fileName := file.Name()
-	_, err = l.awsClient.UploadFileToS3(fileName, "logs/")
+	_, err = l.awsClient.UploadFileToS3(fileName, enums.LogsPath)
 	if err != nil {
 		return err
 	}

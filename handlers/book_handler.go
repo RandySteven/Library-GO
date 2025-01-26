@@ -48,7 +48,6 @@ func (b *BookHandler) AddBook(w http.ResponseWriter, r *http.Request) {
 		utils.ResponseHandler(w, http.StatusBadRequest, `bad request`, nil, nil, err)
 		return
 	}
-	//fileHeader := r.MultipartForm.File["image"][0]
 
 	result, customErr := b.usecase.AddNewBook(ctx, request, fileHeader)
 	if customErr != nil {

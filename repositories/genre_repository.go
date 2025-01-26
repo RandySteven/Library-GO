@@ -3,14 +3,10 @@ package repositories
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"github.com/RandySteven/Library-GO/entities/models"
 	repositories_interfaces "github.com/RandySteven/Library-GO/interfaces/repositories"
 	"github.com/RandySteven/Library-GO/queries"
 	"github.com/RandySteven/Library-GO/utils"
-	"log"
-	"strconv"
-	"strings"
 )
 
 type genreRepository struct {
@@ -46,15 +42,7 @@ func (g *genreRepository) FindAll(ctx context.Context, skip uint64, take uint64)
 }
 
 func (g *genreRepository) FindSelectedGenresByID(ctx context.Context, ids []uint64) (result []*models.Genre, err error) {
-	queryIn := ` WHERE id IN (%s)`
-	wildCards := []string{}
-	for _, id := range ids {
-		wildCards = append(wildCards, strconv.Itoa(int(id)))
-	}
-	wildCardStr := strings.Join(wildCards, ",")
-	queryIn = fmt.Sprintf(queryIn, wildCardStr)
-	selectStr := queries.SelectGenresQuery.ToString() + queryIn
-	log.Println(selectStr)
+	selectStr := utils.SelectIdIn(queries.SelectGenresQuery, ids)
 	rows, err := g.Trigger().QueryContext(ctx, selectStr)
 	if err != nil {
 		return nil, err

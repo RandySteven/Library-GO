@@ -3,14 +3,11 @@ package repositories
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"github.com/RandySteven/Library-GO/entities/models"
 	repositories_interfaces "github.com/RandySteven/Library-GO/interfaces/repositories"
 	"github.com/RandySteven/Library-GO/queries"
 	"github.com/RandySteven/Library-GO/utils"
 	"log"
-	"strconv"
-	"strings"
 )
 
 type authorRepository struct {
@@ -71,14 +68,7 @@ func (a *authorRepository) GetTx(ctx context.Context) *sql.Tx {
 }
 
 func (a *authorRepository) FindSelectedAuthorsByID(ctx context.Context, ids []uint64) (result []*models.Author, err error) {
-	queryIn := ` WHERE id IN (%s)`
-	wildCards := []string{}
-	for _, id := range ids {
-		wildCards = append(wildCards, strconv.Itoa(int(id)))
-	}
-	wildCardStr := strings.Join(wildCards, ",")
-	queryIn = fmt.Sprintf(queryIn, wildCardStr)
-	selectStr := queries.SelectAuthorQuery.ToString() + queryIn
+	selectStr := utils.SelectIdIn(queries.SelectAuthorQuery, ids)
 	log.Println(selectStr)
 	rows, err := a.Trigger().QueryContext(ctx, selectStr)
 	if err != nil {

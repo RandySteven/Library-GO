@@ -11,6 +11,7 @@ import (
 	aws_client "github.com/RandySteven/Library-GO/pkg/aws"
 	"github.com/RandySteven/Library-GO/utils"
 	"mime/multipart"
+	"sync"
 	"time"
 )
 
@@ -79,9 +80,56 @@ func (r *roomUsecase) GetRoomByID(ctx context.Context, id uint64) (result *respo
 	return result, nil
 }
 
-func (r *roomUsecase) UploadRoomPhoto(ctx context.Context, request *requests.UploadRoomPhoto) (customErr *apperror.CustomError) {
+func (r *roomUsecase) UploadRoomPhoto(ctx context.Context, request *requests.UploadRoomPhoto, fileHeader *multipart.FileHeader) (result *responses.UploadRoomPhotoResponse, customErr *apperror.CustomError) {
+	var (
+		wg           sync.WaitGroup
+		imagePathsCh = make(chan []string, 0)
+		customErrCh  = make(chan *apperror.CustomError)
+	)
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
 
-	return
+	wg.Add(1)
+
+	go func() {
+		defer wg.Done()
+		imagePaths := []string{}
+		for _, photo := range request.Photos {
+			imagePath, err := r.awsClient.UploadImageFile(photo, "rooms/", fileHeader, 1020, 800)
+			if err != nil {
+				customErrCh <- apperror.NewCustomError(apperror.ErrInternalServer, `failed to upload image to s3`, err)
+				return
+			}
+			imagePaths = append(imagePaths, *imagePath)
+		}
+		imagePathsCh <- imagePaths
+	}()
+
+	go func() {
+		wg.Wait()
+		close(customErrCh)
+	}()
+
+	select {
+	case customErr = <-customErrCh:
+		cancel()
+		return nil, customErr
+	case <-ctx.Done():
+		return nil, apperror.NewCustomError(apperror.ErrInternalServer, "context cancelled", ctx.Err())
+	default:
+		for _, roomPhotoUrl := range <-imagePathsCh {
+			roomPhotoUrl, err := r.roomPhotoRepo.Save(ctx, &models.RoomPhoto{
+				RoomID: request.RoomID,
+				Photo:  roomPhotoUrl,
+			})
+			if err != nil {
+				return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to upload the photo`, err)
+			}
+			result.PhotoURLs = append(result.PhotoURLs, roomPhotoUrl.Photo)
+		}
+		result.RoomID = request.RoomID
+		return result, nil
+	}
 }
 
 var _ usecases_interfaces.RoomUsecase = &roomUsecase{}

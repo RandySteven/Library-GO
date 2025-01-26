@@ -72,15 +72,15 @@ func BindMultipartForm(req *http.Request, request interface{}) error {
 
 	// Handling file uploads
 	multipartFiles := req.MultipartForm.File
-	for fieldname, files := range multipartFiles {
-		field := reflect.ValueOf(request).Elem().FieldByName(fieldname)
+	for fieldName, files := range multipartFiles {
+		field := reflect.ValueOf(request).Elem().FieldByName(fieldName)
 		if !field.IsValid() {
-			log.Printf("Field not found in request for file upload: %s", fieldname)
+			log.Printf("Field not found in request for file upload: %s", fieldName)
 			continue
 		}
 
 		if field.Kind() != reflect.Slice || !reflect.TypeOf(field.Interface()).Elem().Implements(reflect.TypeOf((*io.Reader)(nil)).Elem()) {
-			return fmt.Errorf("Field %s is not a slice of io.Reader", fieldname)
+			return fmt.Errorf("Field %s is not a slice of io.Reader", fieldName)
 		}
 
 		fieldSlice := reflect.MakeSlice(field.Type(), 0, len(files))

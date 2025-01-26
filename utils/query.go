@@ -9,6 +9,7 @@ import (
 	"github.com/RandySteven/Library-GO/queries"
 	"log"
 	"reflect"
+	"strconv"
 	"strings"
 )
 
@@ -181,6 +182,18 @@ func RollbackTx(ctx context.Context, tx *sql.Tx) error {
 	default:
 		return tx.Rollback()
 	}
+}
+
+func SelectIdIn(query queries.GoQuery, ids []uint64) string {
+	queryIn := ` WHERE id IN (%s)`
+	wildCards := []string{}
+	for _, id := range ids {
+		wildCards = append(wildCards, strconv.Itoa(int(id)))
+	}
+	wildCardStr := strings.Join(wildCards, ",")
+	queryIn = fmt.Sprintf(queryIn, wildCardStr)
+	selectStr := query.ToString() + queryIn
+	return selectStr
 }
 
 //func ExecTx(ctx context.Context, fn func(ctx context.Context, tx *sql.Tx) error) error {

@@ -37,6 +37,21 @@ func (c *CommentHandler) Comment(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *CommentHandler) Reply(w http.ResponseWriter, r *http.Request) {
+	var (
+		rID     = uuid.NewString()
+		ctx     = context.WithValue(r.Context(), enums.RequestID, rID)
+		request = &requests.ReplyCommentRequest{}
+		dataKey = `result`
+	)
+	if err := utils.BindRequest(r, request); err != nil {
+		return
+	}
+	result, customErr := c.usecase.ReplyComment(ctx, request)
+	if customErr != nil {
+		utils.ResponseHandler(w, customErr.ErrCode(), `failed to reply a comment`, nil, nil, customErr)
+		return
+	}
+	utils.ResponseHandler(w, http.StatusOK, `success to reply comment`, &dataKey, result, nil)
 }
 
 func (c *CommentHandler) GetBookComment(w http.ResponseWriter, r *http.Request) {

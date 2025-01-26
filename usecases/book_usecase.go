@@ -84,7 +84,7 @@ func (b *bookUsecase) AddNewBook(ctx context.Context, request *requests.CreateBo
 
 	b.setTx(ctx)
 
-	imagePath, err := b.awsClient.UploadImageFile(request.Image, "books/", fileHeader, 600, 900)
+	imagePath, err := b.awsClient.UploadImageFile(request.Image, enums.BooksPath, fileHeader, 600, 900)
 	if err != nil {
 		return nil, apperror.NewCustomError(apperror.ErrInternalServer, "failed to upload book image", err)
 	}
@@ -103,6 +103,20 @@ func (b *bookUsecase) AddNewBook(ctx context.Context, request *requests.CreateBo
 
 	go func() {
 		defer wg.Done()
+		if len(request.Authors) == 1 {
+			_, err = b.authorBookRepo.Save(ctx, &models.AuthorBook{
+				AuthorID: request.Authors[0],
+				BookID:   book.ID,
+			})
+			if err != nil {
+				select {
+				case errCh <- apperror.NewCustomError(apperror.ErrInternalServer, fmt.Sprintf(`failed to create author book relation due %s`, err.Error()), err):
+					cancel()
+				}
+				return
+			}
+			return
+		}
 		for _, authorID := range request.Authors {
 			_, err = b.authorBookRepo.Save(ctx, &models.AuthorBook{
 				AuthorID: authorID,
@@ -120,6 +134,20 @@ func (b *bookUsecase) AddNewBook(ctx context.Context, request *requests.CreateBo
 
 	go func() {
 		defer wg.Done()
+		if len(request.Genres) == 1 {
+			_, err = b.bookGenreRepo.Save(ctx, &models.BookGenre{
+				GenreID: request.Genres[0],
+				BookID:  book.ID,
+			})
+			if err != nil {
+				select {
+				case errCh <- apperror.NewCustomError(apperror.ErrInternalServer, fmt.Sprintf(`failed to create book genre relation due %s`, err.Error()), err):
+					cancel()
+				}
+				return
+			}
+			return
+		}
 		for _, genreID := range request.Genres {
 			_, err = b.bookGenreRepo.Save(ctx, &models.BookGenre{
 				GenreID: genreID,
@@ -204,7 +232,7 @@ func (b *bookUsecase) GetBookByID(ctx context.Context, id uint64) (result *respo
 	)
 	book, err := b.bookRepo.FindByID(ctx, id)
 	if err != nil {
-		return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to get book by id`, err)
+		return nil, apperror.NewCustomError(apperror.ErrNotFound, `failed to get book by id`, err)
 	}
 
 	result = &responses.BookDetailResponse{

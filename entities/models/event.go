@@ -10,6 +10,7 @@ type Event struct {
 	Description               string
 	ParticipantNumber         uint64
 	OccupiedParticipantNumber uint64
+	RoomID                    string
 	Date                      time.Time
 	StartTime                 time.Time
 	EndTime                   time.Time

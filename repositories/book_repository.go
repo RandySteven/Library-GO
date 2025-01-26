@@ -3,15 +3,11 @@ package repositories
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"github.com/RandySteven/Library-GO/entities/models"
 	"github.com/RandySteven/Library-GO/enums"
 	repositories_interfaces "github.com/RandySteven/Library-GO/interfaces/repositories"
 	"github.com/RandySteven/Library-GO/queries"
 	"github.com/RandySteven/Library-GO/utils"
-	"log"
-	"strconv"
-	"strings"
 )
 
 type bookRepository struct {
@@ -72,15 +68,7 @@ func (b *bookRepository) FindAll(ctx context.Context, skip uint64, take uint64) 
 }
 
 func (b *bookRepository) FindSelectedBooksId(ctx context.Context, ids []uint64) (results []*models.Book, err error) {
-	queryIn := ` WHERE id IN (%s)`
-	wildCards := []string{}
-	for _, id := range ids {
-		wildCards = append(wildCards, strconv.Itoa(int(id)))
-	}
-	wildCardStr := strings.Join(wildCards, ",")
-	queryIn = fmt.Sprintf(queryIn, wildCardStr)
-	selectStr := queries.SelectBooksQuery.ToString() + queryIn
-	log.Println(selectStr)
+	selectStr := utils.SelectIdIn(queries.SelectBooksQuery, ids)
 	rows, err := b.db.QueryContext(ctx, selectStr)
 	if err != nil {
 		return nil, err

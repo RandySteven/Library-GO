@@ -29,4 +29,10 @@ type (
 		UpdatedAt   time.Time  `json:"updated_at"`
 		DeletedAt   *time.Time `json:"deleted_at"`
 	}
+
+	UploadRoomPhotoResponse struct {
+		RoomID    uint64   `json:"room_id"`
+		RoomName  string   `json:"room_name"`
+		PhotoURLs []string `json:"photo_urls"`
+	}
 )

@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/RandySteven/Library-GO/enums"
 	"github.com/RandySteven/Library-GO/utils"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockruntime"
 	"github.com/aws/aws-sdk-go/aws"
@@ -67,10 +68,9 @@ func (a *AWSClient) GeneratePromptResult(ctx context.Context, request any) (outp
 
 	select {
 	case err = <-errCh:
-		// Handle error in bucket listing
 		return "", err
 	default:
-		resultLocation, err := a.UploadFileToS3(fileName, "stories/")
+		resultLocation, err := a.UploadFileToS3(fileName, enums.StoriesPath)
 		if err != nil {
 			return "", err
 		}
