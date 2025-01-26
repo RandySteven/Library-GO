@@ -23,6 +23,7 @@ type Usecases struct {
 	CommentUsecase        usecases_interfaces.CommentUsecase
 	EventUsecase          usecases_interfaces.EventUsecase
 	ChatUsecase           usecases_interfaces.ChatUsecase
+	RoomUsecase           usecases_interfaces.RoomUsecase
 }
 
 func NewUsecases(repositories *repositories.Repositories, caches *caches.Caches, awsClient aws_client.AWS, algoClient *algolia_client.AlgoliaAPISearchClient, pubsub rabbitmqs_client.PubSub) *Usecases {
@@ -40,5 +41,6 @@ func NewUsecases(repositories *repositories.Repositories, caches *caches.Caches,
 		CommentUsecase:        newCommentUsecase(repositories.CommentRepo, repositories.UserRepo, repositories.BookRepo),
 		EventUsecase:          newEventUsecase(awsClient, repositories.EventRepo, repositories.EventUserRepo, repositories.UserRepo),
 		ChatUsecase:           newChatUsecase(repositories.ChatRepo, repositories.RoomChatRepo, repositories.RoomChatUserRepo, repositories.UserRepo),
+		RoomUsecase:           newRoomUsecase(repositories.RoomRepo, repositories.RoomPhotoRepo, awsClient),
 	}
 }

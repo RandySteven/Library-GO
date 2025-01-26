@@ -108,6 +108,12 @@ func NewEndpointRouters(h *handlers.Handlers) RouterPrefix {
 		Get("/{id}", h.EventHandler.GetEvent),
 	}
 
+	endpointRouters[enums.RoomPrefix] = []*Router{
+		Post("", h.RoomHandler.AddNewRoom),
+		Get("", h.RoomHandler.GetRooms),
+		Get("/{id}", h.RoomHandler.GetRoomByID),
+	}
+
 	return endpointRouters
 }
 
@@ -210,6 +216,12 @@ func InitRouters(routers RouterPrefix, r *mux.Router) {
 	for _, router := range routers[enums.RatingPrefix] {
 		router.RouterLog(enums.RatingPrefix.ToString())
 		ratingRouter.HandleFunc(router.path, router.handler).Methods(router.method)
+	}
+
+	roomRouter := r.PathPrefix(enums.RoomPrefix.ToString()).Subrouter()
+	for _, router := range routers[enums.RoomPrefix] {
+		router.RouterLog(enums.RoomPrefix.ToString())
+		roomRouter.HandleFunc(router.path, router.handler).Methods(router.method)
 	}
 }
 
