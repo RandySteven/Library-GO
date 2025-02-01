@@ -84,7 +84,7 @@ func (b *bookUsecase) AddNewBook(ctx context.Context, request *requests.CreateBo
 
 	b.setTx(ctx)
 
-	imagePath, err := b.awsClient.UploadImageFile(request.Image, enums.BooksPath, fileHeader, 600, 900)
+	imagePath, err := b.awsClient.UploadImageFile(ctx, request.Image, enums.BooksPath, fileHeader, 600, 900)
 	if err != nil {
 		return nil, apperror.NewCustomError(apperror.ErrInternalServer, "failed to upload book image", err)
 	}

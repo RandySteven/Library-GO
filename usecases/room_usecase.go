@@ -22,7 +22,7 @@ type roomUsecase struct {
 }
 
 func (r *roomUsecase) CreateRoom(ctx context.Context, request *requests.CreateRoomRequest, fileHeader *multipart.FileHeader) (result *responses.CreateRoomResponse, customErr *apperror.CustomError) {
-	imagePath, err := r.awsClient.UploadImageFile(request.Thumbnail, "rooms/", fileHeader, 1020, 800)
+	imagePath, err := r.awsClient.UploadImageFile(ctx, request.Thumbnail, "rooms/", fileHeader, 1020, 800)
 	if err != nil {
 		return nil, apperror.NewCustomError(apperror.ErrInternalServer, "failed to upload book image", err)
 	}
@@ -95,7 +95,7 @@ func (r *roomUsecase) UploadRoomPhoto(ctx context.Context, request *requests.Upl
 		defer wg.Done()
 		imagePaths := []string{}
 		for _, photo := range request.Photos {
-			imagePath, err := r.awsClient.UploadImageFile(photo, "rooms/", fileHeader, 1020, 800)
+			imagePath, err := r.awsClient.UploadImageFile(ctx, photo, "rooms/", fileHeader, 1020, 800)
 			if err != nil {
 				customErrCh <- apperror.NewCustomError(apperror.ErrInternalServer, `failed to upload image to s3`, err)
 				return

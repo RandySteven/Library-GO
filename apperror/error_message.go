@@ -6,3 +6,5 @@ const (
 	ErrTooManyRequest      = `Too many request from one device`
 	ErrRequestTimeout      = `Request timeout`
 )
+
+const ()

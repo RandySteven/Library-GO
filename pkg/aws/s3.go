@@ -1,6 +1,8 @@
 package aws_client
 
 import (
+	"context"
+	"fmt"
 	"github.com/RandySteven/Library-GO/utils"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
@@ -11,6 +13,7 @@ import (
 	"log"
 	"mime/multipart"
 	"os"
+	"path/filepath"
 )
 
 func (c *AWSClient) CreateBucket(name string) error {
@@ -32,38 +35,65 @@ func (c *AWSClient) ListBucket() (result *s3.ListBucketsOutput, err error) {
 	return result, nil
 }
 
-func (c *AWSClient) UploadImageFile(fileRequest io.Reader, filePath string, fileHeader *multipart.FileHeader, width, height uint) (resultLocation *string, err error) {
-	tempFile, err := ioutil.TempFile("./temp-images", "upload-*.png")
+func (c *AWSClient) UploadImageFile(ctx context.Context, fileRequest io.Reader, filePath string, fileHeader *multipart.FileHeader, width, height uint) (resultLocation *string, err error) {
+	err = os.MkdirAll("./temp-images", os.ModePerm)
 	if err != nil {
 		return nil, err
 	}
 
+	if err = ctx.Err(); err != nil {
+		return nil, err
+	}
+
+	tempFile, err := os.CreateTemp("./temp-images", "upload-*.png")
+	if err != nil {
+		return nil, fmt.Errorf("error during create temp file : %w", err)
+	}
 	defer tempFile.Close()
-
-	fileBytes, err := ioutil.ReadAll(fileRequest)
-	if err != nil {
-		return nil, err
-	}
-	tempFile.Write(fileBytes)
+	defer os.Remove(tempFile.Name())
 
 	imageFile, err := fileHeader.Open()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("open file header issue to : %w", err)
 	}
 	defer imageFile.Close()
+
+	fileBytes, err := ioutil.ReadAll(imageFile)
+	if err != nil {
+		return nil, err
+	}
+	if err = ctx.Err(); err != nil {
+		return nil, fmt.Errorf("operation canceled before writing to temp file: %w", err)
+	}
+
+	if _, err = tempFile.Write(fileBytes); err != nil {
+		return nil, fmt.Errorf("failed to write to temp file: %w", err)
+	}
+
+	if err := ctx.Err(); err != nil {
+		return nil, fmt.Errorf("operation canceled before resizing image: %w", err)
+	}
 
 	err = utils.ResizeImage(tempFile.Name(), tempFile.Name(), width, height)
 	if err != nil {
 		return nil, err
 	}
 
-	renamedImage := uuid.NewString()
+	fileExt := filepath.Ext(fileHeader.Filename)
+	renamedImage := uuid.NewString() + fileExt
+	if err = ctx.Err(); err != nil {
+		return nil, fmt.Errorf("operation canceled before opening resized file: %w", err)
+	}
 
 	file, err := os.Open(tempFile.Name())
 	if err != nil {
 		return nil, err
 	}
 	defer file.Close()
+
+	if err = ctx.Err(); err != nil {
+		return nil, fmt.Errorf("operation canceled before uploading to S3: %w", err)
+	}
 
 	result, err := s3manager.NewUploader(c.SessionClient()).Upload(&s3manager.UploadInput{
 		Bucket: aws.String("library-api-image"),
@@ -74,8 +104,6 @@ func (c *AWSClient) UploadImageFile(fileRequest io.Reader, filePath string, file
 		log.Println("uploader issue ", err)
 		return nil, err
 	}
-
-	_ = os.Remove(tempFile.Name())
 
 	return &result.Location, nil
 }

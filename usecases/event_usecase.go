@@ -22,7 +22,7 @@ type eventUsecase struct {
 	userRepo      repositories_interfaces.UserRepository
 }
 
-func (e *eventUsecase) imageUploader(thumbnail io.Reader, fileHeader *multipart.FileHeader) (*string, *apperror.CustomError) {
+func (e *eventUsecase) imageUploader(ctx context.Context, thumbnail io.Reader, fileHeader *multipart.FileHeader) (*string, *apperror.CustomError) {
 	//tempFile, err := ioutil.TempFile("./temp-images", "upload-*.png")
 	//if err != nil {
 	//	return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to read file`, err)
@@ -58,7 +58,7 @@ func (e *eventUsecase) imageUploader(thumbnail io.Reader, fileHeader *multipart.
 	//	return nil, apperror.NewCustomError(apperror.ErrInternalServer, fmt.Sprintf("failed to list buckets: %s", err), err)
 	//}
 
-	imagePath, err := e.awsClient.UploadImageFile(thumbnail, "events/", fileHeader, 1544, 794)
+	imagePath, err := e.awsClient.UploadImageFile(ctx, thumbnail, "events/", fileHeader, 1544, 794)
 	if err != nil {
 		return nil, apperror.NewCustomError(apperror.ErrInternalServer, "failed to upload book image", err)
 	}
@@ -74,7 +74,7 @@ func (e *eventUsecase) CreateEvent(ctx context.Context, request *requests.Create
 		ParticipantNumber: request.ParticipantNumber,
 	}
 
-	imagePath, customErr := e.imageUploader(request.Thumbnail, fileHeader)
+	imagePath, customErr := e.imageUploader(ctx, request.Thumbnail, fileHeader)
 	if customErr != nil {
 		return nil, customErr
 	}

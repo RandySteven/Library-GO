@@ -2,6 +2,8 @@ package aws_client
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"github.com/RandySteven/Library-GO/pkg/configs"
 	"github.com/aws/aws-sdk-go-v2/config"
 	credentials2 "github.com/aws/aws-sdk-go-v2/credentials"
@@ -23,7 +25,7 @@ type (
 		S3() *s3.S3
 		GeneratePromptResult(ctx context.Context, request any) (outputText string, err error)
 		ListBucket() (result *s3.ListBucketsOutput, err error)
-		UploadImageFile(fileRequest io.Reader, filePath string, fileHeader *multipart.FileHeader, width, height uint) (resultLocation *string, err error)
+		UploadImageFile(ctx context.Context, fileRequest io.Reader, filePath string, fileHeader *multipart.FileHeader, width, height uint) (resultLocation *string, err error)
 		CreateBucket(name string) error
 		UploadFileToS3(fileName, path string) (string, error)
 	}
@@ -36,7 +38,15 @@ type (
 )
 
 func NewAWSClient(configYml *configs.Config) (*AWSClient, error) {
+	if configYml == nil || &configYml.Config.AWS == nil {
+		return nil, errors.New("AWS configuration is required")
+	}
+
 	awsCfg := configYml.Config.AWS
+	if awsCfg.AccessKeyID == "" || awsCfg.SecretAccessKey == "" || awsCfg.Region == "" {
+		return nil, errors.New("AWS access key ID, secret access key, and region are required")
+	}
+
 	bedrockCfg, err := config.LoadDefaultConfig(context.Background(),
 		config.WithRegion(awsCfg.Region),
 		config.WithCredentialsProvider(credentials2.NewStaticCredentialsProvider(
@@ -48,8 +58,9 @@ func NewAWSClient(configYml *configs.Config) (*AWSClient, error) {
 			Timeout: 120 * time.Second,
 		}))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to load AWS config: %w", err)
 	}
+
 	sess, err := session.NewSession(&aws.Config{
 		Region: aws.String(awsCfg.Region),
 		Credentials: credentials.NewStaticCredentials(
@@ -59,8 +70,9 @@ func NewAWSClient(configYml *configs.Config) (*AWSClient, error) {
 		),
 	})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create AWS session: %w", err)
 	}
+
 	return &AWSClient{
 		session: sess,
 		s3:      s3.New(sess),
