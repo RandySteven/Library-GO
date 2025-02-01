@@ -23,46 +23,10 @@ type eventUsecase struct {
 }
 
 func (e *eventUsecase) imageUploader(ctx context.Context, thumbnail io.Reader, fileHeader *multipart.FileHeader) (*string, *apperror.CustomError) {
-	//tempFile, err := ioutil.TempFile("./temp-images", "upload-*.png")
-	//if err != nil {
-	//	return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to read file`, err)
-	//}
-	//defer tempFile.Close()
-	//
-	//fileBytes, err := ioutil.ReadAll(thumbnail)
-	//if err != nil {
-	//	return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to read file`, err)
-	//}
-	//
-	//tempFile.Write(fileBytes)
-	//
-	//if fileHeader == nil {
-	//	return nil, apperror.NewCustomError(apperror.ErrInternalServer, `invalid file header`, err)
-	//}
-	//
-	//imageFile, err := fileHeader.Open()
-	//if err != nil {
-	//	return nil, apperror.NewCustomError(apperror.ErrInternalServer, "failed to open image file", err)
-	//}
-	//
-	//defer imageFile.Close()
-	//
-	//err = utils.ResizeImage(tempFile.Name(), tempFile.Name(), 1544, 794)
-	//if err != nil {
-	//	return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to resize image`, err)
-	//}
-	//
-	//renamedImage := utils.RenameFileWithDateAndUUID(tempFile.Name()[len(`./temp-images/`):])
-	//buckets, err := e.awsClient.ListBucket()
-	//if err != nil {
-	//	return nil, apperror.NewCustomError(apperror.ErrInternalServer, fmt.Sprintf("failed to list buckets: %s", err), err)
-	//}
-
 	imagePath, err := e.awsClient.UploadImageFile(ctx, thumbnail, "events/", fileHeader, 1544, 794)
 	if err != nil {
 		return nil, apperror.NewCustomError(apperror.ErrInternalServer, "failed to upload book image", err)
 	}
-
 	return imagePath, nil
 }
 
