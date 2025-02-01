@@ -21,7 +21,7 @@ func (l *loggerScheduler) UploadLoggerScheduler(ctx context.Context) error {
 	}
 
 	fileName := file.Name()
-	_, err = l.awsClient.UploadFileToS3(fileName, enums.LogsPath)
+	_, err = l.awsClient.UploadFileToS3(ctx, fileName, enums.LogsPath)
 	if err != nil {
 		return err
 	}

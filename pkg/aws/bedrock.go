@@ -70,7 +70,7 @@ func (a *AWSClient) GeneratePromptResult(ctx context.Context, request any) (outp
 	case err = <-errCh:
 		return "", err
 	default:
-		resultLocation, err := a.UploadFileToS3(fileName, enums.StoriesPath)
+		resultLocation, err := a.UploadFileToS3(ctx, fileName, enums.StoriesPath)
 		if err != nil {
 			return "", err
 		}

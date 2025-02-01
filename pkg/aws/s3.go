@@ -108,7 +108,7 @@ func (c *AWSClient) UploadImageFile(ctx context.Context, fileRequest io.Reader, 
 	return &result.Location, nil
 }
 
-func (c *AWSClient) UploadFileToS3(fileName, path string) (string, error) {
+func (c *AWSClient) UploadFileToS3(ctx context.Context, fileName, path string) (string, error) {
 	buckets, err := c.ListBucket()
 	if err != nil {
 		return "", err
@@ -118,8 +118,12 @@ func (c *AWSClient) UploadFileToS3(fileName, path string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-
 	defer file.Close()
+
+	if err = ctx.Err(); err != nil {
+		return "", err
+	}
+
 	result, err := s3manager.NewUploader(c.SessionClient()).Upload(&s3manager.UploadInput{
 		Bucket: aws.String(*buckets.Buckets[0].Name),
 		Key:    aws.String(path + fileName),

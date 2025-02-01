@@ -27,7 +27,7 @@ type (
 		ListBucket() (result *s3.ListBucketsOutput, err error)
 		UploadImageFile(ctx context.Context, fileRequest io.Reader, filePath string, fileHeader *multipart.FileHeader, width, height uint) (resultLocation *string, err error)
 		CreateBucket(name string) error
-		UploadFileToS3(fileName, path string) (string, error)
+		UploadFileToS3(ctx context.Context, fileName, path string) (string, error)
 	}
 
 	AWSClient struct {
