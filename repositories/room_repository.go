@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"github.com/RandySteven/Library-GO/entities/models"
 	repositories_interfaces "github.com/RandySteven/Library-GO/interfaces/repositories"
+	"github.com/RandySteven/Library-GO/queries"
 	"github.com/RandySteven/Library-GO/utils"
 )
 
@@ -14,7 +15,7 @@ type roomRepository struct {
 }
 
 func (r *roomRepository) Save(ctx context.Context, entity *models.Room) (*models.Room, error) {
-	id, err := utils.Save[models.Room](ctx, r.Trigger(), ``, &entity.Name, &entity.Thumbnail)
+	id, err := utils.Save[models.Room](ctx, r.Trigger(), queries.InsertRoomQuery, &entity.Name, &entity.Thumbnail)
 	if err != nil {
 		return nil, err
 	}

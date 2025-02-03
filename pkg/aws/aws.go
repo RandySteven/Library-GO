@@ -37,6 +37,8 @@ type (
 	}
 )
 
+var _ AWS = &AWSClient{}
+
 func NewAWSClient(configYml *configs.Config) (*AWSClient, error) {
 	if configYml == nil || &configYml.Config.AWS == nil {
 		return nil, errors.New("AWS configuration is required")

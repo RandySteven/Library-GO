@@ -20,13 +20,13 @@ import (
 
 type App struct {
 	AlgoliaSearch  *algolia_client.AlgoliaAPISearchClient
-	AWSClient      *aws_client.AWSClient
+	AWSClient      aws_client.AWS
 	MySQLDB        *mysql_client.MySQLClient
 	Redis          *caches_client.RedisClient
 	Mailer         *emails_client.Mailer
 	ElasticClient  *elastics_client.ElasticClient
 	DiceDB         *caches_client.DiceDBClient
-	RabbitMQClient *rabbitmqs_client.RabbitMqClient
+	RabbitMQClient rabbitmqs_client.PubSub
 }
 
 func NewApp(config *configs.Config) (*App, error) {

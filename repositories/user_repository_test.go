@@ -33,26 +33,27 @@ func TestUserRepositoryTestSuite(t *testing.T) {
 }
 
 func (u *UserRepositoryTestSuite) TestFindByEmail() {
-	u.Run("success find user by consumers", func() {
+	u.Run("success find user by email", func() {
 		db, mock, err := sqlmock.New()
 		u.NoError(err)
 		defer db.Close()
 
 		email := "test@example.com"
 		expectedUser := &models.User{
-			ID:          1,
-			Name:        "Test User",
-			Email:       email,
-			PhoneNumber: "123456789",
-			DoB:         time.Now(),
-			CreatedAt:   time.Now(),
-			UpdatedAt:   time.Now(),
+			ID:             1,
+			Name:           "Test User",
+			Email:          email,
+			PhoneNumber:    "123456789",
+			ProfilePicture: "",
+			DoB:            time.Now(),
+			CreatedAt:      time.Now(),
+			UpdatedAt:      time.Now(),
 		}
 
 		// Mock the query result
-		rows := sqlmock.NewRows([]string{"id", "name", "address", "consumers", "phone", "password", "dob", "created_at", "updated_at", "deleted_at", "verified_at"}).
-			AddRow(expectedUser.ID, expectedUser.Name, "", expectedUser.Email, expectedUser.PhoneNumber, "", expectedUser.DoB, expectedUser.CreatedAt, expectedUser.UpdatedAt, nil, nil)
-		mock.ExpectQuery("SELECT .* FROM users WHERE consumers = ?").WithArgs(email).WillReturnRows(rows)
+		rows := sqlmock.NewRows([]string{"id", "name", "address", "email", "phone", "password", "dob", "profile_picture", "created_at", "updated_at", "deleted_at", "verified_at"}).
+			AddRow(expectedUser.ID, expectedUser.Name, "", expectedUser.Email, expectedUser.PhoneNumber, "", expectedUser.DoB, expectedUser.ProfilePicture, expectedUser.CreatedAt, expectedUser.UpdatedAt, nil, nil)
+		mock.ExpectQuery("SELECT .* FROM users WHERE email = ?").WithArgs(email).WillReturnRows(rows)
 
 		repo := repositories.NewRepositories(db)
 		user, err := repo.UserRepo.FindByEmail(context.Background(), email)
@@ -62,7 +63,7 @@ func (u *UserRepositoryTestSuite) TestFindByEmail() {
 		u.NoError(mock.ExpectationsWereMet())
 	})
 
-	u.Run("failed to find user consumers", func() {
+	u.Run("failed to find user email", func() {
 		db, mock, err := sqlmock.New()
 		u.NoError(err)
 		defer db.Close()
@@ -79,9 +80,9 @@ func (u *UserRepositoryTestSuite) TestFindByEmail() {
 		}
 
 		// Mock the query result
-		rows := sqlmock.NewRows([]string{"id", "name", "address", "consumers", "phone", "password", "dob", "created_at", "updated_at", "deleted_at", "verified_at"}).
+		rows := sqlmock.NewRows([]string{"id", "name", "address", "email", "phone", "password", "dob", "created_at", "updated_at", "deleted_at", "verified_at"}).
 			AddRow(expectedUser.ID, expectedUser.Name, "", expectedUser.Email, expectedUser.PhoneNumber, "", expectedUser.DoB, expectedUser.CreatedAt, expectedUser.UpdatedAt, nil, nil)
-		mock.ExpectQuery("SELECT .* FROM users WHERE consumers = ?").WithArgs("test").WillReturnRows(rows)
+		mock.ExpectQuery("SELECT .* FROM users WHERE email = ?").WithArgs("test").WillReturnRows(rows)
 
 		repo := repositories.NewRepositories(db)
 		_, err = repo.UserRepo.FindByEmail(context.Background(), email)
@@ -91,7 +92,7 @@ func (u *UserRepositoryTestSuite) TestFindByEmail() {
 }
 
 func (u *UserRepositoryTestSuite) TestFindByPhoneNumber() {
-	u.Run("success find user by consumers", func() {
+	u.Run("success find user by email", func() {
 		db, mock, err := sqlmock.New()
 		u.NoError(err)
 		defer db.Close()
@@ -109,7 +110,7 @@ func (u *UserRepositoryTestSuite) TestFindByPhoneNumber() {
 		}
 
 		// Mock the query result
-		rows := sqlmock.NewRows([]string{"id", "name", "address", "consumers", "phone_number", "password", "dob", "created_at", "updated_at", "deleted_at", "verified_at"}).
+		rows := sqlmock.NewRows([]string{"id", "name", "address", "email", "phone_number", "password", "dob", "created_at", "updated_at", "deleted_at", "verified_at"}).
 			AddRow(expectedUser.ID, expectedUser.Name, "", expectedUser.Email, expectedUser.PhoneNumber, "", expectedUser.DoB, expectedUser.CreatedAt, expectedUser.UpdatedAt, nil, nil)
 		mock.ExpectQuery("SELECT .* FROM users WHERE phone_number = ?").WithArgs(phone).WillReturnRows(rows)
 
@@ -138,7 +139,7 @@ func (u *UserRepositoryTestSuite) TestFindByPhoneNumber() {
 		}
 
 		// Mock the query result
-		rows := sqlmock.NewRows([]string{"id", "name", "address", "consumers", "phone", "password", "dob", "created_at", "updated_at", "deleted_at", "verified_at"}).
+		rows := sqlmock.NewRows([]string{"id", "name", "address", "email", "phone", "password", "dob", "created_at", "updated_at", "deleted_at", "verified_at"}).
 			AddRow(expectedUser.ID, expectedUser.Name, "", expectedUser.Email, expectedUser.PhoneNumber, "", expectedUser.DoB, expectedUser.CreatedAt, expectedUser.UpdatedAt, nil, nil)
 		mock.ExpectQuery("SELECT .* FROM users WHERE phone_number = ?").WithArgs("test").WillReturnRows(rows)
 
@@ -166,7 +167,7 @@ func (u *UserRepositoryTestSuite) TestSave() {
 		}
 
 		// Mock the insert query result
-		mock.ExpectPrepare("^INSERT INTO users \\(name, address, consumers, phone_number, password, dob\\) VALUES \\(\\?, \\?, \\?, \\?, \\?, \\?\\)$").
+		mock.ExpectPrepare("^INSERT INTO users \\(name, address, email, phone_number, password, dob\\) VALUES \\(\\?, \\?, \\?, \\?, \\?, \\?\\)$").
 			ExpectExec().
 			WithArgs(user.Name, user.Address, user.Email, user.PhoneNumber, user.Password, user.DoB).
 			WillReturnResult(sqlmock.NewResult(1, 1))
@@ -196,7 +197,7 @@ func (u *UserRepositoryTestSuite) TestSave() {
 		}
 
 		// Mock the insert query result
-		mock.ExpectPrepare("^INSERT INTO users \\(name, address, consumers, phone_number, password, dob\\) VALUES \\(\\?, \\?, \\?, \\?, \\?, \\?\\)$").
+		mock.ExpectPrepare("^INSERT INTO users \\(name, address, email, phone_number, password, dob\\) VALUES \\(\\?, \\?, \\?, \\?, \\?, \\?\\)$").
 			ExpectExec().
 			WillReturnError(fmt.Errorf(`error db`))
 
@@ -230,11 +231,11 @@ func (u *UserRepositoryTestSuite) TestFindByID() {
 		}
 
 		// Mock the database response
-		rows := sqlmock.NewRows([]string{"id", "name", "address", "consumers", "phone_number", "password", "dob", "created_at", "updated_at", "deleted_at", "verified_at"}).
+		rows := sqlmock.NewRows([]string{"id", "name", "address", "email", "phone_number", "password", "dob", "created_at", "updated_at", "deleted_at", "verified_at"}).
 			AddRow(expectedUser.ID, expectedUser.Name, expectedUser.Address, expectedUser.Email, expectedUser.PhoneNumber, expectedUser.Password, expectedUser.DoB, expectedUser.CreatedAt, expectedUser.UpdatedAt, nil, nil)
 
 		// Ensure the query is matched correctly
-		mock.ExpectPrepare(`SELECT id, name, address, consumers, phone_number, password, dob, created_at, updated_at, deleted_at, verified_at FROM users WHERE id = ?`).
+		mock.ExpectPrepare(`SELECT id, name, address, email, phone_number, password, dob, created_at, updated_at, deleted_at, verified_at FROM users WHERE id = ?`).
 			ExpectQuery().
 			WithArgs(id).
 			WillReturnRows(rows)
@@ -267,7 +268,7 @@ func (u *UserRepositoryTestSuite) TestFindByID() {
 		id := uint64(1)
 
 		// Ensure the query is matched correctly
-		mock.ExpectPrepare(`SELECT id, name, address, consumers, phone_number, password, dob, created_at, updated_at, deleted_at, verified_at FROM users WHERE id = ?`).
+		mock.ExpectPrepare(`SELECT id, name, address, email, phone_number, password, dob, created_at, updated_at, deleted_at, verified_at FROM users WHERE id = ?`).
 			ExpectQuery().
 			WillReturnError(fmt.Errorf(`error db`))
 

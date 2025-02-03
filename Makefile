@@ -59,3 +59,6 @@ docker_run:
 
 test:
 	go test -coverprofile=coverage.out ./... ;    go tool cover -html=coverage.out
+
+mockery:
+	mockery --all --output ./mocks

@@ -10,7 +10,7 @@ import (
 )
 
 type loggerScheduler struct {
-	awsClient *aws_client.AWSClient
+	awsClient aws_client.AWS
 }
 
 func (l *loggerScheduler) UploadLoggerScheduler(ctx context.Context) error {
@@ -36,7 +36,7 @@ func (l *loggerScheduler) UploadLoggerScheduler(ctx context.Context) error {
 
 var _ schedulers_interfaces.LoggerScheduler = &loggerScheduler{}
 
-func newLoggingScheduler(awsClient *aws_client.AWSClient) *loggerScheduler {
+func newLoggingScheduler(awsClient aws_client.AWS) *loggerScheduler {
 	return &loggerScheduler{
 		awsClient: awsClient,
 	}

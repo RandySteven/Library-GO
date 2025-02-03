@@ -13,7 +13,7 @@ type Schedulers struct {
 	LoggerScheduler schedulers_interfaces.LoggerScheduler
 }
 
-func NewSchedulers(repo *repositories.Repositories, cache *caches.Caches, aws *aws_client.AWSClient) *Schedulers {
+func NewSchedulers(repo *repositories.Repositories, cache *caches.Caches, aws aws_client.AWS) *Schedulers {
 	return &Schedulers{
 		BorrowScheduler: newBorrowScheduler(repo.BorrowRepo, repo.BorrowDetailRepo, repo.BookRepo),
 		BookScheduler:   newBookScheduler(repo.BookRepo, repo.RatingRepo, cache.BookCache),
