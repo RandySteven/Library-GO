@@ -12,9 +12,18 @@ import (
 	"time"
 )
 
+type MySQL interface {
+	Close()
+	Ping() error
+	Client() *sql.DB
+	Alter(ctx context.Context, queryScript queries.GoQuery) error
+}
+
 type MySQLClient struct {
 	db *sql.DB
 }
+
+var _ MySQL = &MySQLClient{}
 
 func NewMySQLClient(config *configs.Config) (*MySQLClient, error) {
 	mysql := config.Config.MySQL

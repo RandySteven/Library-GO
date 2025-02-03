@@ -5,9 +5,19 @@ import (
 	"github.com/algolia/algoliasearch-client-go/v4/algolia/search"
 )
 
-type AlgoliaAPISearchClient struct {
-	search *search.APIClient
-}
+type (
+	AlgoliaAPISearchClient struct {
+		search *search.APIClient
+	}
+
+	AlgoliaAPISearch interface {
+		SearchClient() *search.APIClient
+		SaveObject(indexName string, record map[string]any) (resp any, err error)
+		Search(indexName string, query string) (*search.SearchResponses, error)
+	}
+)
+
+var _ AlgoliaAPISearch = &AlgoliaAPISearchClient{}
 
 func NewAlgoliaSearch(config *configs.Config) (*AlgoliaAPISearchClient, error) {
 	algolia := config.Config.Algolia

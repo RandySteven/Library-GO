@@ -26,7 +26,7 @@ type Usecases struct {
 	RoomUsecase           usecases_interfaces.RoomUsecase
 }
 
-func NewUsecases(repositories *repositories.Repositories, caches *caches.Caches, awsClient aws_client.AWS, algoClient *algolia_client.AlgoliaAPISearchClient, pubsub rabbitmqs_client.PubSub) *Usecases {
+func NewUsecases(repositories *repositories.Repositories, caches *caches.Caches, awsClient aws_client.AWS, algoClient algolia_client.AlgoliaAPISearch, pubsub rabbitmqs_client.PubSub) *Usecases {
 	return &Usecases{
 		BagUsecase:            newBagUsecase(repositories.BagRepo, repositories.BookRepo, repositories.UserRepo, caches.BagCache),
 		DevUsecase:            newDevUsecase(awsClient, pubsub),

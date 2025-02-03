@@ -19,11 +19,11 @@ import (
 )
 
 type App struct {
-	AlgoliaSearch  *algolia_client.AlgoliaAPISearchClient
+	AlgoliaSearch  algolia_client.AlgoliaAPISearch
 	AWSClient      aws_client.AWS
-	MySQLDB        *mysql_client.MySQLClient
-	Redis          *caches_client.RedisClient
-	Mailer         *emails_client.Mailer
+	MySQLDB        mysql_client.MySQL
+	Redis          caches_client.Redis
+	Mailer         emails_client.Mail
 	ElasticClient  *elastics_client.ElasticClient
 	DiceDB         *caches_client.DiceDBClient
 	RabbitMQClient rabbitmqs_client.PubSub

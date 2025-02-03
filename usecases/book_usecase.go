@@ -24,7 +24,7 @@ import (
 
 type bookUsecase struct {
 	awsClient        aws_client.AWS
-	algoClient       *algolia_client.AlgoliaAPISearchClient
+	algoClient       algolia_client.AlgoliaAPISearch
 	userRepo         repositories_interfaces.UserRepository
 	bookRepo         repositories_interfaces.BookRepository
 	genreRepo        repositories_interfaces.GenreRepository
@@ -374,7 +374,7 @@ func newBookUsecase(
 	borrowDeatilRepo repositories_interfaces.BorrowDetailRepository,
 	ratingRepo repositories_interfaces.RatingRepository,
 	awsClient aws_client.AWS,
-	algoClient *algolia_client.AlgoliaAPISearchClient,
+	algoClient algolia_client.AlgoliaAPISearch,
 	cache caches_interfaces.BookCache) *bookUsecase {
 	return &bookUsecase{
 		userRepo:         userRepo,

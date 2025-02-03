@@ -12,6 +12,12 @@ type Mailer struct {
 	Metadata map[string]interface{}
 }
 
+type Mail interface {
+	Send(to []string, cc []string, subject string, header string, body string, content map[string]interface{}) (err error)
+}
+
+var _ Mail = &Mailer{}
+
 func NewMailtrap(config *configs.Config) (*Mailer, error) {
 	mailtrap := config.Config.Mailtrap
 	host := mailtrap.Host

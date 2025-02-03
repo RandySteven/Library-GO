@@ -20,10 +20,20 @@ var (
 	rateLimiter  = os.Getenv("RATE_LIMITER")
 )
 
-type RedisClient struct {
-	client  *redis.Client
-	limiter *redis_rate.Limiter
-}
+type (
+	RedisClient struct {
+		client  *redis.Client
+		limiter *redis_rate.Limiter
+	}
+
+	Redis interface {
+		Ping() error
+		Client() *redis.Client
+		ClearCache(ctx context.Context) error
+	}
+)
+
+var _ Redis = &RedisClient{}
 
 func NewRedisCache(config *configs.Config) (*RedisClient, error) {
 	redisCfg := config.Config.Redis
