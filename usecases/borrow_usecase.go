@@ -149,7 +149,7 @@ func (b *borrowUsecase) BorrowTransaction(ctx context.Context) (result *response
 		log.Fatal("error send to topic", err)
 	}
 
-	b.bookCache.Del(ctx, enums.BooksKey)
+	_ = b.bookCache.Del(ctx, enums.BooksKey)
 
 	result = &responses.BorrowResponse{
 		ID:           borrow.ID,
