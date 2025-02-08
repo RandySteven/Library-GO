@@ -50,40 +50,8 @@ func (s *scheduler) deleteImageFiles(ctx context.Context) error {
 	})
 }
 
-func (s *scheduler) RunAllJobs(ctx context.Context) error {
-	log.Println("Running all jobs")
-	s.cron.Start()
-	if err := s.updateBorrowDetailStatus(ctx); err != nil {
-		return err
-	}
-	if err := s.testSchedulerLog(ctx); err != nil {
-		return err
-	}
-	if err := s.refereshBookList(ctx); err != nil {
-		return err
-	}
-	if err := s.uploadLogFile(ctx); err != nil {
-		return err
-	}
-	return nil
-}
-
 func (s *scheduler) updateBorrowDetailStatus(ctx context.Context) error {
 	return s.runScheduler(ctx, os.Getenv("SCHEDULER_UPDATE_BOOK_STATUS"), s.dependencies.schedulers.BorrowScheduler.UpdateBorrowDetailStatusToExpired)
-}
-
-func (s *scheduler) StopAllJobs(ctx context.Context) error {
-	log.Println("Stopping scheduler...")
-
-	// Gracefully stop cron jobs
-	cronCtx := s.cron.Stop() // Returns a channel that closes once all running jobs are complete
-	select {
-	case <-cronCtx.Done():
-		log.Println("All cron jobs stopped gracefully")
-		return nil
-	case <-ctx.Done():
-		return ctx.Err() // Context timeout or cancellation
-	}
 }
 
 func (s *scheduler) runScheduler(ctx context.Context, spec string, schedulerFunc func(ctx context.Context) error) error {
