@@ -18,6 +18,12 @@ type (
 		DeletedAt *time.Time `json:"deleted_at"`
 	}
 
+	PaginationListBookResponse struct {
+		Next  string               `json:"next"`
+		Prev  string               `json:"prev"`
+		Books []*ListBooksResponse `json:"books"`
+	}
+
 	AuthorBookResponse struct {
 		ID   uint64 `json:"id"`
 		Name string `json:"name"`

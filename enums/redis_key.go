@@ -1,8 +1,9 @@
 package enums
 
 const (
-	BookKey  = `cache_books.%s`
-	BooksKey = `cache_all_books`
+	BookKey     = `cache_books.%s`
+	BooksKey    = `cache_all_books`
+	BookPageKey = `cache_books.page.%d`
 
 	BorrowKey  = `cache_borrows.%s`
 	BorrowsKey = `cache_all_borrows.%d`

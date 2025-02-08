@@ -30,4 +30,13 @@ const (
 		SET status = ?
 		WHERE id = ?
 	`
+
+	SelectBookPaginateQuery GoQuery = `
+		SELECT id, title, description, image, status, created_at, updated_at, deleted_at 
+		FROM
+		    books
+		ORDER BY id
+		LIMIT ?
+		OFFSET ?
+	`
 )

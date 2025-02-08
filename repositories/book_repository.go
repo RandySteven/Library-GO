@@ -64,7 +64,30 @@ func (b *bookRepository) FindByID(ctx context.Context, id uint64) (result *model
 }
 
 func (b *bookRepository) FindAll(ctx context.Context, skip uint64, take uint64) ([]*models.Book, error) {
-	return utils.FindAll[models.Book](ctx, b.Trigger(), queries.SelectBooksQuery)
+	if skip == 0 && take == 0 {
+		return utils.FindAll[models.Book](ctx, b.Trigger(), queries.SelectBooksQuery)
+	}
+	if skip == 1 {
+		skip = 0
+	} else {
+		skip = skip*take - take
+	}
+	books := []*models.Book{}
+	rows, err := b.Trigger().QueryContext(ctx, queries.SelectBookPaginateQuery.ToString(), take, skip)
+	if err != nil {
+		return nil, err
+	}
+	for rows.Next() {
+		book := &models.Book{}
+		err = rows.Scan(
+			&book.ID, &book.Title, &book.Description, &book.Image,
+			&book.Status, &book.CreatedAt, &book.UpdatedAt, &book.DeletedAt)
+		if err != nil {
+			return nil, err
+		}
+		books = append(books, book)
+	}
+	return books, nil
 }
 
 func (b *bookRepository) FindSelectedBooksId(ctx context.Context, ids []uint64) (results []*models.Book, err error) {

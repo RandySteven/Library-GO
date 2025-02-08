@@ -2,7 +2,9 @@ package handlers
 
 import (
 	"context"
+	"fmt"
 	"github.com/RandySteven/Library-GO/entities/payloads/requests"
+	"github.com/RandySteven/Library-GO/entities/payloads/responses"
 	"github.com/RandySteven/Library-GO/enums"
 	handlers_interfaces "github.com/RandySteven/Library-GO/interfaces/handlers"
 	usecases_interfaces "github.com/RandySteven/Library-GO/interfaces/usecases"
@@ -11,6 +13,8 @@ import (
 	"github.com/gorilla/mux"
 	"log"
 	"net/http"
+	"net/url"
+	"os"
 	"strconv"
 )
 
@@ -57,18 +61,43 @@ func (b *BookHandler) AddBook(w http.ResponseWriter, r *http.Request) {
 	utils.ResponseHandler(w, http.StatusOK, `success create book`, &dataKey, result, nil)
 }
 
+func paginationRequest(query url.Values) (request *requests.PaginationRequest) {
+	request = &requests.PaginationRequest{}
+	page := query.Get(`page`)
+	limit := query.Get(`limit`)
+	pageInt, _ := strconv.Atoi(page)
+	limitInt, _ := strconv.Atoi(limit)
+	request.Page = uint64(pageInt)
+	request.Limit = uint64(limitInt)
+	return request
+}
+
 func (b *BookHandler) GetAllBooks(w http.ResponseWriter, r *http.Request) {
 	var (
 		rID     = uuid.NewString()
 		ctx     = context.WithValue(r.Context(), enums.RequestID, rID)
 		dataKey = `books`
+		request = &requests.PaginationRequest{}
 	)
-	result, customErr := b.usecase.GetAllBooks(ctx)
+	request = paginationRequest(r.URL.Query())
+
+	result, customErr := b.usecase.GetAllBooks(ctx, request)
 	if customErr != nil {
 		utils.ResponseHandler(w, customErr.ErrCode(), `internal server error`, nil, nil, customErr)
 		return
 	}
-	utils.ResponseHandler(w, http.StatusOK, `success get books`, &dataKey, result, nil)
+	pageInt := request.Page
+	limitInt := request.Limit
+	prev := fmt.Sprintf("http://%s:%s/books?page=%d&limit=%d", os.Getenv("HOST"), os.Getenv("PORT"), pageInt-1, limitInt)
+	if pageInt == 1 {
+		prev = ""
+	}
+	response := &responses.PaginationListBookResponse{
+		Books: result,
+		Next:  fmt.Sprintf("http://%s:%s/books?page=%d&limit=%d", os.Getenv("HOST"), os.Getenv("PORT"), pageInt+1, limitInt),
+		Prev:  prev,
+	}
+	utils.ResponseHandler(w, http.StatusOK, `success get books`, &dataKey, response, nil)
 }
 
 func (b *BookHandler) GetBookByID(w http.ResponseWriter, r *http.Request) {

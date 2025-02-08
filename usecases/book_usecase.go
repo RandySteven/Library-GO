@@ -183,9 +183,8 @@ func (b *bookUsecase) AddNewBook(ctx context.Context, request *requests.CreateBo
 	return result, nil
 }
 
-func (b *bookUsecase) GetAllBooks(ctx context.Context) (result []*responses.ListBooksResponse, customErr *apperror.CustomError) {
-	result = []*responses.ListBooksResponse{}
-	result, err := b.cache.GetMultiData(ctx)
+func (b *bookUsecase) GetAllBooks(ctx context.Context, request *requests.PaginationRequest) (result []*responses.ListBooksResponse, customErr *apperror.CustomError) {
+	result, err := b.cache.GetBookPage(ctx, request.Page)
 	if err != nil {
 		if !errors.Is(err, redis.Nil) {
 			return nil, apperror.NewCustomError(apperror.ErrInternalServer, `redis issue : `, err)
@@ -194,7 +193,7 @@ func (b *bookUsecase) GetAllBooks(ctx context.Context) (result []*responses.List
 	if result != nil {
 		return result, nil
 	}
-	books, err := b.bookRepo.FindAll(ctx, 0, 0)
+	books, err := b.bookRepo.FindAll(ctx, request.Page, request.Limit)
 	if err != nil {
 		return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to get books`, err)
 	}
@@ -215,9 +214,9 @@ func (b *bookUsecase) GetAllBooks(ctx context.Context) (result []*responses.List
 			DeletedAt: book.DeletedAt,
 		})
 	}
-	err = b.cache.SetMultiData(ctx, result)
+	err = b.cache.SetBookPage(ctx, request.Page, result)
 	if err != nil {
-		return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to insert to redis`, err)
+		return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to insert redis`, err)
 	}
 	return result, nil
 }
