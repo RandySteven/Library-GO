@@ -26,7 +26,7 @@ func (s *scheduler) register(registerJob ...job) (jobs []job) {
 	return jobs
 }
 
-func (s *scheduler) RegisteredJobs() (jobs []job) {
+func (s *scheduler) registeredJobs() (jobs []job) {
 	jobs = s.register(
 		s.testSchedulerLog,
 		s.updateBorrowDetailStatus,

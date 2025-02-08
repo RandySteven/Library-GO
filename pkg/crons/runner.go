@@ -8,7 +8,7 @@ import (
 func (s *scheduler) RunAllJobs(ctx context.Context) error {
 	log.Println("Running all jobs")
 	s.cron.Start()
-	for _, registerJob := range s.RegisteredJobs() {
+	for _, registerJob := range s.registeredJobs() {
 		if err := registerJob(ctx); err != nil {
 			return err
 		}
