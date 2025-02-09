@@ -61,22 +61,11 @@ func (b *BookHandler) AddBook(w http.ResponseWriter, r *http.Request) {
 	utils.ResponseHandler(w, http.StatusOK, `success create book`, &dataKey, result, nil)
 }
 
-func paginationRequest(query url.Values) (request *requests.PaginationRequest) {
-	request = &requests.PaginationRequest{}
-	page := query.Get(`page`)
-	limit := query.Get(`limit`)
-	pageInt, _ := strconv.Atoi(page)
-	limitInt, _ := strconv.Atoi(limit)
-	request.Page = uint64(pageInt)
-	request.Limit = uint64(limitInt)
-	return request
-}
-
 func (b *BookHandler) GetAllBooks(w http.ResponseWriter, r *http.Request) {
 	var (
 		rID     = uuid.NewString()
 		ctx     = context.WithValue(r.Context(), enums.RequestID, rID)
-		dataKey = `books`
+		dataKey = `result`
 		request = &requests.PaginationRequest{}
 	)
 	request = paginationRequest(r.URL.Query())
@@ -88,13 +77,12 @@ func (b *BookHandler) GetAllBooks(w http.ResponseWriter, r *http.Request) {
 	}
 	pageInt := request.Page
 	limitInt := request.Limit
-	prev := fmt.Sprintf("http://%s:%s/books?page=%d&limit=%d", os.Getenv("HOST"), os.Getenv("PORT"), pageInt-1, limitInt)
-	if pageInt == 1 {
-		prev = ""
-	}
+
+	next, prev := prevNext(pageInt, limitInt, len(result))
+
 	response := &responses.PaginationListBookResponse{
 		Books: result,
-		Next:  fmt.Sprintf("http://%s:%s/books?page=%d&limit=%d", os.Getenv("HOST"), os.Getenv("PORT"), pageInt+1, limitInt),
+		Next:  next,
 		Prev:  prev,
 	}
 	utils.ResponseHandler(w, http.StatusOK, `success get books`, &dataKey, response, nil)
@@ -140,6 +128,29 @@ func (b *BookHandler) SearchBooks(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	utils.ResponseHandler(w, http.StatusOK, `success search books`, &dataKey, result, nil)
+}
+
+func paginationRequest(query url.Values) (request *requests.PaginationRequest) {
+	request = &requests.PaginationRequest{}
+	page := query.Get(`page`)
+	limit := query.Get(`limit`)
+	pageInt, _ := strconv.Atoi(page)
+	limitInt, _ := strconv.Atoi(limit)
+	request.Page = uint64(pageInt)
+	request.Limit = uint64(limitInt)
+	return request
+}
+
+func prevNext(pageInt, limitInt uint64, currResultLen int) (next, prev string) {
+	prev = fmt.Sprintf("http://%s:%s/books?page=%d&limit=%d", os.Getenv("HOST"), os.Getenv("PORT"), pageInt-1, limitInt)
+	if pageInt == 1 {
+		prev = ""
+	}
+	next = fmt.Sprintf("http://%s:%s/books?page=%d&limit=%d", os.Getenv("HOST"), os.Getenv("PORT"), pageInt+1, limitInt)
+	if currResultLen < int(limitInt) {
+		next = ""
+	}
+	return next, prev
 }
 
 var _ handlers_interfaces.BookHandler = &BookHandler{}
