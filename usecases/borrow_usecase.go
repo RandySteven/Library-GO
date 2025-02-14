@@ -138,7 +138,7 @@ func (b *borrowUsecase) BorrowTransaction(ctx context.Context) (result *response
 		return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to delete user bag`, err)
 	}
 
-	if err = b.pubsub.Send("borrow_transactions", "borrow-transaction-success", &messages.EmailMessage{
+	if err = b.pubsub.Send(ctx, "borrow_transactions", "borrow-transaction-success", &messages.EmailMessage{
 		ID: uuid.NewString(),
 		To: user.Email,
 		Content: &messages.BorrowMessage{

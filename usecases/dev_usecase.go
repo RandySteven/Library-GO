@@ -36,7 +36,8 @@ func (d *devUsecase) GetListBuckets(ctx context.Context) ([]string, error) {
 
 func (d *devUsecase) MessageBrokerCheckerHealth(ctx context.Context) (string, error) {
 	requestID := (ctx.Value(enums.RequestID)).(string)
-	err := d.pubsub.Send("dev_checker", "dev-send-message", fmt.Sprintf("Check dev healthy with request ID : %s", requestID))
+	message := fmt.Sprintf("Check dev healthy with request ID : %s", requestID)
+	err := d.pubsub.Send(ctx, "dev_checker", "dev-send-message", message)
 	if err != nil {
 		return "", err
 	}

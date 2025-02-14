@@ -14,6 +14,7 @@ import (
 	usecases_interfaces "github.com/RandySteven/Library-GO/interfaces/usecases"
 	algolia_client "github.com/RandySteven/Library-GO/pkg/algolia"
 	aws_client "github.com/RandySteven/Library-GO/pkg/aws"
+	rabbitmqs_client "github.com/RandySteven/Library-GO/pkg/rabbitmqs"
 	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
 	"log"
@@ -35,6 +36,7 @@ type bookUsecase struct {
 	borrowDeatilRepo repositories_interfaces.BorrowDetailRepository
 	ratingRepo       repositories_interfaces.RatingRepository
 	cache            caches_interfaces.BookCache
+	pubsub           rabbitmqs_client.PubSub
 }
 
 func (b *bookUsecase) setTx(ctx context.Context) {
@@ -176,7 +178,8 @@ func (b *bookUsecase) AddNewBook(ctx context.Context, request *requests.CreateBo
 	case <-ctx.Done():
 		return nil, apperror.NewCustomError(apperror.ErrInternalServer, "context cancelled", ctx.Err())
 	}
-	_ = b.cache.Del(ctx, enums.BooksKey)
+	//_ = b.cache.Del(ctx, enums.BooksKey)
+	_ = b.pubsub.Send(ctx, "book_exchange", "book-send-message", book)
 	result = &responses.CreateBookResponse{
 		ID: uuid.NewString(),
 	}
@@ -374,7 +377,8 @@ func newBookUsecase(
 	ratingRepo repositories_interfaces.RatingRepository,
 	awsClient aws_client.AWS,
 	algoClient algolia_client.AlgoliaAPISearch,
-	cache caches_interfaces.BookCache) *bookUsecase {
+	cache caches_interfaces.BookCache,
+	pubsub rabbitmqs_client.PubSub) *bookUsecase {
 	return &bookUsecase{
 		userRepo:         userRepo,
 		bookRepo:         bookRepo,
@@ -388,5 +392,6 @@ func newBookUsecase(
 		awsClient:        awsClient,
 		algoClient:       algoClient,
 		cache:            cache,
+		pubsub:           pubsub,
 	}
 }

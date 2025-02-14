@@ -1,6 +1,7 @@
 package rabbitmqs_client
 
 import (
+	"context"
 	"fmt"
 	"github.com/RandySteven/Library-GO/pkg/configs"
 	"github.com/streadway/amqp"
@@ -16,6 +17,8 @@ type RabbitMqClient struct {
 
 func NewRabbitMQClient(configs *configs.Config) (*RabbitMqClient, error) {
 	rabbitMQConf := configs.Config.RabbitMQ
+	//fmt.Sprintf("amqp://%s:%s@%s:%s/", rabbitMQConf.User, rabbitMQConf.Password, rabbitMQConf.Host, rabbitMQConf.Port)
+
 	connectUrlRabbitMq := fmt.Sprintf("amqp://%s:%s", rabbitMQConf.Host, rabbitMQConf.Port)
 	log.Println(connectUrlRabbitMq)
 	conn, err := amqp.Dial(connectUrlRabbitMq)
@@ -55,6 +58,21 @@ func (r *RabbitMqClient) Close() error {
 
 func processMessage(body []byte) error {
 	log.Printf("Processing message: %s", string(body))
+	return nil
+}
+
+func (r *RabbitMqClient) DeclareExchange(ctx context.Context, exchange, typeExchange string) error {
+	err := r.channel.ExchangeDeclare(
+		exchange,
+		typeExchange,
+		true,
+		false,
+		false,
+		false,
+		nil)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

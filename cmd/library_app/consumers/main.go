@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"github.com/RandySteven/Library-GO/apps"
+	consumers2 "github.com/RandySteven/Library-GO/consumers"
 	"github.com/RandySteven/Library-GO/pkg/configs"
 	"github.com/joho/godotenv"
 	"log"
@@ -18,6 +19,7 @@ func init() {
 
 func main() {
 	_ = context.TODO()
+	ctx := context.Background()
 	configPath, err := configs.ParseFlags()
 
 	if err != nil {
@@ -41,10 +43,22 @@ func main() {
 		log.Fatal(err)
 		return
 	}
+	log.Println("rabbit mq nya nil gk ya ? ", app.RabbitMQClient == nil)
+	consumersEs := consumers2.NewConsumers(app)
+	log.Println("si consumer nya nil gak ya ? ", consumersEs == nil)
+	go func() {
+		err = consumersEs.RunConsumers(ctx)
+		if err != nil {
+			log.Fatal("consumer error run consumers ", err)
+		}
+	}()
 
-	if err = app.RabbitMQClient.Receive("dev_checker", "dev-send-message"); err != nil {
-		log.Fatal("consumer error ", err)
-		return
-	}
-	defer app.RabbitMQClient.Close()
+	<-ctx.Done()
+	log.Println("application shutdown")
+
+	//if _, err = app.RabbitMQClient.Receive(ctx, "dev_checker", "dev-send-message"); err != nil {
+	//	log.Fatal("consumer error ", err)
+	//	return
+	//}
+	//defer app.RabbitMQClient.Close()
 }
