@@ -178,7 +178,6 @@ func (b *bookUsecase) AddNewBook(ctx context.Context, request *requests.CreateBo
 	case <-ctx.Done():
 		return nil, apperror.NewCustomError(apperror.ErrInternalServer, "context cancelled", ctx.Err())
 	}
-	//_ = b.cache.Del(ctx, enums.BooksKey)
 	_ = b.pubsub.Send(ctx, "book_exchange", "book-send-message", book)
 	result = &responses.CreateBookResponse{
 		ID: uuid.NewString(),
@@ -242,6 +241,7 @@ func (b *bookUsecase) GetBookByID(ctx context.Context, id uint64) (result *respo
 		Title:       book.Title,
 		Description: book.Description,
 		Image:       book.Image,
+		PDFFile:     book.PDFFile,
 		Status:      book.Status.ToString(),
 		CreatedAt:   book.CreatedAt.Local(),
 	}

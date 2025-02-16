@@ -41,6 +41,7 @@ type (
 		Title       string                `json:"title"`
 		Status      string                `json:"status"`
 		Description string                `json:"description"`
+		PDFFile     string                `json:"pdf_file"`
 		Authors     []*AuthorBookResponse `json:"authors"`
 		Genres      []*GenreBookResponse  `json:"genres"`
 		CreatedAt   time.Time             `json:"created_at"`

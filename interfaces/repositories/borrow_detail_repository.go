@@ -7,6 +7,7 @@ import (
 
 type BorrowDetailRepository interface {
 	Saver[models.BorrowDetail]
+	Finder[models.BorrowDetail]
 	UnitOfWork
 	FindByBorrowID(ctx context.Context, borrowID uint64) (results []*models.BorrowDetail, err error)
 	FindByBorrowIDAndBookID(ctx context.Context, borrowID uint64, bookID uint64) (result *models.BorrowDetail, err error)

@@ -34,6 +34,23 @@ func (o *onboardingUsecase) refreshTx(ctx context.Context) {
 	o.roleUserRepo.SetTx(tx)
 }
 
+func (o *onboardingUsecase) setTransaction(ctx context.Context, customErr *apperror.CustomError) {
+	defer o.userRepo.SetTx(nil)
+	if r := recover(); r != nil {
+		_ = o.userRepo.RollbackTx(ctx)
+		panic(r)
+	} else if customErr != nil {
+		_ = o.userRepo.RollbackTx(ctx)
+		return
+	} else {
+		if err := o.userRepo.CommitTx(ctx); err != nil {
+			log.Println("failed to commit transaction")
+			return
+		}
+		return
+	}
+}
+
 func (o *onboardingUsecase) RegisterUser(ctx context.Context, request *requests.UserRegisterRequest) (result *responses.UserRegisterResponse, customErr *apperror.CustomError) {
 	var (
 		user        = &models.User{}
@@ -44,22 +61,7 @@ func (o *onboardingUsecase) RegisterUser(ctx context.Context, request *requests.
 	if err != nil {
 		return
 	}
-	defer func() {
-		defer o.userRepo.SetTx(nil)
-		if r := recover(); r != nil {
-			_ = o.userRepo.RollbackTx(ctx)
-			panic(r)
-		} else if customErr != nil {
-			_ = o.userRepo.RollbackTx(ctx)
-			return
-		} else {
-			if err = o.userRepo.CommitTx(ctx); err != nil {
-				log.Println("failed to commit transaction")
-				return
-			}
-			return
-		}
-	}()
+	defer o.setTransaction(ctx, customErr)
 
 	go func() {
 		defer wg.Done()

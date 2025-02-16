@@ -11,6 +11,7 @@ type Book struct {
 	Description string
 	Image       string
 	Status      enums.BookStatus
+	PDFFile     string
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 	DeletedAt   *time.Time

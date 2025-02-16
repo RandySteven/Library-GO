@@ -14,6 +14,15 @@ type borrowDetailRepository struct {
 	tx *sql.Tx
 }
 
+func (b *borrowDetailRepository) FindByID(ctx context.Context, id uint64) (*models.BorrowDetail, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (b *borrowDetailRepository) FindAll(ctx context.Context, skip uint64, take uint64) (result []*models.BorrowDetail, err error) {
+	return utils.FindAll[models.BorrowDetail](ctx, b.Trigger(), queries.SelectBorrowDetailQuery)
+}
+
 func (b *borrowDetailRepository) Save(ctx context.Context, entity *models.BorrowDetail) (result *models.BorrowDetail, err error) {
 	result = entity
 	id, err := utils.Save[models.BorrowDetail](ctx, b.Trigger(), queries.InsertBorrowDetailQuery, &entity.BorrowID, &entity.BookID, &entity.ReturnedDate)

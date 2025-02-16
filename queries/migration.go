@@ -43,6 +43,7 @@ const (
 		    description TEXT NOT NULL,
 		    image VARCHAR(244) NOT NULL,
 		    status INT NOT NULL DEFAULT 0,
+		    pdf_file VARCHAR(244) NOT NULL,
 		    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 		    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 		    deleted_at TIMESTAMP DEFAULT NULL 

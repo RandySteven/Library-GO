@@ -51,4 +51,22 @@ type (
 		UserID        uint64                `json:"user_id"`
 		ReturnedBooks []*ReturnBookResponse `json:"returned_books"`
 	}
+
+	ListBorrowDashboardResponse struct {
+		ID              uint64 `json:"id"`
+		BorrowReference string `json:"borrow_reference"`
+		User            *struct {
+			ID          uint64 `json:"id"`
+			Name        string `json:"name"`
+			Email       string `json:"email"`
+			PhoneNumber string `json:"phone_number"`
+		} `json:"user"`
+		Book *struct {
+			ID     uint64 `json:"id"`
+			Title  string `json:"title"`
+			Status string `json:"status"`
+		} `json:"book"`
+		BorrowDate time.Time `json:"borrow_date"`
+		ReturnDate time.Time `json:"return_date"`
+	}
 )

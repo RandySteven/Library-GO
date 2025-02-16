@@ -81,7 +81,7 @@ func (b *bookRepository) FindAll(ctx context.Context, skip uint64, take uint64) 
 		book := &models.Book{}
 		err = rows.Scan(
 			&book.ID, &book.Title, &book.Description, &book.Image,
-			&book.Status, &book.CreatedAt, &book.UpdatedAt, &book.DeletedAt)
+			&book.Status, &book.PDFFile, &book.CreatedAt, &book.UpdatedAt, &book.DeletedAt)
 		if err != nil {
 			return nil, err
 		}
@@ -99,7 +99,7 @@ func (b *bookRepository) FindSelectedBooksId(ctx context.Context, ids []uint64) 
 	defer rows.Close()
 	for rows.Next() {
 		book := new(models.Book)
-		err = rows.Scan(&book.ID, &book.Title, &book.Description, &book.Image, &book.Status, &book.CreatedAt, &book.UpdatedAt, &book.DeletedAt)
+		err = rows.Scan(&book.ID, &book.Title, &book.Description, &book.Image, &book.Status, &book.PDFFile, &book.CreatedAt, &book.UpdatedAt, &book.DeletedAt)
 		if err != nil {
 			return nil, err
 		}
@@ -111,7 +111,7 @@ func (b *bookRepository) FindSelectedBooksId(ctx context.Context, ids []uint64) 
 func (b *bookRepository) FindBookStatus(ctx context.Context, id uint64, status enums.BookStatus) (isExist bool, err error) {
 	result := &models.Book{}
 	err = b.Trigger().QueryRowContext(ctx, queries.SelectBookAndStatus.ToString(), id, status).Scan(
-		&result.ID, &result.Title, &result.Description, &result.Image, &result.Status, &result.CreatedAt, &result.UpdatedAt, &result.DeletedAt)
+		&result.ID, &result.Title, &result.Description, &result.Image, &result.Status, &result.PDFFile, &result.CreatedAt, &result.UpdatedAt, &result.DeletedAt)
 	if err != nil {
 		return false, err
 	}
