@@ -8,6 +8,6 @@ import (
 type GenreRepository interface {
 	Saver[models.Genre]
 	Finder[models.Genre]
-	UnitOfWork
+	//UnitOfWork
 	FindSelectedGenresByID(ctx context.Context, id []uint64) (result []*models.Genre, err error)
 }

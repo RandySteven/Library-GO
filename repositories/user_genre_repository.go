@@ -2,7 +2,6 @@ package repositories
 
 import (
 	"context"
-	"database/sql"
 	"github.com/RandySteven/Library-GO/entities/models"
 	repositories_interfaces "github.com/RandySteven/Library-GO/interfaces/repositories"
 	"github.com/RandySteven/Library-GO/queries"
@@ -10,11 +9,11 @@ import (
 )
 
 type userGenreRepository struct {
-	db *sql.DB
+	dbx repositories_interfaces.DB
 }
 
 func (u *userGenreRepository) Save(ctx context.Context, entity *models.UserGenre) (*models.UserGenre, error) {
-	id, err := utils.Save[models.UserGenre](ctx, u.db, queries.InsertUserGenreQuery, entity.UserID, entity.GenreID)
+	id, err := utils.Save[models.UserGenre](ctx, u.dbx(ctx), queries.InsertUserGenreQuery, entity.UserID, entity.GenreID)
 	if err != nil {
 		return nil, err
 	}

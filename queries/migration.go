@@ -252,7 +252,7 @@ const (
 			user_id BIGINT NOT NULL,
 			genre_id BIGINT NOT NULL,
 			FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-		    FOREIGN KEY (genre_id) REFERNECES genres(id) ON DELETE CASCADE
+		    FOREIGN KEY (genre_id) REFERENCES genres(id) ON DELETE CASCADE
 		)
 	`
 

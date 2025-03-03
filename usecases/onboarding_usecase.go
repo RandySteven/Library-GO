@@ -17,7 +17,6 @@ import (
 	"github.com/RandySteven/Library-GO/utils"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
-	"log"
 	"sync"
 	"time"
 )
@@ -26,29 +25,7 @@ type onboardingUsecase struct {
 	userRepo     repositories_interfaces.UserRepository
 	roleUserRepo repositories_interfaces.RoleUserRepository
 	pubSub       rabbitmqs_client.PubSub
-}
-
-func (o *onboardingUsecase) refreshTx(ctx context.Context) {
-	tx := o.userRepo.GetTx(ctx)
-	o.userRepo.SetTx(tx)
-	o.roleUserRepo.SetTx(tx)
-}
-
-func (o *onboardingUsecase) setTransaction(ctx context.Context, customErr *apperror.CustomError) {
-	defer o.userRepo.SetTx(nil)
-	if r := recover(); r != nil {
-		_ = o.userRepo.RollbackTx(ctx)
-		panic(r)
-	} else if customErr != nil {
-		_ = o.userRepo.RollbackTx(ctx)
-		return
-	} else {
-		if err := o.userRepo.CommitTx(ctx); err != nil {
-			log.Println("failed to commit transaction")
-			return
-		}
-		return
-	}
+	transaction  repositories_interfaces.Transaction
 }
 
 func (o *onboardingUsecase) RegisterUser(ctx context.Context, request *requests.UserRegisterRequest) (result *responses.UserRegisterResponse, customErr *apperror.CustomError) {
@@ -56,66 +33,66 @@ func (o *onboardingUsecase) RegisterUser(ctx context.Context, request *requests.
 		user        = &models.User{}
 		wg          sync.WaitGroup
 		customErrCh = make(chan *apperror.CustomError)
+		err         error
 	)
-	err := o.userRepo.BeginTx(ctx)
-	if err != nil {
-		return
-	}
-	defer o.setTransaction(ctx, customErr)
 
-	go func() {
-		defer wg.Done()
-		_, err = o.userRepo.FindByEmail(ctx, request.Email)
-		if err != nil {
-			if errors.Is(err, sql.ErrNoRows) {
-				customErrCh <- apperror.NewCustomError(apperror.ErrInternalServer, `failed to find user by email "`+request.Email+`"`, err)
+	customErr = o.transaction.RunInTx(ctx, func(ctx context.Context) *apperror.CustomError {
+		go func() {
+			defer wg.Done()
+			_, err = o.userRepo.FindByEmail(ctx, request.Email)
+			if err != nil {
+				if errors.Is(err, sql.ErrNoRows) {
+					customErrCh <- apperror.NewCustomError(apperror.ErrInternalServer, `failed to find user by email "`+request.Email+`"`, err)
+					return
+				}
 				return
 			}
-			return
-		}
-	}()
+		}()
 
-	go func() {
-		defer wg.Done()
-		_, err = o.userRepo.FindByPhoneNumber(ctx, request.PhoneNumber)
-		if err != nil {
-			if errors.Is(err, sql.ErrNoRows) {
-				customErrCh <- apperror.NewCustomError(apperror.ErrInternalServer, `failed to find user by phone number "`+request.PhoneNumber+`"`, err)
+		go func() {
+			defer wg.Done()
+			_, err = o.userRepo.FindByPhoneNumber(ctx, request.PhoneNumber)
+			if err != nil {
+				if errors.Is(err, sql.ErrNoRows) {
+					customErrCh <- apperror.NewCustomError(apperror.ErrInternalServer, `failed to find user by phone number "`+request.PhoneNumber+`"`, err)
+					return
+				}
 				return
 			}
-			return
+		}()
+
+		go func() {
+			wg.Wait()
+			close(customErrCh)
+		}()
+
+		dob, _ := time.Parse("2006-01-02", fmt.Sprintf("%s-%s-%s", request.Year, request.Month, request.Day))
+		user = &models.User{
+			Name:        fmt.Sprintf("%s %s", request.FirstName, request.LastName),
+			Email:       request.Email,
+			Password:    utils.HashPassword(request.Password),
+			PhoneNumber: request.PhoneNumber,
+			Address:     request.Address,
+			DoB:         dob,
 		}
-	}()
+		user, err = o.userRepo.Save(ctx, user)
+		if err != nil {
+			return apperror.NewCustomError(apperror.ErrInternalServer, `failed to create user`, err)
+		}
 
-	go func() {
-		wg.Wait()
-		close(customErrCh)
-	}()
-
-	dob, _ := time.Parse("2006-01-02", fmt.Sprintf("%s-%s-%s", request.Year, request.Month, request.Day))
-	user = &models.User{
-		Name:        fmt.Sprintf("%s %s", request.FirstName, request.LastName),
-		Email:       request.Email,
-		Password:    utils.HashPassword(request.Password),
-		PhoneNumber: request.PhoneNumber,
-		Address:     request.Address,
-		DoB:         dob,
-	}
-	user, err = o.userRepo.Save(ctx, user)
-	if err != nil {
-		return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to create user`, err)
-	}
-
-	select {
-	case customErr = <-customErrCh:
+		select {
+		case customErr = <-customErrCh:
+			return customErr
+		}
+	})
+	if customErr != nil {
 		return nil, customErr
-	default:
-		return &responses.UserRegisterResponse{
-			ID:        utils.HashID(user.ID),
-			Token:     uuid.NewString(),
-			CreatedAt: time.Now(),
-		}, nil
 	}
+	return &responses.UserRegisterResponse{
+		ID:        utils.HashID(user.ID),
+		Token:     uuid.NewString(),
+		CreatedAt: time.Now(),
+	}, nil
 }
 
 func (o *onboardingUsecase) LoginUser(ctx context.Context, request *requests.UserLoginRequest) (result *responses.UserLoginResponse, customErr *apperror.CustomError) {
@@ -193,10 +170,12 @@ var _ usecases_interfaces.OnboardingUsecase = &onboardingUsecase{}
 func newOnboardingUsecase(
 	userRepo repositories_interfaces.UserRepository,
 	roleUserRepo repositories_interfaces.RoleUserRepository,
-	pubSub rabbitmqs_client.PubSub) *onboardingUsecase {
+	pubSub rabbitmqs_client.PubSub,
+	transaction repositories_interfaces.Transaction) *onboardingUsecase {
 	return &onboardingUsecase{
 		userRepo:     userRepo,
 		roleUserRepo: roleUserRepo,
 		pubSub:       pubSub,
+		transaction:  transaction,
 	}
 }

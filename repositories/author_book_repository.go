@@ -2,7 +2,6 @@ package repositories
 
 import (
 	"context"
-	"database/sql"
 	"github.com/RandySteven/Library-GO/entities/models"
 	repositories_interfaces "github.com/RandySteven/Library-GO/interfaces/repositories"
 	"github.com/RandySteven/Library-GO/queries"
@@ -10,12 +9,11 @@ import (
 )
 
 type authorBookRepository struct {
-	db *sql.DB
-	tx *sql.Tx
+	db repositories_interfaces.DB
 }
 
 func (a *authorBookRepository) Save(ctx context.Context, entity *models.AuthorBook) (result *models.AuthorBook, err error) {
-	id, err := utils.Save[models.AuthorBook](ctx, a.Trigger(), queries.InsertAuthorBookQuery, &entity.AuthorID, &entity.BookID)
+	id, err := utils.Save[models.AuthorBook](ctx, a.db(ctx), queries.InsertAuthorBookQuery, &entity.AuthorID, &entity.BookID)
 	if err != nil {
 		return nil, err
 	}
@@ -24,37 +22,8 @@ func (a *authorBookRepository) Save(ctx context.Context, entity *models.AuthorBo
 	return result, nil
 }
 
-func (a *authorBookRepository) Trigger() repositories_interfaces.Trigger {
-	return utils.InitTrigger(a.db, a.tx)
-}
-
-func (a *authorBookRepository) BeginTx(ctx context.Context) error {
-	tx, err := a.db.BeginTx(ctx, nil)
-	if err != nil {
-		return err
-	}
-	a.tx = tx
-	return nil
-}
-
-func (a *authorBookRepository) CommitTx(ctx context.Context) error {
-	return utils.CommitTx(ctx, a.tx)
-}
-
-func (a *authorBookRepository) RollbackTx(ctx context.Context) error {
-	return utils.RollbackTx(ctx, a.tx)
-}
-
-func (a *authorBookRepository) SetTx(tx *sql.Tx) {
-	a.tx = tx
-}
-
-func (a *authorBookRepository) GetTx(ctx context.Context) *sql.Tx {
-	return a.tx
-}
-
 func (a *authorBookRepository) FindAuthorBookByBookID(ctx context.Context, bookID uint64) (result []*models.AuthorBook, err error) {
-	rows, err := a.Trigger().QueryContext(ctx, queries.SelectAuthorBookByBookIDQuery.ToString(), bookID)
+	rows, err := a.db(ctx).QueryContext(ctx, queries.SelectAuthorBookByBookIDQuery.ToString(), bookID)
 	if err != nil {
 		return nil, err
 	}
@@ -76,7 +45,7 @@ func (a *authorBookRepository) FindAuthorBookByBookID(ctx context.Context, bookI
 
 var _ repositories_interfaces.AuthorBookRepository = &authorBookRepository{}
 
-func newAuthorBookRepository(db *sql.DB) *authorBookRepository {
+func newAuthorBookRepository(db repositories_interfaces.DB) *authorBookRepository {
 	return &authorBookRepository{
 		db: db,
 	}

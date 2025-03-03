@@ -3,17 +3,11 @@ package repositories_interfaces
 import (
 	"context"
 	"database/sql"
+	"github.com/RandySteven/Library-GO/apperror"
 )
 
 type (
-	UnitOfWork interface {
-		Trigger() Trigger
-		BeginTx(ctx context.Context) error
-		CommitTx(ctx context.Context) error
-		RollbackTx(ctx context.Context) error
-		SetTx(tx *sql.Tx)
-		GetTx(ctx context.Context) *sql.Tx
-	}
+	DB func(ctx context.Context) Trigger
 
 	Trigger interface {
 		PrepareContext(ctx context.Context, query string) (*sql.Stmt, error)
@@ -23,6 +17,6 @@ type (
 	}
 
 	Transaction interface {
-		RunInTx(ctx context.Context, fn func(ctx context.Context, tx *sql.Tx, request any) (any, error)) (result any, err error)
+		RunInTx(ctx context.Context, txFnc func(ctx context.Context) *apperror.CustomError) (err *apperror.CustomError)
 	}
 )

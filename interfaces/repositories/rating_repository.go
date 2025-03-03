@@ -7,7 +7,7 @@ import (
 
 type RatingRepository interface {
 	Saver[models.Rating]
-	UnitOfWork
+	//UnitOfWork
 	FindRatingForBook(ctx context.Context, bookId uint64) (result *models.Rating, err error)
 	FindSortedLimitRating(ctx context.Context, sorted string, limit uint64) (result []*models.Rating, err error)
 }

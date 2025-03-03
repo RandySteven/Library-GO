@@ -2,7 +2,6 @@ package repositories
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"github.com/RandySteven/Library-GO/entities/models"
 	repositories_interfaces "github.com/RandySteven/Library-GO/interfaces/repositories"
@@ -13,41 +12,11 @@ import (
 )
 
 type borrowRepository struct {
-	db *sql.DB
-	tx *sql.Tx
-}
-
-func (b *borrowRepository) Trigger() repositories_interfaces.Trigger {
-	return utils.InitTrigger(b.db, b.tx)
-}
-
-func (b *borrowRepository) BeginTx(ctx context.Context) error {
-	tx, err := b.db.BeginTx(ctx, nil)
-	if err != nil {
-		return err
-	}
-	b.SetTx(tx)
-	return nil
-}
-
-func (b *borrowRepository) CommitTx(ctx context.Context) error {
-	return b.tx.Commit()
-}
-
-func (b *borrowRepository) RollbackTx(ctx context.Context) error {
-	return b.tx.Rollback()
-}
-
-func (b *borrowRepository) SetTx(tx *sql.Tx) {
-	b.tx = tx
-}
-
-func (b *borrowRepository) GetTx(ctx context.Context) *sql.Tx {
-	return b.tx
+	dbx repositories_interfaces.DB
 }
 
 func (b *borrowRepository) Save(ctx context.Context, entity *models.Borrow) (result *models.Borrow, err error) {
-	id, err := utils.Save[models.Borrow](ctx, b.Trigger(), queries.InsertBorrowQuery, &entity.UserID, &entity.BorrowReference)
+	id, err := utils.Save[models.Borrow](ctx, b.dbx(ctx), queries.InsertBorrowQuery, &entity.UserID, &entity.BorrowReference)
 	if err != nil {
 		return nil, err
 	}
@@ -57,7 +26,7 @@ func (b *borrowRepository) Save(ctx context.Context, entity *models.Borrow) (res
 
 func (b *borrowRepository) FindByID(ctx context.Context, id uint64) (result *models.Borrow, err error) {
 	result = &models.Borrow{}
-	err = utils.FindByID[models.Borrow](ctx, b.Trigger(), queries.SelectBorrowByIDQuery, id, result)
+	err = utils.FindByID[models.Borrow](ctx, b.dbx(ctx), queries.SelectBorrowByIDQuery, id, result)
 	if err != nil {
 		return nil, err
 	}
@@ -71,7 +40,7 @@ func (b *borrowRepository) FindAll(ctx context.Context, skip uint64, take uint64
 
 func (b *borrowRepository) FindByReferenceID(ctx context.Context, referenceID string) (result *models.Borrow, err error) {
 	result = &models.Borrow{}
-	err = b.Trigger().QueryRowContext(ctx, queries.SelectBorrowByReference.ToString(), referenceID).
+	err = b.dbx(ctx).QueryRowContext(ctx, queries.SelectBorrowByReference.ToString(), referenceID).
 		Scan(
 			&result.ID,
 			&result.UserID,
@@ -86,7 +55,7 @@ func (b *borrowRepository) FindByReferenceID(ctx context.Context, referenceID st
 }
 
 func (b *borrowRepository) FindByUserId(ctx context.Context, userId uint64) (result []*models.Borrow, err error) {
-	rows, err := b.Trigger().QueryContext(ctx, queries.SelectBorrowUserIdQuery.ToString(), userId)
+	rows, err := b.dbx(ctx).QueryContext(ctx, queries.SelectBorrowUserIdQuery.ToString(), userId)
 	if err != nil {
 		return nil, err
 	}
@@ -120,7 +89,7 @@ func (b *borrowRepository) FindByMultipleBorrowID(ctx context.Context, borrowIDs
 	queryIn = fmt.Sprintf(queryIn, wildCardStr)
 	selectStr := queries.SelectBorrowsQueryWithUser.ToString() + queryIn
 
-	rows, err := b.Trigger().QueryContext(ctx, selectStr)
+	rows, err := b.dbx(ctx).QueryContext(ctx, selectStr)
 	if err != nil {
 		return nil, err
 	}
@@ -139,8 +108,8 @@ func (b *borrowRepository) FindByMultipleBorrowID(ctx context.Context, borrowIDs
 
 var _ repositories_interfaces.BorrowRepository = &borrowRepository{}
 
-func newBorrowRepository(db *sql.DB) *borrowRepository {
+func newBorrowRepository(dbx repositories_interfaces.DB) *borrowRepository {
 	return &borrowRepository{
-		db: db,
+		dbx: dbx,
 	}
 }

@@ -25,28 +25,31 @@ type Repositories struct {
 	RoleUserRepo     repositories_interfaces.RoleUserRepository
 	RoomRepo         repositories_interfaces.RoomRepository
 	RoomPhotoRepo    repositories_interfaces.RoomPhotoRepository
+	Transaction      repositories_interfaces.Transaction
 }
 
 func NewRepositories(db *sql.DB) *Repositories {
+	tr, dbx := newTransaction(db)
 	return &Repositories{
-		AuthorRepo:       newAuthorRepository(db),
-		AuthorBookRepo:   newAuthorBookRepository(db),
-		BagRepo:          newBagRepository(db),
-		BookRepo:         newBookRepository(db),
-		BookGenreRepo:    newBookGenreRepository(db),
-		BorrowRepo:       newBorrowRepository(db),
-		BorrowDetailRepo: newBorrowDetailRepository(db),
-		GenreRepo:        newGenreRepository(db),
-		UserRepo:         newUserRepository(db),
-		RatingRepo:       newRatingRepository(db),
-		CommentRepo:      newCommentRepository(db),
-		EventRepo:        newEventRepository(db),
-		EventUserRepo:    newEventUserRepository(db),
-		ChatRepo:         newChatRepository(db),
-		RoomChatRepo:     newRoomChatRepository(db),
-		RoomChatUserRepo: newRoomChatUserRepository(db),
-		RoleUserRepo:     newRoleUserRepository(db),
-		RoomRepo:         newRoomRepository(db),
-		RoomPhotoRepo:    newRoomPhotoRepository(db),
+		AuthorRepo:       newAuthorRepository(dbx),
+		AuthorBookRepo:   newAuthorBookRepository(dbx),
+		BagRepo:          newBagRepository(dbx),
+		BookRepo:         newBookRepository(dbx),
+		BookGenreRepo:    newBookGenreRepository(dbx),
+		BorrowRepo:       newBorrowRepository(dbx),
+		BorrowDetailRepo: newBorrowDetailRepository(dbx),
+		GenreRepo:        newGenreRepository(dbx),
+		UserRepo:         newUserRepository(dbx),
+		RatingRepo:       newRatingRepository(dbx),
+		CommentRepo:      newCommentRepository(dbx),
+		EventRepo:        newEventRepository(dbx),
+		EventUserRepo:    newEventUserRepository(dbx),
+		ChatRepo:         newChatRepository(dbx),
+		RoomChatRepo:     newRoomChatRepository(dbx),
+		RoomChatUserRepo: newRoomChatUserRepository(dbx),
+		RoleUserRepo:     newRoleUserRepository(dbx),
+		RoomRepo:         newRoomRepository(dbx),
+		RoomPhotoRepo:    newRoomPhotoRepository(dbx),
+		Transaction:      tr,
 	}
 }

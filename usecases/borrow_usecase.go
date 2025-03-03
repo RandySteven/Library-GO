@@ -33,110 +33,85 @@ type borrowUsecase struct {
 	borrowCache      caches_interfaces.BorrowCache
 	bookCache        caches_interfaces.BookCache
 	pubsub           rabbitmqs_client.PubSub
-}
-
-func (b *borrowUsecase) setTx(ctx context.Context) {
-	tx := b.borrowRepo.GetTx(ctx)
-	b.bagRepo.SetTx(tx)
-	b.bookRepo.SetTx(tx)
-	b.borrowDetailRepo.SetTx(tx)
-	b.userRepo.SetTx(tx)
-	b.authorRepo.SetTx(tx)
-	b.genreRepo.SetTx(tx)
-}
-
-func (b *borrowUsecase) refreshTx(ctx context.Context) {
-	b.borrowRepo.SetTx(nil)
-	b.setTx(ctx)
+	transaction      repositories_interfaces.Transaction
 }
 
 func (b *borrowUsecase) BorrowTransaction(ctx context.Context) (result *responses.BorrowResponse, customErr *apperror.CustomError) {
-	userId := ctx.Value(enums.UserID).(uint64)
 	var (
 		err         error
 		wg          sync.WaitGroup
 		customErrCh = make(chan *apperror.CustomError)
+		user        *models.User
+		borrow      *models.Borrow
+		bagBooks    []*models.Bag
 	)
+	userId := ctx.Value(enums.UserID).(uint64)
 
-	user, err := b.userRepo.FindByID(ctx, userId)
-	if err != nil {
-		return nil, apperror.NewCustomError(apperror.ErrNotFound, `failed to search user`, err)
-	}
+	customErr = b.transaction.RunInTx(ctx, func(ctx context.Context) *apperror.CustomError {
 
-	bags, _ := b.bagRepo.FindBagByUser(ctx, user.ID)
-	if bags == nil {
-		return nil, apperror.NewCustomError(apperror.ErrBadRequest, `the bag already empty`, err)
-	}
-
-	if err = b.borrowRepo.BeginTx(ctx); err != nil {
-		return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to init trx`, err)
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			_ = b.borrowRepo.RollbackTx(ctx)
-			panic(r)
-		} else if customErr != nil {
-			_ = b.borrowRepo.RollbackTx(ctx)
-		} else if err = b.borrowRepo.CommitTx(ctx); err != nil {
-			log.Println("failed to commit transaction:", err)
+		user, err = b.userRepo.FindByID(ctx, userId)
+		if err != nil {
+			return apperror.NewCustomError(apperror.ErrNotFound, `failed to search user`, err)
 		}
-		b.setTx(nil)
-		b.refreshTx(ctx)
-		_ = b.borrowCache.Del(ctx, fmt.Sprintf(enums.BorrowsKey, userId))
-	}()
-	b.setTx(ctx)
 
-	bagBooks, err := b.bagRepo.FindBagByUser(ctx, userId)
-	if err != nil {
-		return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to get bag`, err)
-	}
-	for _, bag := range bagBooks {
-		if bag.Book.Status != enums.Available {
-			return nil, apperror.NewCustomError(apperror.ErrBadRequest, `book is not available`, fmt.Errorf(`book is not available`))
+		bags, _ := b.bagRepo.FindBagByUser(ctx, user.ID)
+		if bags == nil {
+			return apperror.NewCustomError(apperror.ErrBadRequest, `the bag already empty`, err)
 		}
-	}
 
-	borrow := &models.Borrow{
-		UserID:          userId,
-		BorrowReference: utils.GenerateBorrowReference(24),
-	}
-	borrow, err = b.borrowRepo.Save(ctx, borrow)
-	if err != nil {
-		return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to save borrow`, err)
-	}
-
-	for _, bagBook := range bagBooks {
-		wg.Add(1)
-		go func(ctx context.Context, bagBook *models.Bag) {
-			defer wg.Done()
-			borrowDetail := &models.BorrowDetail{
-				BorrowID:     borrow.ID,
-				BookID:       bagBook.Book.ID,
-				ReturnedDate: time.Now().Add(7 * 24 * time.Hour),
+		bagBooks, err = b.bagRepo.FindBagByUser(ctx, userId)
+		if err != nil {
+			return apperror.NewCustomError(apperror.ErrInternalServer, `failed to get bag`, err)
+		}
+		for _, bag := range bagBooks {
+			if bag.Book.Status != enums.Available {
+				return apperror.NewCustomError(apperror.ErrBadRequest, `book is not available`, fmt.Errorf(`book is not available`))
 			}
-			borrowDetail, err = b.borrowDetailRepo.Save(ctx, borrowDetail)
-			if err != nil {
-				customErrCh <- apperror.NewCustomError(apperror.ErrInternalServer, `failed to save detail`, err)
-				return
-			}
-			err = b.bookRepo.UpdateBookStatus(ctx, bagBook.Book.ID, enums.ReadyToTake)
-			if err != nil {
-				customErrCh <- apperror.NewCustomError(apperror.ErrInternalServer, `failed to save status`, err)
-				return
-			}
-		}(ctx, bagBook)
-	}
+		}
 
-	wg.Wait()
-	close(customErrCh)
+		borrow = &models.Borrow{
+			UserID:          userId,
+			BorrowReference: utils.GenerateBorrowReference(24),
+		}
+		borrow, err = b.borrowRepo.Save(ctx, borrow)
+		if err != nil {
+			return apperror.NewCustomError(apperror.ErrInternalServer, `failed to save borrow`, err)
+		}
 
-	for customErr = range customErrCh {
-		return nil, customErr
-	}
+		for _, bagBook := range bagBooks {
+			wg.Add(1)
+			go func(ctx context.Context, bagBook *models.Bag) {
+				defer wg.Done()
+				borrowDetail := &models.BorrowDetail{
+					BorrowID:     borrow.ID,
+					BookID:       bagBook.Book.ID,
+					ReturnedDate: time.Now().Add(7 * 24 * time.Hour),
+				}
+				borrowDetail, err = b.borrowDetailRepo.Save(ctx, borrowDetail)
+				if err != nil {
+					customErrCh <- apperror.NewCustomError(apperror.ErrInternalServer, `failed to save detail`, err)
+					return
+				}
+				err = b.bookRepo.UpdateBookStatus(ctx, bagBook.Book.ID, enums.ReadyToTake)
+				if err != nil {
+					customErrCh <- apperror.NewCustomError(apperror.ErrInternalServer, `failed to save status`, err)
+					return
+				}
+			}(ctx, bagBook)
+		}
 
-	if err := b.bagRepo.DeleteUserBag(ctx, userId); err != nil {
-		return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to delete user bag`, err)
-	}
+		wg.Wait()
+		close(customErrCh)
+
+		for customErr = range customErrCh {
+			return customErr
+		}
+
+		if err := b.bagRepo.DeleteUserBag(ctx, userId); err != nil {
+			return apperror.NewCustomError(apperror.ErrInternalServer, `failed to delete user bag`, err)
+		}
+		return nil
+	})
 
 	if err = b.pubsub.Send(ctx, "borrow_transactions", "borrow-transaction-success", &messages.EmailMessage{
 		ID: uuid.NewString(),
@@ -159,6 +134,7 @@ func (b *borrowUsecase) BorrowTransaction(ctx context.Context) (result *response
 		Status:       "SUCCESS",
 		BorrowedDate: time.Now().Local(),
 		ReturnedDate: time.Now().Local().Add(7 * 24 * time.Hour),
+		CreatedAt:    time.Now(),
 	}
 
 	return result, nil
@@ -273,38 +249,44 @@ func (b *borrowUsecase) GetBorrowDetail(ctx context.Context, id uint64) (result 
 }
 
 func (b *borrowUsecase) BorrowConfirmation(ctx context.Context, request *requests.ConfirmBorrowRequest) (customErr *apperror.CustomError) {
-	if err := b.borrowRepo.BeginTx(ctx); err != nil {
-		return apperror.NewCustomError(apperror.ErrInternalServer, `failed to init trx`, err)
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			_ = b.borrowRepo.RollbackTx(ctx)
-			panic(r)
-		} else if customErr != nil {
-			_ = b.borrowRepo.RollbackTx(ctx)
-		} else if err := b.borrowRepo.CommitTx(ctx); err != nil {
-			log.Println("failed to commit transaction:", err)
-		}
-		b.setTx(nil)
-		b.refreshTx(ctx)
-	}()
-	b.setTx(ctx)
+	//if err := b.borrowRepo.BeginTx(ctx); err != nil {
+	//	return apperror.NewCustomError(apperror.ErrInternalServer, `failed to init trx`, err)
+	//}
+	//defer func() {
+	//	if r := recover(); r != nil {
+	//		_ = b.borrowRepo.RollbackTx(ctx)
+	//		panic(r)
+	//	} else if customErr != nil {
+	//		_ = b.borrowRepo.RollbackTx(ctx)
+	//	} else if err := b.borrowRepo.CommitTx(ctx); err != nil {
+	//		log.Println("failed to commit transaction:", err)
+	//	}
+	//	b.setTx(nil)
+	//	b.refreshTx(ctx)
+	//}()
+	//b.setTx(ctx)
+	customErr = b.transaction.RunInTx(ctx, func(ctx context.Context) *apperror.CustomError {
 
-	borrow, err := b.borrowRepo.FindByReferenceID(ctx, request.BorrowID)
-	if err != nil {
-		return apperror.NewCustomError(apperror.ErrInternalServer, `failed to get borrow`, err)
-	}
-
-	borrowDetails, err := b.borrowDetailRepo.FindByBorrowID(ctx, borrow.ID)
-	if err != nil {
-		return apperror.NewCustomError(apperror.ErrInternalServer, `failed to get borrow detail`, err)
-	}
-
-	for _, borrowDetail := range borrowDetails {
-		err = b.bookRepo.UpdateBookStatus(ctx, borrowDetail.BookID, enums.Borrowed)
+		borrow, err := b.borrowRepo.FindByReferenceID(ctx, request.BorrowID)
 		if err != nil {
-			return apperror.NewCustomError(apperror.ErrInternalServer, `failed to update borrow detail`, err)
+			return apperror.NewCustomError(apperror.ErrInternalServer, `failed to get borrow`, err)
 		}
+
+		borrowDetails, err := b.borrowDetailRepo.FindByBorrowID(ctx, borrow.ID)
+		if err != nil {
+			return apperror.NewCustomError(apperror.ErrInternalServer, `failed to get borrow detail`, err)
+		}
+
+		for _, borrowDetail := range borrowDetails {
+			err = b.bookRepo.UpdateBookStatus(ctx, borrowDetail.BookID, enums.Borrowed)
+			if err != nil {
+				return apperror.NewCustomError(apperror.ErrInternalServer, `failed to update borrow detail`, err)
+			}
+		}
+		return nil
+	})
+	if customErr != nil {
+		return customErr
 	}
 
 	_ = b.bookCache.Del(ctx, enums.BooksKey)
@@ -324,7 +306,8 @@ func newBorrowUsecase(
 	genreRepo repositories_interfaces.GenreRepository,
 	borrowCache caches_interfaces.BorrowCache,
 	bookCache caches_interfaces.BookCache,
-	pubsub rabbitmqs_client.PubSub) *borrowUsecase {
+	pubsub rabbitmqs_client.PubSub,
+	transaction repositories_interfaces.Transaction) *borrowUsecase {
 	return &borrowUsecase{
 		bagRepo:          bagRepo,
 		bookRepo:         bookRepo,
@@ -336,5 +319,6 @@ func newBorrowUsecase(
 		borrowCache:      borrowCache,
 		bookCache:        bookCache,
 		pubsub:           pubsub,
+		transaction:      transaction,
 	}
 }

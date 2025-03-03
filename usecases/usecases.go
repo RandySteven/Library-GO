@@ -28,14 +28,14 @@ type Usecases struct {
 
 func NewUsecases(repositories *repositories.Repositories, caches *caches.Caches, awsClient aws_client.AWS, algoClient algolia_client.AlgoliaAPISearch, pubsub rabbitmqs_client.PubSub) *Usecases {
 	return &Usecases{
-		BagUsecase:            newBagUsecase(repositories.BagRepo, repositories.BookRepo, repositories.UserRepo, caches.BagCache),
+		BagUsecase:            newBagUsecase(repositories.BagRepo, repositories.BookRepo, repositories.UserRepo, caches.BagCache, repositories.Transaction),
 		DevUsecase:            newDevUsecase(awsClient, pubsub),
-		OnboardingUsecase:     newOnboardingUsecase(repositories.UserRepo, repositories.RoleUserRepo, pubsub),
-		BookUsecase:           newBookUsecase(repositories.UserRepo, repositories.BookRepo, repositories.GenreRepo, repositories.AuthorRepo, repositories.AuthorBookRepo, repositories.BookGenreRepo, repositories.BorrowRepo, repositories.BorrowDetailRepo, repositories.RatingRepo, awsClient, algoClient, caches.BookCache, pubsub),
-		BorrowUsecase:         newBorrowUsecase(repositories.BagRepo, repositories.BookRepo, repositories.BorrowRepo, repositories.BorrowDetailRepo, repositories.UserRepo, repositories.AuthorRepo, repositories.GenreRepo, caches.BorrowCache, caches.BookCache, pubsub),
+		OnboardingUsecase:     newOnboardingUsecase(repositories.UserRepo, repositories.RoleUserRepo, pubsub, repositories.Transaction),
+		BookUsecase:           newBookUsecase(repositories.UserRepo, repositories.BookRepo, repositories.GenreRepo, repositories.AuthorRepo, repositories.AuthorBookRepo, repositories.BookGenreRepo, repositories.BorrowRepo, repositories.BorrowDetailRepo, repositories.RatingRepo, awsClient, algoClient, caches.BookCache, pubsub, repositories.Transaction),
+		BorrowUsecase:         newBorrowUsecase(repositories.BagRepo, repositories.BookRepo, repositories.BorrowRepo, repositories.BorrowDetailRepo, repositories.UserRepo, repositories.AuthorRepo, repositories.GenreRepo, caches.BorrowCache, caches.BookCache, pubsub, repositories.Transaction),
 		GenreUsecase:          newGenreUsecase(repositories.GenreRepo, repositories.BookRepo, repositories.BookGenreRepo, repositories.RatingRepo, caches.GenreCache),
 		StoryGeneratorUsecase: newStoryGeneratorUsecase(awsClient),
-		ReturnUsecase:         newReturnUsecase(repositories.BorrowRepo, repositories.BorrowDetailRepo, repositories.BookRepo, repositories.UserRepo),
+		ReturnUsecase:         newReturnUsecase(repositories.BorrowRepo, repositories.BorrowDetailRepo, repositories.BookRepo, repositories.UserRepo, repositories.Transaction),
 		RatingUsecase:         newRatingUsecase(repositories.RatingRepo),
 		UserUsecase:           newUserUsecase(repositories.UserRepo),
 		CommentUsecase:        newCommentUsecase(repositories.CommentRepo, repositories.UserRepo, repositories.BookRepo),

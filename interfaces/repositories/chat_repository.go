@@ -9,7 +9,7 @@ type (
 	ChatRepository interface {
 		Saver[models.Chat]
 		Finder[models.Chat]
-		UnitOfWork
+		//UnitOfWork
 		FindChatByRoomID(ctx context.Context, roomChatID uint64) (result []*models.Chat, err error)
 	}
 )

@@ -2,7 +2,6 @@ package usecases
 
 import (
 	"context"
-	"database/sql"
 	"github.com/RandySteven/Library-GO/apperror"
 	"github.com/RandySteven/Library-GO/entities/models"
 	"github.com/RandySteven/Library-GO/entities/payloads/requests"
@@ -10,11 +9,8 @@ import (
 	"github.com/RandySteven/Library-GO/enums"
 	repositories_interfaces "github.com/RandySteven/Library-GO/interfaces/repositories"
 	usecases_interfaces "github.com/RandySteven/Library-GO/interfaces/usecases"
-	"github.com/RandySteven/Library-GO/utils"
 	"github.com/google/uuid"
-	"log"
 	"sync"
-	"time"
 )
 
 type chatUsecase struct {
@@ -24,72 +20,66 @@ type chatUsecase struct {
 	userRepo         repositories_interfaces.UserRepository
 }
 
-func (c *chatUsecase) refreshTx(tx *sql.Tx) {
-	c.chatRepo.SetTx(tx)
-	c.roomChatRepo.SetTx(tx)
-	c.roomChatUserRepo.SetTx(tx)
-	c.userRepo.SetTx(tx)
-}
-
 func (c *chatUsecase) CreateRoomChat(ctx context.Context, request *requests.CreateChatRoom) (result *responses.CreateRoomChatResponse, customErr *apperror.CustomError) {
 	//begin tx
-	err := c.roomChatRepo.BeginTx(ctx)
-	if err != nil {
-		return nil, apperror.NewCustomError(apperror.ErrInternalServer, "failed to init transaction", err)
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			_ = c.roomChatRepo.RollbackTx(ctx)
-			panic(r)
-		} else if customErr != nil {
-			_ = c.roomChatRepo.RollbackTx(ctx)
-		} else if err = c.roomChatRepo.CommitTx(ctx); err != nil {
-			log.Println("failed to commit transaction:", err)
-		}
-		c.roomChatRepo.SetTx(nil)
-	}()
-	c.refreshTx(c.roomChatRepo.GetTx(ctx))
-
-	userId := ctx.Value(enums.UserID).(uint64)
-	request.InviteUserIDs = append(request.InviteUserIDs, userId)
-
-	users, err := c.userRepo.FindSelectedUsersByID(ctx, request.InviteUserIDs)
-	if err != nil {
-		return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to get list of users`, err)
-	}
-
-	roomName := request.RoomName
-	if roomName != "" {
-		for _, user := range users {
-			roomName += user.Name + "|"
-		}
-	}
-
-	roomChat, err := c.roomChatRepo.Save(ctx, &models.RoomChat{
-		RoomName: roomName,
-	})
-
-	if err != nil {
-		return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to create room chat`, err)
-	}
-
-	for _, user := range users {
-		_, err := c.roomChatUserRepo.Save(ctx, &models.RoomChatUser{
-			RoomChatID: roomChat.ID,
-			UserID:     user.ID,
-		})
-		if err != nil {
-			return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to create room chat user`, err)
-		}
-	}
-
-	result = &responses.CreateRoomChatResponse{
-		ID:        utils.HashID(roomChat.ID),
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
-	}
-
-	return result, nil
+	//err := c.roomChatRepo.BeginTx(ctx)
+	//if err != nil {
+	//	return nil, apperror.NewCustomError(apperror.ErrInternalServer, "failed to init transaction", err)
+	//}
+	//defer func() {
+	//	if r := recover(); r != nil {
+	//		_ = c.roomChatRepo.RollbackTx(ctx)
+	//		panic(r)
+	//	} else if customErr != nil {
+	//		_ = c.roomChatRepo.RollbackTx(ctx)
+	//	} else if err = c.roomChatRepo.CommitTx(ctx); err != nil {
+	//		log.Println("failed to commit transaction:", err)
+	//	}
+	//	c.roomChatRepo.SetTx(nil)
+	//}()
+	//c.refreshTx(c.roomChatRepo.GetTx(ctx))
+	//
+	//userId := ctx.Value(enums.UserID).(uint64)
+	//request.InviteUserIDs = append(request.InviteUserIDs, userId)
+	//
+	//users, err := c.userRepo.FindSelectedUsersByID(ctx, request.InviteUserIDs)
+	//if err != nil {
+	//	return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to get list of users`, err)
+	//}
+	//
+	//roomName := request.RoomName
+	//if roomName != "" {
+	//	for _, user := range users {
+	//		roomName += user.Name + "|"
+	//	}
+	//}
+	//
+	//roomChat, err := c.roomChatRepo.Save(ctx, &models.RoomChat{
+	//	RoomName: roomName,
+	//})
+	//
+	//if err != nil {
+	//	return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to create room chat`, err)
+	//}
+	//
+	//for _, user := range users {
+	//	_, err := c.roomChatUserRepo.Save(ctx, &models.RoomChatUser{
+	//		RoomChatID: roomChat.ID,
+	//		UserID:     user.ID,
+	//	})
+	//	if err != nil {
+	//		return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to create room chat user`, err)
+	//	}
+	//}
+	//
+	//result = &responses.CreateRoomChatResponse{
+	//	ID:        utils.HashID(roomChat.ID),
+	//	CreatedAt: time.Now(),
+	//	UpdatedAt: time.Now(),
+	//}
+	//
+	//return result, nil
+	return nil, nil
 }
 
 func (c *chatUsecase) ListRooms(ctx context.Context) (result []*responses.ListRoomChatsResponse, customErr *apperror.CustomError) {

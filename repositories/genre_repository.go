@@ -2,7 +2,6 @@ package repositories
 
 import (
 	"context"
-	"database/sql"
 	"github.com/RandySteven/Library-GO/entities/models"
 	repositories_interfaces "github.com/RandySteven/Library-GO/interfaces/repositories"
 	"github.com/RandySteven/Library-GO/queries"
@@ -10,16 +9,15 @@ import (
 )
 
 type genreRepository struct {
-	db *sql.DB
-	tx *sql.Tx
+	dbx repositories_interfaces.DB
 }
 
-func (g *genreRepository) Trigger() repositories_interfaces.Trigger {
-	return utils.InitTrigger(g.db, g.tx)
-}
+//func (g *genreRepository) .dbx(ctx) repositories_interfaces.Trigger {
+//	return utils.InitTrigger(g.db, g.tx)
+//}
 
 func (g *genreRepository) Save(ctx context.Context, entity *models.Genre) (result *models.Genre, err error) {
-	id, err := utils.Save[models.Genre](ctx, g.Trigger(), queries.InsertGenreQuery, &entity.Genre)
+	id, err := utils.Save[models.Genre](ctx, g.dbx(ctx), queries.InsertGenreQuery, &entity.Genre)
 	if err != nil {
 		return nil, err
 	}
@@ -30,7 +28,7 @@ func (g *genreRepository) Save(ctx context.Context, entity *models.Genre) (resul
 
 func (g *genreRepository) FindByID(ctx context.Context, id uint64) (result *models.Genre, err error) {
 	result = &models.Genre{}
-	err = utils.FindByID[models.Genre](ctx, g.Trigger(), queries.SelectGenreByID, id, result)
+	err = utils.FindByID[models.Genre](ctx, g.dbx(ctx), queries.SelectGenreByID, id, result)
 	if err != nil {
 		return nil, err
 	}
@@ -38,12 +36,12 @@ func (g *genreRepository) FindByID(ctx context.Context, id uint64) (result *mode
 }
 
 func (g *genreRepository) FindAll(ctx context.Context, skip uint64, take uint64) (result []*models.Genre, err error) {
-	return utils.FindAll[models.Genre](ctx, g.Trigger(), queries.SelectGenresQuery)
+	return utils.FindAll[models.Genre](ctx, g.dbx(ctx), queries.SelectGenresQuery)
 }
 
 func (g *genreRepository) FindSelectedGenresByID(ctx context.Context, ids []uint64) (result []*models.Genre, err error) {
 	selectStr := utils.SelectIdIn(queries.SelectGenresQuery, ids)
-	rows, err := g.Trigger().QueryContext(ctx, selectStr)
+	rows, err := g.dbx(ctx).QueryContext(ctx, selectStr)
 	if err != nil {
 		return nil, err
 	}
@@ -59,35 +57,10 @@ func (g *genreRepository) FindSelectedGenresByID(ctx context.Context, ids []uint
 	return result, nil
 }
 
-func (g *genreRepository) BeginTx(ctx context.Context) error {
-	tx, err := g.db.BeginTx(ctx, nil)
-	if err != nil {
-		return err
-	}
-	g.tx = tx
-	return nil
-}
-
-func (g *genreRepository) CommitTx(ctx context.Context) error {
-	return g.tx.Commit()
-}
-
-func (g *genreRepository) RollbackTx(ctx context.Context) error {
-	return g.tx.Rollback()
-}
-
-func (g *genreRepository) SetTx(tx *sql.Tx) {
-	g.tx = tx
-}
-
-func (g *genreRepository) GetTx(ctx context.Context) *sql.Tx {
-	return g.tx
-}
-
 var _ repositories_interfaces.GenreRepository = &genreRepository{}
 
-func newGenreRepository(db *sql.DB) *genreRepository {
+func newGenreRepository(dbx repositories_interfaces.DB) *genreRepository {
 	return &genreRepository{
-		db: db,
+		dbx: dbx,
 	}
 }

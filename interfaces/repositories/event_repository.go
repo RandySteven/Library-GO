@@ -6,5 +6,5 @@ type EventRepository interface {
 	Saver[models.Event]
 	Finder[models.Event]
 	Updater[models.Event]
-	UnitOfWork
+	//UnitOfWork
 }

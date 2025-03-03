@@ -9,7 +9,7 @@ type (
 	RoomChatUserRepository interface {
 		Saver[models.RoomChatUser]
 		Finder[models.RoomChatUser]
-		UnitOfWork
+		//UnitOfWork
 		FindUserRooms(ctx context.Context, userId uint64) (result []*models.RoomChatUser, err error)
 	}
 )

@@ -2,7 +2,6 @@ package repositories
 
 import (
 	"context"
-	"database/sql"
 	"github.com/RandySteven/Library-GO/entities/models"
 	repositories_interfaces "github.com/RandySteven/Library-GO/interfaces/repositories"
 	"github.com/RandySteven/Library-GO/queries"
@@ -10,8 +9,7 @@ import (
 )
 
 type borrowDetailRepository struct {
-	db *sql.DB
-	tx *sql.Tx
+	dbx repositories_interfaces.DB
 }
 
 func (b *borrowDetailRepository) FindByID(ctx context.Context, id uint64) (*models.BorrowDetail, error) {
@@ -20,12 +18,12 @@ func (b *borrowDetailRepository) FindByID(ctx context.Context, id uint64) (*mode
 }
 
 func (b *borrowDetailRepository) FindAll(ctx context.Context, skip uint64, take uint64) (result []*models.BorrowDetail, err error) {
-	return utils.FindAll[models.BorrowDetail](ctx, b.Trigger(), queries.SelectBorrowDetailQuery)
+	return utils.FindAll[models.BorrowDetail](ctx, b.dbx(ctx), queries.SelectBorrowDetailQuery)
 }
 
 func (b *borrowDetailRepository) Save(ctx context.Context, entity *models.BorrowDetail) (result *models.BorrowDetail, err error) {
 	result = entity
-	id, err := utils.Save[models.BorrowDetail](ctx, b.Trigger(), queries.InsertBorrowDetailQuery, &entity.BorrowID, &entity.BookID, &entity.ReturnedDate)
+	id, err := utils.Save[models.BorrowDetail](ctx, b.dbx(ctx), queries.InsertBorrowDetailQuery, &entity.BorrowID, &entity.BookID, &entity.ReturnedDate)
 	if err != nil {
 		return nil, err
 	}
@@ -33,37 +31,8 @@ func (b *borrowDetailRepository) Save(ctx context.Context, entity *models.Borrow
 	return result, nil
 }
 
-func (b *borrowDetailRepository) Trigger() repositories_interfaces.Trigger {
-	return utils.InitTrigger(b.db, b.tx)
-}
-
-func (b *borrowDetailRepository) BeginTx(ctx context.Context) error {
-	tx, err := b.db.BeginTx(ctx, nil)
-	if err != nil {
-		return err
-	}
-	b.tx = tx
-	return nil
-}
-
-func (b *borrowDetailRepository) CommitTx(ctx context.Context) error {
-	return b.tx.Commit()
-}
-
-func (b *borrowDetailRepository) RollbackTx(ctx context.Context) error {
-	return b.tx.Rollback()
-}
-
-func (b *borrowDetailRepository) SetTx(tx *sql.Tx) {
-	b.tx = tx
-}
-
-func (b *borrowDetailRepository) GetTx(ctx context.Context) *sql.Tx {
-	return b.tx
-}
-
 func (b *borrowDetailRepository) FindByBorrowID(ctx context.Context, borrowID uint64) (results []*models.BorrowDetail, err error) {
-	rows, err := b.Trigger().QueryContext(ctx, queries.SelectBorrowDetailByBorrowIDQuery.ToString(), borrowID)
+	rows, err := b.dbx(ctx).QueryContext(ctx, queries.SelectBorrowDetailByBorrowIDQuery.ToString(), borrowID)
 	if err != nil {
 		return nil, err
 	}
@@ -82,7 +51,7 @@ func (b *borrowDetailRepository) FindByBorrowID(ctx context.Context, borrowID ui
 }
 
 func (b *borrowDetailRepository) FindCurrReturnDate(ctx context.Context) (results []*models.BorrowDetail, err error) {
-	rows, err := b.Trigger().QueryContext(ctx, queries.SelectBorrowDetailReturnedDateTodayQuery.ToString())
+	rows, err := b.dbx(ctx).QueryContext(ctx, queries.SelectBorrowDetailReturnedDateTodayQuery.ToString())
 	if err != nil {
 		return nil, err
 	}
@@ -110,7 +79,7 @@ func (b *borrowDetailRepository) FindCurrReturnDate(ctx context.Context) (result
 
 func (b *borrowDetailRepository) FindByBorrowIDAndBookID(ctx context.Context, borrowID uint64, bookID uint64) (result *models.BorrowDetail, err error) {
 	result = &models.BorrowDetail{}
-	err = b.Trigger().QueryRowContext(ctx, queries.SelectBorrowDetailByBorrowAndBookQuery.ToString(), borrowID, bookID).
+	err = b.dbx(ctx).QueryRowContext(ctx, queries.SelectBorrowDetailByBorrowAndBookQuery.ToString(), borrowID, bookID).
 		Scan(
 			&result.ID,
 			&result.BorrowID,
@@ -129,7 +98,7 @@ func (b *borrowDetailRepository) FindByBorrowIDAndBookID(ctx context.Context, bo
 
 func (b *borrowDetailRepository) UpdateReturnDateByBorrowIDAndBookID(ctx context.Context, borrowID uint64, bookID uint64) (result *models.BorrowDetail, err error) {
 	result = &models.BorrowDetail{}
-	_, err = b.Trigger().ExecContext(ctx, queries.UpdateBorrowReturnDateByBorrowAndBookQuery.ToString(), borrowID, bookID)
+	_, err = b.dbx(ctx).ExecContext(ctx, queries.UpdateBorrowReturnDateByBorrowAndBookQuery.ToString(), borrowID, bookID)
 	if err != nil {
 		return nil, err
 	}
@@ -137,7 +106,7 @@ func (b *borrowDetailRepository) UpdateReturnDateByBorrowIDAndBookID(ctx context
 }
 
 func (b *borrowDetailRepository) FindByBookID(ctx context.Context, bookID uint64) (results []*models.BorrowDetail, err error) {
-	rows, err := b.Trigger().QueryContext(ctx, queries.SelectBorrowDetailWithBookIDQuery.ToString(), bookID)
+	rows, err := b.dbx(ctx).QueryContext(ctx, queries.SelectBorrowDetailWithBookIDQuery.ToString(), bookID)
 	if err != nil {
 		return nil, err
 	}
@@ -156,8 +125,8 @@ func (b *borrowDetailRepository) FindByBookID(ctx context.Context, bookID uint64
 
 var _ repositories_interfaces.BorrowDetailRepository = &borrowDetailRepository{}
 
-func newBorrowDetailRepository(db *sql.DB) *borrowDetailRepository {
+func newBorrowDetailRepository(dbx repositories_interfaces.DB) *borrowDetailRepository {
 	return &borrowDetailRepository{
-		db: db,
+		dbx: dbx,
 	}
 }

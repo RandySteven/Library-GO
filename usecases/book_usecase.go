@@ -37,21 +37,7 @@ type bookUsecase struct {
 	ratingRepo       repositories_interfaces.RatingRepository
 	cache            caches_interfaces.BookCache
 	pubsub           rabbitmqs_client.PubSub
-}
-
-func (b *bookUsecase) setTx(ctx context.Context) {
-	tx := b.bookRepo.GetTx(ctx)
-	b.userRepo.SetTx(tx)
-	b.genreRepo.SetTx(tx)
-	b.authorRepo.SetTx(tx)
-	b.authorBookRepo.SetTx(tx)
-	b.bookGenreRepo.SetTx(tx)
-	b.ratingRepo.SetTx(tx)
-}
-
-func (b *bookUsecase) refreshTx(ctx context.Context) {
-	b.bookRepo.SetTx(nil)
-	b.setTx(ctx)
+	transaction      repositories_interfaces.Transaction
 }
 
 func (b *bookUsecase) AddNewBook(ctx context.Context, request *requests.CreateBookRequest, fileHeader *multipart.FileHeader) (result *responses.CreateBookResponse, customErr *apperror.CustomError) {
@@ -59,125 +45,128 @@ func (b *bookUsecase) AddNewBook(ctx context.Context, request *requests.CreateBo
 		wg            sync.WaitGroup
 		errCh         = make(chan *apperror.CustomError, 1)
 		goroutineDone = make(chan struct{})
+		book          = &models.Book{}
 	)
 
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	err := b.bookRepo.BeginTx(ctx)
-	if err != nil {
-		return nil, apperror.NewCustomError(apperror.ErrInternalServer, "failed to init transaction", err)
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			_ = b.bookRepo.RollbackTx(ctx)
-			panic(r)
-		} else if customErr != nil {
-			_ = b.bookRepo.RollbackTx(ctx)
-		} else if len(errCh) > 1 {
-			_ = b.bookRepo.RollbackTx(ctx)
-		} else if err = b.bookRepo.CommitTx(ctx); err != nil {
-			log.Println("failed to commit transaction:", err)
-			return
+	customErr = b.transaction.RunInTx(ctx, func(ctx context.Context) *apperror.CustomError {
+		imagePath, err := b.awsClient.UploadImageFile(ctx, request.Image, enums.BooksPath, fileHeader, 600, 900)
+		if err != nil {
+			log.Println("error pas upload image")
+			return apperror.NewCustomError(apperror.ErrInternalServer, "failed to upload book image", err)
 		}
-		b.setTx(nil)
-		b.refreshTx(ctx)
-	}()
 
-	b.setTx(ctx)
+		book, err = b.bookRepo.Save(ctx, &models.Book{
+			Title:       request.Title,
+			Description: request.Description,
+			Status:      enums.Available,
+			Image:       *imagePath,
+		})
+		if err != nil {
+			log.Println("error pas save book")
+			return apperror.NewCustomError(apperror.ErrInternalServer, fmt.Sprintf("failed to create book: %s", err), err)
+		}
+		log.Println("succcess save book")
 
-	imagePath, err := b.awsClient.UploadImageFile(ctx, request.Image, enums.BooksPath, fileHeader, 600, 900)
-	if err != nil {
-		return nil, apperror.NewCustomError(apperror.ErrInternalServer, "failed to upload book image", err)
-	}
+		wg.Add(2)
 
-	book, err := b.bookRepo.Save(ctx, &models.Book{
-		Title:       request.Title,
-		Description: request.Description,
-		Status:      enums.Available,
-		Image:       *imagePath,
+		go func() {
+			defer wg.Done()
+			if len(request.Authors) == 1 {
+				_, err = b.authorBookRepo.Save(ctx, &models.AuthorBook{
+					AuthorID: request.Authors[0],
+					BookID:   book.ID,
+				})
+				if err != nil {
+					select {
+					case errCh <- apperror.NewCustomError(apperror.ErrInternalServer, fmt.Sprintf(`failed to create author book relation due %s`, err.Error()), err):
+						cancel()
+					}
+					return
+				}
+				log.Println("success create author book")
+				return
+			}
+			for _, authorID := range request.Authors {
+				_, err = b.authorBookRepo.Save(ctx, &models.AuthorBook{
+					AuthorID: authorID,
+					BookID:   book.ID,
+				})
+				if err != nil {
+					log.Println("error ", err)
+					select {
+					case errCh <- apperror.NewCustomError(apperror.ErrInternalServer, fmt.Sprintf(`failed to create author book relation due %s`, err.Error()), err):
+						cancel()
+					}
+					return
+				}
+				log.Println("success to save author book")
+			}
+		}()
+
+		go func() {
+			defer wg.Done()
+			if len(request.Genres) == 1 {
+				_, err = b.bookGenreRepo.Save(ctx, &models.BookGenre{
+					GenreID: request.Genres[0],
+					BookID:  book.ID,
+				})
+				if err != nil {
+					select {
+					case errCh <- apperror.NewCustomError(apperror.ErrInternalServer, fmt.Sprintf(`failed to create book genre relation due %s`, err.Error()), err):
+						cancel()
+					}
+					return
+				}
+				return
+			}
+			for _, genreID := range request.Genres {
+				_, err = b.bookGenreRepo.Save(ctx, &models.BookGenre{
+					GenreID: genreID,
+					BookID:  book.ID,
+				})
+				if err != nil {
+					select {
+					case errCh <- apperror.NewCustomError(apperror.ErrInternalServer, fmt.Sprintf(`failed to create book genre relation due %s`, err.Error()), err):
+						cancel()
+					}
+					return
+				}
+				log.Println("success to save book genre")
+			}
+		}()
+
+		go func() {
+			wg.Wait()
+			close(errCh)
+			close(goroutineDone)
+		}()
+
+		select {
+		case <-goroutineDone:
+			var firstErr *apperror.CustomError
+			for err := range errCh {
+				if firstErr == nil {
+					firstErr = err
+				}
+				log.Println("Error encountered:", err)
+			}
+			if firstErr != nil {
+				return firstErr
+			}
+		case <-ctx.Done():
+			return apperror.NewCustomError(apperror.ErrInternalServer, "context cancelled", ctx.Err())
+		}
+		return nil
 	})
-	if err != nil {
-		return nil, apperror.NewCustomError(apperror.ErrInternalServer, fmt.Sprintf("failed to create book: %s", err), err)
+	if customErr != nil {
+		return nil, customErr
 	}
 
-	wg.Add(2)
+	log.Println("success upload book")
 
-	go func() {
-		defer wg.Done()
-		if len(request.Authors) == 1 {
-			_, err = b.authorBookRepo.Save(ctx, &models.AuthorBook{
-				AuthorID: request.Authors[0],
-				BookID:   book.ID,
-			})
-			if err != nil {
-				select {
-				case errCh <- apperror.NewCustomError(apperror.ErrInternalServer, fmt.Sprintf(`failed to create author book relation due %s`, err.Error()), err):
-					cancel()
-				}
-				return
-			}
-			return
-		}
-		for _, authorID := range request.Authors {
-			_, err = b.authorBookRepo.Save(ctx, &models.AuthorBook{
-				AuthorID: authorID,
-				BookID:   book.ID,
-			})
-			if err != nil {
-				select {
-				case errCh <- apperror.NewCustomError(apperror.ErrInternalServer, fmt.Sprintf(`failed to create author book relation due %s`, err.Error()), err):
-					cancel()
-				}
-				return
-			}
-		}
-	}()
-
-	go func() {
-		defer wg.Done()
-		if len(request.Genres) == 1 {
-			_, err = b.bookGenreRepo.Save(ctx, &models.BookGenre{
-				GenreID: request.Genres[0],
-				BookID:  book.ID,
-			})
-			if err != nil {
-				select {
-				case errCh <- apperror.NewCustomError(apperror.ErrInternalServer, fmt.Sprintf(`failed to create book genre relation due %s`, err.Error()), err):
-					cancel()
-				}
-				return
-			}
-			return
-		}
-		for _, genreID := range request.Genres {
-			_, err = b.bookGenreRepo.Save(ctx, &models.BookGenre{
-				GenreID: genreID,
-				BookID:  book.ID,
-			})
-			if err != nil {
-				select {
-				case errCh <- apperror.NewCustomError(apperror.ErrInternalServer, fmt.Sprintf(`failed to create book genre relation due %s`, err.Error()), err):
-					cancel()
-				}
-				return
-			}
-		}
-	}()
-
-	go func() {
-		wg.Wait()
-		close(goroutineDone)
-	}()
-
-	select {
-	case <-goroutineDone:
-		if len(errCh) > 0 {
-			return nil, <-errCh
-		}
-	case <-ctx.Done():
-		return nil, apperror.NewCustomError(apperror.ErrInternalServer, "context cancelled", ctx.Err())
-	}
 	_ = b.pubsub.Send(ctx, "book_exchange", "book-send-message", book)
 	result = &responses.CreateBookResponse{
 		ID: uuid.NewString(),
@@ -378,7 +367,8 @@ func newBookUsecase(
 	awsClient aws_client.AWS,
 	algoClient algolia_client.AlgoliaAPISearch,
 	cache caches_interfaces.BookCache,
-	pubsub rabbitmqs_client.PubSub) *bookUsecase {
+	pubsub rabbitmqs_client.PubSub,
+	transaction repositories_interfaces.Transaction) *bookUsecase {
 	return &bookUsecase{
 		userRepo:         userRepo,
 		bookRepo:         bookRepo,
@@ -393,5 +383,6 @@ func newBookUsecase(
 		algoClient:       algoClient,
 		cache:            cache,
 		pubsub:           pubsub,
+		transaction:      transaction,
 	}
 }

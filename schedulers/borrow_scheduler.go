@@ -2,7 +2,6 @@ package schedulers
 
 import (
 	"context"
-	"github.com/RandySteven/Library-GO/enums"
 	repositories_interfaces "github.com/RandySteven/Library-GO/interfaces/repositories"
 	schedulers_interfaces "github.com/RandySteven/Library-GO/interfaces/schedulers"
 )
@@ -14,24 +13,24 @@ type borrowScheduler struct {
 }
 
 func (b *borrowScheduler) UpdateBorrowDetailStatusToExpired(ctx context.Context) error {
-	if err := b.borrowDetailRepo.BeginTx(ctx); err != nil {
-		return err
-	}
-	borrowDetails, err := b.borrowDetailRepo.FindCurrReturnDate(ctx)
-	if err != nil {
-		return err
-	}
-	var bookIds = []uint64{}
-	for _, borrowDetail := range borrowDetails {
-		bookIds = append(bookIds, borrowDetail.BookID)
-	}
-
-	for _, bookId := range bookIds {
-		err = b.bookRepo.UpdateBookStatus(ctx, bookId, enums.Expired)
-		if err != nil {
-			return err
-		}
-	}
+	//if err := b.borrowDetailRepo.BeginTx(ctx); err != nil {
+	//	return err
+	//}
+	//borrowDetails, err := b.borrowDetailRepo.FindCurrReturnDate(ctx)
+	//if err != nil {
+	//	return err
+	//}
+	//var bookIds = []uint64{}
+	//for _, borrowDetail := range borrowDetails {
+	//	bookIds = append(bookIds, borrowDetail.BookID)
+	//}
+	//
+	//for _, bookId := range bookIds {
+	//	err = b.bookRepo.UpdateBookStatus(ctx, bookId, enums.Expired)
+	//	if err != nil {
+	//		return err
+	//	}
+	//}
 	return nil
 }
 

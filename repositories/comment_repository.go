@@ -2,7 +2,6 @@ package repositories
 
 import (
 	"context"
-	"database/sql"
 	"github.com/RandySteven/Library-GO/entities/models"
 	repositories_interfaces "github.com/RandySteven/Library-GO/interfaces/repositories"
 	"github.com/RandySteven/Library-GO/queries"
@@ -10,16 +9,15 @@ import (
 )
 
 type commentRepository struct {
-	db *sql.DB
-	tx *sql.Tx
+	dbx repositories_interfaces.DB
 }
 
 func (c *commentRepository) DeleteByID(ctx context.Context, id uint64) error {
-	return utils.Delete[models.Comment](ctx, c.Trigger(), `comments`, id)
+	return utils.Delete[models.Comment](ctx, c.dbx(ctx), `comments`, id)
 }
 
 func (c *commentRepository) Save(ctx context.Context, entity *models.Comment) (result *models.Comment, err error) {
-	id, err := utils.Save[models.Comment](ctx, c.Trigger(), queries.InsertCommentQuery, &entity.UserID, &entity.BookID, &entity.ParentID, &entity.Comment)
+	id, err := utils.Save[models.Comment](ctx, c.dbx(ctx), queries.InsertCommentQuery, &entity.UserID, &entity.BookID, &entity.ParentID, &entity.Comment)
 	if err != nil {
 		return nil, err
 	}
@@ -29,7 +27,7 @@ func (c *commentRepository) Save(ctx context.Context, entity *models.Comment) (r
 
 func (c *commentRepository) FindByID(ctx context.Context, id uint64) (result *models.Comment, err error) {
 	result = &models.Comment{}
-	err = utils.FindByID[models.Comment](ctx, c.Trigger(), queries.SelectCommentByIDQuery, id, result)
+	err = utils.FindByID[models.Comment](ctx, c.dbx(ctx), queries.SelectCommentByIDQuery, id, result)
 	if err != nil {
 		return nil, err
 	}
@@ -42,7 +40,7 @@ func (c *commentRepository) FindAll(ctx context.Context, skip uint64, take uint6
 }
 
 func (c *commentRepository) FindCommentsByBookID(ctx context.Context, bookID uint64) (result []*models.Comment, err error) {
-	rows, err := c.Trigger().QueryContext(ctx, queries.SelectBookCommentsQuery.ToString(), bookID)
+	rows, err := c.dbx(ctx).QueryContext(ctx, queries.SelectBookCommentsQuery.ToString(), bookID)
 	for rows.Next() {
 		comment := &models.Comment{}
 		err = rows.Scan(
@@ -56,39 +54,10 @@ func (c *commentRepository) FindCommentsByBookID(ctx context.Context, bookID uin
 	return result, nil
 }
 
-func (c *commentRepository) Trigger() repositories_interfaces.Trigger {
-	return utils.InitTrigger(c.db, c.tx)
-}
-
-func (c *commentRepository) BeginTx(ctx context.Context) error {
-	tx, err := c.db.BeginTx(ctx, nil)
-	if err != nil {
-		return err
-	}
-	c.tx = tx
-	return nil
-}
-
-func (c *commentRepository) CommitTx(ctx context.Context) error {
-	return c.tx.Commit()
-}
-
-func (c *commentRepository) RollbackTx(ctx context.Context) error {
-	return c.tx.Rollback()
-}
-
-func (c *commentRepository) SetTx(tx *sql.Tx) {
-	c.tx = tx
-}
-
-func (c *commentRepository) GetTx(ctx context.Context) *sql.Tx {
-	return c.tx
-}
-
 var _ repositories_interfaces.CommentRepository = &commentRepository{}
 
-func newCommentRepository(db *sql.DB) *commentRepository {
+func newCommentRepository(dbx repositories_interfaces.DB) *commentRepository {
 	return &commentRepository{
-		db: db,
+		dbx: dbx,
 	}
 }
