@@ -23,38 +23,7 @@ type bagUsecase struct {
 	transaction repositories_interfaces.Transaction
 }
 
-//func (b *bagUsecase) setTx(ctx context.Context) {
-//	tx := b.bagRepo.GetTx(ctx)
-//	b.userRepo.SetTx(tx)
-//	b.bookRepo.SetTx(tx)
-//}
-//
-//func (b *bagUsecase) refreshTx(ctx context.Context) {
-//	b.bagRepo.SetTx(nil)
-//	b.setTx(ctx)
-//}
-
 func (b *bagUsecase) AddBookToBag(ctx context.Context, request *requests.BagRequest) (result *responses.AddBagResponse, customErr *apperror.CustomError) {
-	//if err := b.bagRepo.BeginTx(ctx); err != nil {
-	//	return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to begin tx`, err)
-	//}
-	//defer func() {
-	//	defer b.refreshTx(ctx)
-	//	if r := recover(); r != nil {
-	//		_ = b.bagRepo.RollbackTx(ctx)
-	//		panic(r)
-	//	} else if customErr != nil {
-	//		_ = b.bagRepo.RollbackTx(ctx)
-	//		return
-	//	} else {
-	//		if err := b.bagRepo.CommitTx(ctx); err != nil {
-	//			log.Println("failed to commit transaction")
-	//			return
-	//		}
-	//		return
-	//	}
-	//}()
-	//b.setTx(ctx)
 	var (
 		wg          sync.WaitGroup
 		customErrCh = make(chan *apperror.CustomError)
