@@ -249,22 +249,6 @@ func (b *borrowUsecase) GetBorrowDetail(ctx context.Context, id uint64) (result 
 }
 
 func (b *borrowUsecase) BorrowConfirmation(ctx context.Context, request *requests.ConfirmBorrowRequest) (customErr *apperror.CustomError) {
-	//if err := b.borrowRepo.BeginTx(ctx); err != nil {
-	//	return apperror.NewCustomError(apperror.ErrInternalServer, `failed to init trx`, err)
-	//}
-	//defer func() {
-	//	if r := recover(); r != nil {
-	//		_ = b.borrowRepo.RollbackTx(ctx)
-	//		panic(r)
-	//	} else if customErr != nil {
-	//		_ = b.borrowRepo.RollbackTx(ctx)
-	//	} else if err := b.borrowRepo.CommitTx(ctx); err != nil {
-	//		log.Println("failed to commit transaction:", err)
-	//	}
-	//	b.setTx(nil)
-	//	b.refreshTx(ctx)
-	//}()
-	//b.setTx(ctx)
 	customErr = b.transaction.RunInTx(ctx, func(ctx context.Context) *apperror.CustomError {
 
 		borrow, err := b.borrowRepo.FindByReferenceID(ctx, request.BorrowID)
