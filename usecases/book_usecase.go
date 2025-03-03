@@ -54,7 +54,6 @@ func (b *bookUsecase) AddNewBook(ctx context.Context, request *requests.CreateBo
 	customErr = b.transaction.RunInTx(ctx, func(ctx context.Context) *apperror.CustomError {
 		imagePath, err := b.awsClient.UploadImageFile(ctx, request.Image, enums.BooksPath, fileHeader, 600, 900)
 		if err != nil {
-			log.Println("error pas upload image")
 			return apperror.NewCustomError(apperror.ErrInternalServer, "failed to upload book image", err)
 		}
 
@@ -65,10 +64,8 @@ func (b *bookUsecase) AddNewBook(ctx context.Context, request *requests.CreateBo
 			Image:       *imagePath,
 		})
 		if err != nil {
-			log.Println("error pas save book")
 			return apperror.NewCustomError(apperror.ErrInternalServer, fmt.Sprintf("failed to create book: %s", err), err)
 		}
-		log.Println("succcess save book")
 
 		wg.Add(2)
 
@@ -86,7 +83,6 @@ func (b *bookUsecase) AddNewBook(ctx context.Context, request *requests.CreateBo
 					}
 					return
 				}
-				log.Println("success create author book")
 				return
 			}
 			for _, authorID := range request.Authors {
@@ -102,7 +98,6 @@ func (b *bookUsecase) AddNewBook(ctx context.Context, request *requests.CreateBo
 					}
 					return
 				}
-				log.Println("success to save author book")
 			}
 		}()
 
@@ -134,7 +129,6 @@ func (b *bookUsecase) AddNewBook(ctx context.Context, request *requests.CreateBo
 					}
 					return
 				}
-				log.Println("success to save book genre")
 			}
 		}()
 
@@ -151,7 +145,6 @@ func (b *bookUsecase) AddNewBook(ctx context.Context, request *requests.CreateBo
 				if firstErr == nil {
 					firstErr = err
 				}
-				log.Println("Error encountered:", err)
 			}
 			if firstErr != nil {
 				return firstErr
@@ -164,8 +157,6 @@ func (b *bookUsecase) AddNewBook(ctx context.Context, request *requests.CreateBo
 	if customErr != nil {
 		return nil, customErr
 	}
-
-	log.Println("success upload book")
 
 	_ = b.pubsub.Send(ctx, "book_exchange", "book-send-message", book)
 	result = &responses.CreateBookResponse{
