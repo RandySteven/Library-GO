@@ -16,10 +16,6 @@ type userRepository struct {
 	dbx repositories_interfaces.DB
 }
 
-//func (u *userRepository) Trigger() repositories_interfaces.Trigger {
-//	return utils.InitTrigger(u.db, u.tx)
-//}
-
 func (u *userRepository) FindByEmail(ctx context.Context, email string) (*models.User, error) {
 	return u.findUser(ctx, enums.OnboardByEmail, email)
 }
