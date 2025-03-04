@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"github.com/RandySteven/Library-GO/apperror"
 	repositories_interfaces "github.com/RandySteven/Library-GO/interfaces/repositories"
-	"log"
 )
 
 type (
@@ -24,8 +23,7 @@ func (t *transaction) RunInTx(ctx context.Context, txFunc func(ctx context.Conte
 	txCtx := txToContext(ctx, tx)
 	if customErr = txFunc(txCtx); customErr != nil {
 		_ = tx.Rollback()
-		log.Println("error apa ", customErr)
-		return apperror.NewCustomError(apperror.ErrInternalServer, `failed to rollback tx`, err)
+		return customErr
 	}
 
 	if err = tx.Commit(); err != nil {
