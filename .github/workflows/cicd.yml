@@ -23,28 +23,9 @@ jobs:
         with:
           go-version: ${{ matrix.go-version }}
 
-      - name: Cache Go Modules
-        uses: actions/cache@v2
-        with:
-          path: |
-            ~/.cache/go-build
-            ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ matrix.go-version }}-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-${{ matrix.go-version }}-
-
       - name: Install Mockery
         run: |
           go install github.com/vektra/mockery/v2/...@v2.43.1
-          mkdir -p ~/.cache/mockery
-          cp $(go env GOPATH)/bin/mockery ~/.cache/mockery/mockery
-          echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
-
-      - name: Cache Mockery Binary
-        uses: actions/cache@v2
-        with:
-          path: ~/.cache/mockery
-          key: ${{ runner.os }}-mockery-v2.43.1
 
   test:
     name: Test the code
@@ -55,24 +36,6 @@ jobs:
         go-version: [ '1.22' ]
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Set up Go
-        uses: actions/setup-go@v3
-        with:
-          go-version: ${{ matrix.go-version }}
-
-      - name: Restore Mockery Binary
-        uses: actions/cache@v2
-        with:
-          path: ~/.cache/mockery
-          key: ${{ runner.os }}-mockery-v2.43.1
-
-      - name: Add Mockery to PATH
-        run: |
-          echo "~/.cache/mockery" >> $GITHUB_PATH
-
       - name: Execute unit test
         run: |
           mockery --all --output ./mocks
@@ -80,12 +43,6 @@ jobs:
           go test -coverprofile=coverage.out ./... 
           go tool cover -html=coverage.out
         continue-on-error: true
-
-      - name: Upload coverage report
-        uses: actions/upload-artifact@v3
-        with:
-          name: coverage-report
-          path: coverage.out
 
   build:
     name: Build the app
