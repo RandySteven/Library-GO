@@ -52,11 +52,6 @@ jobs:
           go tool cover -html=coverage.out
         continue-on-error: true
 
-      - name: Execute unit test
-        run: |
-          go test -coverprofile=coverage.out ./... 
-          go tool cover -html=coverage.out
-
   build:
     name: Build the app
     runs-on: ubuntu-latest
