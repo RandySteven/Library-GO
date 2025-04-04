@@ -74,9 +74,18 @@ jobs:
         with:
           go-version: ${{ matrix.go-version }}
 
+      - name: Generate mocks
+        run: |
+          mockery --all --output ./mocks
+          bash ./scripts/organize_mocks.sh
+          go mod tidy
+
+      - name: Verify module
+        run: |
+          go mod verify
+
       - name: Build the app
         run: |
-          go mod tidy
           go build -o bin/library_app/http ./cmd/library_app/http/main.go
 
       - name: Zip the build
