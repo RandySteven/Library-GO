@@ -36,6 +36,14 @@ jobs:
         go-version: [ '1.22' ]
 
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: ${{ matrix.go-version }}
+
       - name: Execute unit test
         run: |
           mockery --all --output ./mocks
@@ -43,6 +51,11 @@ jobs:
           go test -coverprofile=coverage.out ./... 
           go tool cover -html=coverage.out
         continue-on-error: true
+
+      - name: Execute unit test
+        run: |
+          go test -coverprofile=coverage.out ./... 
+          go tool cover -html=coverage.out
 
   build:
     name: Build the app
