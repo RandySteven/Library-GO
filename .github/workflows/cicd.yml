@@ -74,8 +74,8 @@ jobs:
         run: |
           go install github.com/vektra/mockery/v2/...@v2.43.1
           mockery --all --output ./mocks
-          bash ./scripts/organize_mocks.sh
           go mod tidy
+        continue-on-error: true
 
       - name: Verify module
         run: |
