@@ -46,6 +46,7 @@ jobs:
 
       - name: Execute unit test
         run: |
+          go install github.com/vektra/mockery/v2/...@v2.43.1
           mockery --all --output ./mocks
           bash ./scripts/organize_mocks.sh
           go test -coverprofile=coverage.out ./... 
@@ -71,6 +72,7 @@ jobs:
 
       - name: Generate mocks
         run: |
+          go install github.com/vektra/mockery/v2/...@v2.43.1
           mockery --all --output ./mocks
           bash ./scripts/organize_mocks.sh
           go mod tidy
