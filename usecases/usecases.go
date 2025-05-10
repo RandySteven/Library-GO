@@ -5,6 +5,7 @@ import (
 	usecases_interfaces "github.com/RandySteven/Library-GO/interfaces/usecases"
 	algolia_client "github.com/RandySteven/Library-GO/pkg/algolia"
 	aws_client "github.com/RandySteven/Library-GO/pkg/aws"
+	oauth2_client "github.com/RandySteven/Library-GO/pkg/oauth2"
 	rabbitmqs_client "github.com/RandySteven/Library-GO/pkg/rabbitmqs"
 	"github.com/RandySteven/Library-GO/repositories"
 )
@@ -26,11 +27,11 @@ type Usecases struct {
 	RoomUsecase           usecases_interfaces.RoomUsecase
 }
 
-func NewUsecases(repositories *repositories.Repositories, caches *caches.Caches, awsClient aws_client.AWS, algoClient algolia_client.AlgoliaAPISearch, pubsub rabbitmqs_client.PubSub) *Usecases {
+func NewUsecases(repositories *repositories.Repositories, caches *caches.Caches, awsClient aws_client.AWS, algoClient algolia_client.AlgoliaAPISearch, pubsub rabbitmqs_client.PubSub, oauth2 oauth2_client.Oauth2) *Usecases {
 	return &Usecases{
 		BagUsecase:            newBagUsecase(repositories.BagRepo, repositories.BookRepo, repositories.UserRepo, caches.BagCache, repositories.Transaction),
 		DevUsecase:            newDevUsecase(awsClient, pubsub),
-		OnboardingUsecase:     newOnboardingUsecase(repositories.UserRepo, repositories.RoleUserRepo, pubsub, repositories.Transaction),
+		OnboardingUsecase:     newOnboardingUsecase(repositories.UserRepo, repositories.RoleUserRepo, pubsub, repositories.Transaction, oauth2),
 		BookUsecase:           newBookUsecase(repositories.UserRepo, repositories.BookRepo, repositories.GenreRepo, repositories.AuthorRepo, repositories.AuthorBookRepo, repositories.BookGenreRepo, repositories.BorrowRepo, repositories.BorrowDetailRepo, repositories.RatingRepo, awsClient, algoClient, caches.BookCache, pubsub, repositories.Transaction),
 		BorrowUsecase:         newBorrowUsecase(repositories.BagRepo, repositories.BookRepo, repositories.BorrowRepo, repositories.BorrowDetailRepo, repositories.UserRepo, repositories.AuthorRepo, repositories.GenreRepo, caches.BorrowCache, caches.BookCache, pubsub, repositories.Transaction),
 		GenreUsecase:          newGenreUsecase(repositories.GenreRepo, repositories.BookRepo, repositories.BookGenreRepo, repositories.RatingRepo, caches.GenreCache),

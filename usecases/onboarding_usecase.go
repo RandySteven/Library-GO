@@ -3,6 +3,7 @@ package usecases
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/RandySteven/Library-GO/apperror"
@@ -13,10 +14,13 @@ import (
 	repositories_interfaces "github.com/RandySteven/Library-GO/interfaces/repositories"
 	usecases_interfaces "github.com/RandySteven/Library-GO/interfaces/usecases"
 	jwt2 "github.com/RandySteven/Library-GO/pkg/jwt"
+	oauth2_client "github.com/RandySteven/Library-GO/pkg/oauth2"
 	rabbitmqs_client "github.com/RandySteven/Library-GO/pkg/rabbitmqs"
 	"github.com/RandySteven/Library-GO/utils"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
+	"log"
+	"net/http"
 	"sync"
 	"time"
 )
@@ -26,6 +30,7 @@ type onboardingUsecase struct {
 	roleUserRepo repositories_interfaces.RoleUserRepository
 	pubSub       rabbitmqs_client.PubSub
 	transaction  repositories_interfaces.Transaction
+	oauth2       oauth2_client.Oauth2
 }
 
 func (o *onboardingUsecase) RegisterUser(ctx context.Context, request *requests.UserRegisterRequest) (result *responses.UserRegisterResponse, customErr *apperror.CustomError) {
@@ -165,17 +170,96 @@ func (o *onboardingUsecase) VerifyToken(ctx context.Context, token string) (cust
 	return
 }
 
+func (o *onboardingUsecase) GoogleLogin(ctx context.Context) (customErr *apperror.CustomError) {
+	result := o.oauth2.LoginAuth(ctx)
+	log.Println(result)
+	return
+}
+
+func (o *onboardingUsecase) GoogleCallback(ctx context.Context) (result *responses.UserLoginResponse, customErr *apperror.CustomError) {
+	user := &models.User{}
+	roleUser := &models.RoleUser{}
+	accesssToken, err := o.oauth2.CallbackAuth(ctx)
+	if err != nil {
+		return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to callback oauth2`, err)
+	}
+
+	resp, err := http.Get("https://www.googleapis.com/oauth2/v2/userinfo?access_token=" + accesssToken)
+	if err != nil {
+		return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to hit oauth2 user info`, err)
+	}
+
+	oauth2Response := &responses.Oauth2Response{}
+	err = json.NewDecoder(resp.Body).Decode(oauth2Response)
+	if err != nil {
+		return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to read oauth2 user info`, err)
+	}
+
+	customErr = o.transaction.RunInTx(ctx, func(ctx context.Context) *apperror.CustomError {
+		user, _ = o.userRepo.FindByEmail(ctx, oauth2Response.Email)
+		if user != nil {
+			return nil
+		}
+
+		user = &models.User{
+			Name:           oauth2Response.Name,
+			Email:          oauth2Response.Email,
+			Password:       "",
+			PhoneNumber:    "",
+			ProfilePicture: oauth2Response.Picture,
+		}
+
+		user, err = o.userRepo.Save(ctx, user)
+		if err != nil {
+			return apperror.NewCustomError(apperror.ErrInternalServer, `failed to create user`, err)
+		}
+
+		roleUser, err = o.roleUserRepo.Save(ctx, &models.RoleUser{
+			UserID: user.ID,
+			RoleID: uint64(enums.Member),
+		})
+		if err != nil {
+			return apperror.NewCustomError(apperror.ErrInternalServer, `failed to register user role`, err)
+		}
+		return nil
+	})
+	if customErr != nil {
+		return nil, customErr
+	}
+	claims := &jwt2.JWTClaim{
+		UserID: user.ID,
+		RoleID: roleUser.RoleID,
+		RegisteredClaims: jwt.RegisteredClaims{
+			Issuer:    "Applications",
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 1)),
+		},
+	}
+	tokenAlgo := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	token, err := tokenAlgo.SignedString(jwt2.JwtKey)
+	if err != nil {
+		return nil, apperror.NewCustomError(apperror.ErrInternalServer, `failed to generate token`, err)
+	}
+	result = &responses.UserLoginResponse{
+		Token: token,
+	}
+
+	return result, nil
+}
+
 var _ usecases_interfaces.OnboardingUsecase = &onboardingUsecase{}
 
 func newOnboardingUsecase(
 	userRepo repositories_interfaces.UserRepository,
 	roleUserRepo repositories_interfaces.RoleUserRepository,
 	pubSub rabbitmqs_client.PubSub,
-	transaction repositories_interfaces.Transaction) *onboardingUsecase {
+	transaction repositories_interfaces.Transaction,
+	oauth2 oauth2_client.Oauth2) *onboardingUsecase {
 	return &onboardingUsecase{
 		userRepo:     userRepo,
 		roleUserRepo: roleUserRepo,
 		pubSub:       pubSub,
 		transaction:  transaction,
+		oauth2:       oauth2,
 	}
 }

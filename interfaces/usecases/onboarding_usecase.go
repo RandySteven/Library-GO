@@ -12,4 +12,6 @@ type OnboardingUsecase interface {
 	LoginUser(ctx context.Context, request *requests.UserLoginRequest) (result *responses.UserLoginResponse, customErr *apperror.CustomError)
 	VerifyToken(ctx context.Context, token string) (customErr *apperror.CustomError)
 	GetLoginUser(ctx context.Context) (result *responses.LoginUserResponse, customErr *apperror.CustomError)
+	GoogleLogin(ctx context.Context) (customErr *apperror.CustomError)
+	GoogleCallback(ctx context.Context) (result *responses.UserLoginResponse, customErr *apperror.CustomError)
 }
